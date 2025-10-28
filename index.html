@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard CERS Dinámico (Gist)</title>
     <style>
-        /* Estilos CSS - Igual que antes */
+        /* Estilos CSS - Sin cambios */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f7f6;
@@ -114,21 +114,20 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        // === 1. COLOCA AQUÍ LA URL CSV DE TU GOOGLE SHEET ===
-        // VE A ARCHIVO > COMPARTIR > PUBLICAR EN LA WEB > CSV > COPIA LA URL
-        const CSV_URL = 'COLOCA_AQUÍ_LA_URL_DE_TU_GOOGLE_SHEET_CSV'; 
+        // === 1. URL DEL CSV PROPORCIONADA POR EL USUARIO ===
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv'; 
         // ====================================================
 
         const COL_LINEA = 0;
         const COL_PORCENTAJE = 4;
         const COL_NIVEL = 5;
         const COL_RECOMENDACION = 6;
-        const HEADER_ROW = 1; // La fila de encabezados en el CSV publicado
+        const HEADER_ROW = 2; // *** CAMBIO CLAVE: Empezar a leer datos desde la fila 3 (índice 2) para saltar el título y el encabezado de la tabla. ***
         
         function loadData() {
             Papa.parse(CSV_URL, {
                 download: true,
-                header: false, // El CSV de Google Sheets no siempre tiene un buen header
+                header: false,
                 complete: function(results) {
                     processData(results.data);
                 },
@@ -145,13 +144,14 @@
             let bajoCount = 0;
             let medioCount = 0;
             let altoCount = 0;
-            const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv';;
+            const tableBody = document.getElementById('data-table-body');
             let html = '';
 
-            // Iterar sobre las filas de datos (asumiendo que los datos comienzan después de la fila de encabezados)
-            for (let i = HEADER_ROW + 1; i < data.length; i++) {
+            // Iterar sobre las filas de datos, comenzando desde la fila de datos real (HEADER_ROW)
+            for (let i = HEADER_ROW; i < data.length; i++) {
                 const row = data[i];
-                if (row.length > COL_RECOMENDACION && row[COL_LINEA] && row[COL_PORCENTAJE]) {
+                // Se asegura que la fila tenga suficientes columnas y que la columna de línea no esté vacía
+                if (row.length > COL_RECOMENDACION && row[COL_LINEA] && row[COL_PORCENTAJE]) { 
                     totalLineas++;
                     const porcentaje = parseFloat(row[COL_PORCENTAJE]);
                     const nivel = row[COL_NIVEL];
@@ -200,4 +200,4 @@
         window.onload = loadData;
     </script>
 </body>
-</html>      
+</html>
