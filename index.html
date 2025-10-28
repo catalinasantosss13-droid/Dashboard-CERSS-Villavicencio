@@ -10,12 +10,11 @@
     
     <style>
         :root {
-            /* Colores basados en la bandera de Villavicencio y estándares de salud */
-            --color-primario: #0D47A1; /* Azul: Seriedad y Confianza */
-            --color-secundario: #16a085; /* Verde azulado: Salud */
-            --color-alto: #28a745;       /* Verde */
-            --color-medio: #ffc107;      /* Amarillo */
-            --color-bajo: #dc3545;       /* Rojo */
+            --color-primario: #0D47A1; 
+            --color-secundario: #16a085; 
+            --color-alto: #28a745;       
+            --color-medio: #ffc107;      
+            --color-bajo: #dc3545;       
             --color-fondo: #f0f4f8;
             --color-texto: #333;
             --color-blanco: #ffffff;
@@ -46,23 +45,20 @@
         .sync-status-section {
             background-color: var(--color-blanco);
             border-radius: 10px;
-            padding: 30px;
+            padding: 15px 30px; /* Reducido para que sea un banner */
             margin-bottom: 30px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border-left: 5px solid var(--color-secundario);
             text-align: center;
         }
-        .sync-status-section h2 { margin-top: 0; color: var(--color-primario); font-size: 1.6em; }
         .sync-status { 
             font-size: 1.1em;
             font-weight: 600;
-            margin-top: 10px;
         }
         .status-success { color: var(--color-alto); }
         .status-error { color: var(--color-bajo); }
-        .status-loading { color: #555; }
         
-        /* --- KPIS Y BARRA DE PROGRESO --- */
+        /* --- KPIS Y GRÁFICOS (mantener estilos) --- */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -76,54 +72,21 @@
             padding: 25px;
             text-align: center;
         }
-        .kpi-title {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #555;
-            text-transform: uppercase;
-        }
-        .kpi-value {
-            font-size: 2.8em;
-            font-weight: 700;
-            margin-top: 10px;
-            line-height: 1;
-        }
+        .kpi-title { font-size: 0.9em; font-weight: 600; color: #555; text-transform: uppercase; }
+        .kpi-value { font-size: 2.8em; font-weight: 700; margin-top: 10px; line-height: 1; }
         .kpi-value.alto { color: var(--color-alto); }
         .kpi-value.medio { color: var(--color-medio); }
         .kpi-value.bajo { color: var(--color-bajo); }
         .kpi-promedio { grid-column: span 4; padding: 30px; }
-        .kpi-promedio .kpi-title { font-size: 1.2em; }
-        .progress-bar-container {
-            width: 100%;
-            background-color: #e9ecef;
-            border-radius: 25px;
-            height: 35px;
-            margin-top: 20px;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-bar {
-            background-color: var(--color-primario);
-            height: 100%;
-            border-radius: 25px;
-            transition: width 1.5s ease-out;
-        }
-        .progress-bar-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            line-height: 35px;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2em;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-        }
-        
-        /* --- GRÁFICOS --- */
+        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 25px; height: 35px; margin-top: 20px; overflow: hidden; position: relative; }
+        .progress-bar { background-color: var(--color-primario); height: 100%; border-radius: 25px; transition: width 1.5s ease-out; }
+        .progress-bar-text { position: absolute; width: 100%; text-align: center; line-height: 35px; color: white; font-weight: 700; font-size: 1.2em; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+
         .charts-container {
             display: grid;
             grid-template-columns: 1fr 1.5fr;
             gap: 30px;
+            margin-bottom: 40px;
         }
         .chart-box {
             background-color: var(--color-blanco);
@@ -132,90 +95,161 @@
             padding: 25px;
         }
         .chart-box h2 { margin-top: 0; text-align: center; color: var(--color-primario); font-size: 1.3em; }
+
+        /* --- TABLA DE RESULTADOS DETALLADA --- */
+        .data-table-section {
+            background-color: var(--color-blanco);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        .data-table-section h2 { 
+            border-left: 5px solid var(--color-secundario);
+            padding-left: 10px;
+            color: #34495e;
+        }
+        #results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #results-table th, #results-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+            font-size: 0.95em;
+        }
+        #results-table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        #results-table tr:nth-child(even) { background-color: #f8f9fa; }
         
-        /* --- FOOTER Y RESPONSIVE --- */
-        footer { text-align: center; margin-top: 40px; font-size: 0.9em; color: #888; }
-        footer p { margin: 5px 0; }
-        @media (max-width: 1300px) { .kpi-promedio { grid-column: span 4; } }
-        @media (max-width: 1000px) { .charts-container { grid-template-columns: 1fr; } }
-        @media (max-width: 600px) {
-            .kpi-container { grid-template-columns: 1fr 1fr; }
-            .kpi-promedio { grid-column: 1 / -1; }
-        }
+        /* Estilos para Niveles */
+        .Bajo { background-color: #f5c6cb; color: #721c24; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
+        .Medio { background-color: #ffeeba; color: #856404; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
+        .Alto { background-color: #c3e6cb; color: #155724; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
+        .linea-critica { font-weight: bold; background-color: #f5c6cb !important; }
 
-        /* --- TRANSICIONES PRO --- */
-        .kpi, .chart-box, .sync-status-section {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* --- FOOTER FORMAL (LOGOS) --- */
+        .formal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-top: 1px solid #ccc;
+            margin-top: 30px;
         }
-        .kpi:hover, .chart-box:hover, .sync-status-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        .formal-footer .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .formal-footer img {
+            height: 50px; /* Ajusta el tamaño de los logos */
+            max-width: 100px;
         }
-        .sync-status-section, .kpi-container, .charts-container {
-            opacity: 0;
-            animation: fadeInUp 0.6s ease-out forwards;
+        .formal-footer p {
+            font-size: 0.9em;
+            color: #555;
+            text-align: right;
         }
-        .kpi-container { animation-delay: 0.2s; }
-        .charts-container { animation-delay: 0.4s; }
-
+        
+        @media (max-width: 1000px) {
+            .charts-container { grid-template-columns: 1fr; }
+            .formal-footer { flex-direction: column; text-align: center; gap: 15px; }
+            .formal-footer .logo-group { justify-content: center; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Dashboard de evaluación de la alineación entre el Plan de Acción Política pública de Modos, Condiciones y Estilos de Vida Saludable y los lineamientos CERS/OPS en la Secretaría de Salud de Villavicencio</h1>
+        <h1>Dashboard de Evaluación y Avance CERS Villavicencio</h1>
         <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
     </header>
 
     <div class="container">
 
         <div class="sync-status-section">
-            <h2>Estado de Sincronización</h2>
-            <p>Este dashboard se actualiza automáticamente leyendo la matriz de evaluación publicada desde Google Sheets.</p>
-            <div class="sync-status status-loading" id="sync-status">Conectando con la fuente de datos...</div>
+            <p>Estado de la sincronización:</p>
+            <div class="sync-status status-loading" id="sync-status">Conectando con la matriz de evaluación...</div>
         </div>
 
         <div class="kpi-container">
             <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio general de cumplimiento (%)</div>
+                <div class="kpi-title">Promedio General de Coincidencia (Avance %)</div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
                     <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
                 </div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en nivel alto</div>
+                <div class="kpi-title">Líneas en Nivel Alto</div>
                 <div class="kpi-value alto" id="kpi-alto">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en nivel medio</div>
+                <div class="kpi-title">Líneas en Nivel Medio</div>
                 <div class="kpi-value medio" id="kpi-medio">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en nivel bajo (Crítico)</div>
+                <div class="kpi-title">Líneas en Nivel Bajo (Crítico)</div>
                 <div class="kpi-value bajo" id="kpi-bajo">0</div>
             </div>
         </div>
 
         <div class="charts-container">
             <div class="chart-box">
-                <h2>Distribución de niveles de articulación</h2>
+                <h2>Distribución de Niveles de Articulación</h2>
                 <canvas id="graficoNiveles"></canvas>
             </div>
             <div class="chart-box">
-                <h2> Cumplimiento % por Línea Estratégica</h2>
+                <h2>Avance % por Línea Estratégica</h2>
                 <canvas id="graficoLineas"></canvas>
             </div>
         </div>
+        
+        <div class="data-table-section">
+            <h2>Resultados Detallados y Recomendaciones</h2>
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
+                        <th style="width: 10%;">Coincidencia (%)</th>
+                        <th style="width: 15%;">Nivel de Articulación</th>
+                        <th style="width: 50%;">Recomendaciones de Mejora (Proyecto)</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="conclusions">
+            <h2>Conclusiones para el Proyecto de Mejora</h2>
+            <p>La evaluación identifica los puntos críticos y las oportunidades de **institucionalización** necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
+            <ol>
+                <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
+                <li>**Institucionalizar las Acciones (Nivel Medio):** Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
+                <li>**Enfoque ECNT:** El proyecto de mejora puede centrarse en integrar la línea de **Monitoreo y Evaluación** con las actividades de **Promoción de la Salud** para medir el impacto real de las intervenciones ECNT en la población.</li>
+            </ol>
+        </div>
+        
     </div>
 
-    <footer>
-        <p>Este dashboard es un producto del proyecto de mejora de la práctica administrativa en el Programa ECNT.</p>
-        <p>Elaborado por: Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
+    <footer class="formal-footer">
+        <div class="logo-group">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Escudo_de_Villavicencio.svg/1200px-Escudo_de_Villavicencio.svg.png" alt="Logo Alcaldía de Villavicencio" style="height: 60px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Logotipo_de_la_Universidad_de_los_Llanos.svg/1200px-Logotipo_de_la_Universidad_de_los_Llanos.svg.png" alt="Logo Universidad de los Llanos" style="height: 50px;">
+        </div>
+        <div>
+            <p>Producto de Práctica Administrativa</p>
+            <p>Elaborado por: Catalina Santos González, Estudiante IX Semestre Enfermería, UNILLANOS.</p>
+        </div>
     </footer>
 
     <script>
@@ -232,16 +266,16 @@
         };
 
         // === CONFIGURACIÓN DE DATOS (CRÍTICO) ===
-        // URL CSV actualizada con el GID que proporcionaste
+        // URL CSV actualizada con la última URL proporcionada por el usuario
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1329201944&single=true&output=csv'; 
 
         // Columnas de tu MATRIZ GENERAL (índice base 0)
-        const COL_LINEA = 0;
-        const COL_PORCENTAJE = 4;
-        const COL_NIVEL = 5;
+        const COL_LINEA = 0; // Columna A
+        const COL_PORCENTAJE = 4; // Columna E (% avance)
+        const COL_NIVEL = 5; // Columna F (Nivel de avance)
+        const COL_RECOMENDACION = 6; // Columna G (Recomendaciones de mejora)
         
-        // El script saltará 4 filas (índice 4) para evitar títulos, subtítulos y encabezados rotos.
-        // Esto asume que los datos reales de la primera línea estratégica están en la fila 5 del CSV.
+        // Se mantiene el valor más seguro para saltar títulos y encabezados dobles.
         const HEADER_SKIP_ROWS = 4; 
         // ===========================================
 
@@ -255,28 +289,28 @@
                 header: false,
                 complete: function(results) {
                     try {
-                        // Procesar la data y calcular KPIs
-                        const { kpiData, lineasData } = processData(results.data);
+                        const { kpiData, lineasData, tablaData } = processData(results.data);
                         
-                        // Actualizar la interfaz
                         actualizarVisuals(kpiData, lineasData);
-                        statusElement.innerText = "✅ Sincronizado exitosamente.";
+                        renderTable(tablaData); // NUEVA FUNCIÓN para dibujar la tabla
+                        
+                        statusElement.innerText = "✅ Sincronizado exitosamente. Última actualización: " + new Date().toLocaleTimeString();
                         statusElement.className = "sync-status status-success";
                     } catch (e) {
                          console.error("Error al procesar datos:", e);
-                         statusElement.innerText = `❌ Error: ${e.message}`;
+                         statusElement.innerText = `❌ Error: ${e.message}. Intenta asegurarte de que la MATRIZ GENERAL no tenga celdas combinadas.`;
                          statusElement.className = "sync-status status-error";
                     }
                 },
                 error: function(error) {
                     console.error("Error al cargar datos del CSV:", error);
-                    statusElement.innerText = `❌ Error de conexión: Verifica la URL del CSV o los permisos de publicación.`;
+                    statusElement.innerText = `❌ Error de Conexión. Por favor, verifica la URL publicada.`;
                     statusElement.className = "sync-status status-error";
                 }
             });
         }
 
-        // --- FUNCIÓN DE PROCESAMIENTO Y CÁLCULO DE KPIs ---
+        // --- FUNCIÓN DE PROCESAMIENTO Y CÁLCULO DE KPIs Y TABLA ---
         function processData(data) {
             let totalLineas = 0;
             let sumaPorcentajes = 0;
@@ -285,24 +319,22 @@
             let altoCount = 0;
             
             const lineasData = { labels: [], avances: [] };
+            const tablaData = [];
 
             // Iniciar el bucle de datos después de saltar las filas de encabezado
             for (let i = HEADER_SKIP_ROWS; i < data.length; i++) {
                 const row = data[i];
                 
-                // Si la primera columna (Línea) está vacía, asumimos que terminaron los datos.
                 if (!row[COL_LINEA] || row[COL_LINEA].trim() === "") { 
                     break;
                 }
 
-                // Asegura que las columnas críticas existan
-                if (row.length > COL_NIVEL) { 
+                if (row.length > COL_RECOMENDACION) { 
+                    totalLineas++;
                     
                     const porcentaje = parseFloat(row[COL_PORCENTAJE]) || 0; 
-                    const nivel = row[COL_NIVEL] ? row[COL_NIVEL].trim() : "Sin datos";
+                    const nivel = row[COL_NIVEL] ? row[COL_NIVEL].trim() : "Sin Datos";
                     
-                    // Acumular totales para KPIs
-                    totalLineas++;
                     sumaPorcentajes += porcentaje;
 
                     if (nivel === 'Bajo') bajoCount++;
@@ -312,11 +344,23 @@
                     // Almacenar para el gráfico de barras
                     lineasData.labels.push(row[COL_LINEA]);
                     lineasData.avances.push(porcentaje);
+                    
+                    // Almacenar para la tabla detallada
+                    tablaData.push({
+                        linea: row[COL_LINEA],
+                        porcentaje: porcentaje,
+                        nivel: nivel,
+                        recomendacion: row[COL_RECOMENDACION]
+                    });
                 }
             }
 
             if (totalLineas === 0) {
-                 throw new Error("No se encontraron líneas estratégicas en el rango de datos. Verifique la estructura de su hoja.");
+                 // Si aún no funciona, intentar con otro índice
+                 if (HEADER_SKIP_ROWS === 4) {
+                     // Si 4 falla, intentamos con 3 (Fila 4) o 2 (Fila 3).
+                     throw new Error(`No se encontraron datos. Intenta cambiar 'HEADER_SKIP_ROWS' a 3 o 2 en el código. (Actualmente es ${HEADER_SKIP_ROWS})`);
+                 }
             }
 
             // Devolver los datos calculados
@@ -327,10 +371,37 @@
                     bajo: bajoCount,
                     promedio: totalLineas > 0 ? (sumaPorcentajes / totalLineas) : 0
                 },
-                lineasData: lineasData
+                lineasData: lineasData,
+                tablaData: tablaData
             };
         }
         
+        // --- FUNCIÓN PARA DIBUJAR LA TABLA DE RESULTADOS ---
+        function renderTable(tablaData) {
+            const tableBody = document.getElementById('data-table-body');
+            let html = '';
+
+            if (tablaData.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay datos para mostrar en la tabla.</td></tr>';
+                 return;
+            }
+
+            tablaData.forEach(item => {
+                const isCritical = item.nivel === 'Bajo' ? 'linea-critica' : '';
+                const levelClass = item.nivel.replace(' ', ''); 
+
+                html += `
+                    <tr class="${isCritical}">
+                        <td>${item.linea}</td>
+                        <td>${item.porcentaje}%</td>
+                        <td><span class="${levelClass}">${item.nivel}</span></td>
+                        <td>${item.recomendacion}</td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
         // --- FUNCIÓN "PRO" PARA ANIMAR NÚMEROS (Count-Up) ---
         function animateValue(element, start, end, duration, isDecimal = false) {
             let startTimestamp = null;
