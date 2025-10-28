@@ -3,78 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DASHBOARD DE EVALUACIÓN CERS - SECRETARÍA DE SALUD VILLAVICENCIO</title>
+    <title>Dashboard de Evaluación CERS - Secretaría de Salud Villavicencio</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
     <style>
         /* ---------------------------------------------------- */
-        /* ESTILOS BASE Y VARIABLES (Mantenidos de su código) */
+        /* ESTILOS BASE Y VARIABLES */
         /* ---------------------------------------------------- */
         :root {
-            --color-primario: #0D47A1; /* Azul Oscuro Institucional */
-            --color-secundario: #16a085; /* Verde/Turquesa para acentos */
+            --color-primario: #1a4369; /* Azul oscuro elegante (Institucional) */
+            --color-secundario: #00bcd4; /* Cian/Turquesa para acentos */
             --color-alto: #28a745;        /* Verde para Alto */
             --color-medio: #ffc107;      /* Amarillo para Medio */
             --color-bajo: #dc3545;        /* Rojo para Bajo */
-            --color-fondo: #f0f4f8;
+            --color-fondo: #f8f9fa; /* Fondo muy claro */
             --color-texto: #333;
             --color-blanco: #ffffff;
         }
         body {
-            font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial; /* Fuente mejorada */
+            /* Fuente mejorada */
+            font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
             background-color: var(--color-fondo);
             color: var(--color-texto);
             margin: 0;
             padding: 0;
         }
-        /* ESTILOS DEL ENCABEZADO: Título largo y Mayúsculas */
-        header {
-            background-color: var(--color-primario);
-            color: var(--color-blanco);
-            padding: 20px 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background-image: linear-gradient(135deg, #0d47a1 0%, #1a71ca 100%);
-            text-align: center; /* Centrar el título largo */
+
+        /* --- HEADER Y TÍTULO (Logos y Título Principal) --- */
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--color-blanco);
+            border-bottom: 5px solid var(--color-primario);
+            padding: 20px 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Sombra suave */
         }
-        h1 { 
+
+        .title-block {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        /* Título con capitalización normal */
+        .main-header h1 { 
             margin: 0; 
-            font-size: 1.8em; 
-            text-transform: uppercase; /* Uso de MAYÚSCULAS */
-            line-height: 1.3;
+            font-size: 1.6em; 
+            color: var(--color-primario);
+            font-weight: 700;
         }
-        header p { 
+        .main-header p { 
             margin: 5px 0 0; 
-            font-size: 1.1em; 
-            opacity: 0.9; 
+            font-size: 1em; 
+            color: #6c757d;
         }
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-group img {
+            height: 55px; /* Altura estándar de logos */
+            max-width: 120px;
+            object-fit: contain;
+        }
+
         .container {
             max-width: 1300px;
             margin: 0 auto;
             padding: 20px;
         }
         
-        /* --- ESTADO DE SINCRONIZACIÓN --- */
+        /* --- ESTADO DE SINCRONIZACIÓN (Capitalización corregida) --- */
         .sync-status-section {
             background-color: var(--color-blanco);
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 15px 30px; 
             margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--color-secundario);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--color-secundario);
             text-align: center;
         }
+        .sync-status-section p:first-child {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
         .sync-status { 
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: 600;
-            text-transform: uppercase; /* Mayúsculas para el estado de sincronización */
+            text-transform: none; /* CORRECCIÓN: Evita mayúsculas excesivas */
         }
         .status-success { color: var(--color-alto); }
         .status-error { color: var(--color-bajo); }
         .status-loading { color: #888; }
         
-        /* --- KPIS Y GRÁFICOS (mantener estilos) --- */
+        /* --- KPIS Y GRÁFICOS (Diseño más limpio) --- */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -83,20 +110,19 @@
         }
         .kpi {
             background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 8px; 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
             padding: 25px;
             text-align: center;
+            border: 1px solid #eee;
         }
-        .kpi-title { font-size: 0.9em; font-weight: 600; color: #555; text-transform: uppercase; }
-        .kpi-value { font-size: 2.8em; font-weight: 700; margin-top: 10px; line-height: 1; }
-        .kpi-value.alto { color: var(--color-alto); }
-        .kpi-value.medio { color: var(--color-medio); }
-        .kpi-value.bajo { color: var(--color-bajo); }
+        .kpi-title { 
+            font-size: 0.85em; 
+            font-weight: 600; 
+            color: #555; 
+            text-transform: none; /* CORRECCIÓN */
+        }
         .kpi-promedio { grid-column: span 4; padding: 30px; }
-        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 25px; height: 35px; margin-top: 20px; overflow: hidden; position: relative; }
-        .progress-bar { background-color: var(--color-primario); height: 100%; border-radius: 25px; transition: width 1.5s ease-out; }
-        .progress-bar-text { position: absolute; width: 100%; text-align: center; line-height: 35px; color: white; font-weight: 700; font-size: 1.2em; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
 
         .charts-container {
             display: grid;
@@ -106,88 +132,56 @@
         }
         .chart-box {
             background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             padding: 25px;
+            border: 1px solid #eee;
         }
-        .chart-box h2 { margin-top: 0; text-align: center; color: var(--color-primario); font-size: 1.3em; }
-
-        /* --- TABLA DE RESULTADOS DETALLADA --- */
-        .data-table-section {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-            margin-bottom: 40px;
-        }
-        .data-table-section h2 { 
-            border-left: 5px solid var(--color-secundario);
-            padding-left: 10px;
-            color: #34495e;
-            text-transform: uppercase;
-        }
-        #results-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        #results-table th, #results-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            vertical-align: top;
-            font-size: 0.95em;
-        }
-        #results-table th {
-            background-color: #34495e;
-            color: white;
+        .chart-box h2, .data-table-section h2, .conclusions h2 { 
+            text-transform: none; /* CORRECCIÓN: Títulos con capitalización normal */ 
+            color: var(--color-primario);
+            font-size: 1.2em;
             font-weight: 600;
-            text-transform: uppercase;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
-        #results-table tr:nth-child(even) { background-color: #f8f9fa; }
+        .data-table-section h2 { border-left: 5px solid var(--color-secundario); padding-left: 10px;}
         
-        /* Estilos para Niveles */
-        .Bajo { background-color: #f5c6cb; color: #721c24; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .Medio { background-color: #ffeeba; color: #856404; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .Alto { background-color: #c3e6cb; color: #155724; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .linea-critica { font-weight: bold; background-color: #f5c6cb !important; }
-
-        /* --- FOOTER FORMAL (LOGOS y CRÉDITOS) --- */
+        /* --- TABLA (Capitalización corregida) --- */
+        #results-table th {
+            text-transform: none; /* CORRECCIÓN: Encabezados de tabla normales */
+            font-size: 0.9em;
+        }
+        
+        /* --- FOOTER FORMAL (Créditos) --- */
         .formal-footer {
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Centrado */
             align-items: center;
             padding: 20px;
-            border-top: 2px solid var(--color-secundario); /* Línea de separación formal */
-            background-color: #eaf0f6; /* Fondo de pie de página */
+            border-top: 2px solid var(--color-secundario); 
+            background-color: #eef1f5; 
             margin-top: 30px;
             font-size: 0.85em;
         }
-        .formal-footer .logo-group {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .formal-footer img {
-            height: 55px; /* Ajusta el tamaño de los logos */
-            max-width: 120px;
-            object-fit: contain;
-        }
         .formal-footer .credits p {
-            font-size: 1em;
+            font-size: 0.9em;
             color: #555;
-            text-align: right;
-            margin: 0;
+            text-align: center;
+            margin: 5px 0;
             line-height: 1.4;
-            text-transform: uppercase; /* Mayúsculas para los créditos */
+            text-transform: none; /* CORRECCIÓN */
         }
         
+        /* ... Media Queries (Responsividad) ... */
         @media (max-width: 1000px) {
+            .main-header { flex-direction: column; padding: 15px 20px; }
+            .title-block { margin-bottom: 15px; }
+            .main-header h1 { font-size: 1.4em; }
             .charts-container { grid-template-columns: 1fr; }
             .kpi-container { grid-template-columns: 1fr 1fr 1fr 1fr; }
             .kpi-promedio { grid-column: span 4; }
-            .formal-footer { flex-direction: column; text-align: center; gap: 15px; }
-            .formal-footer .logo-group { justify-content: center; }
-            .formal-footer .credits p { text-align: center; }
         }
         @media (max-width: 600px) {
              .kpi-container { grid-template-columns: 1fr 1fr; }
@@ -197,60 +191,72 @@
 </head>
 <body>
 
-    <header>
-        <h1>DASHBOARD DE EVALUACIÓN DE LA ALINEACIÓN ENTRE EL PLAN DE ACCIÓN POLÍTICA PÚBLICA DE MODOS, CONDICIONES Y ESTILOS DE VIDA SALUDABLE Y LOS LINEAMIENTOS CERS/OPS EN LA SECRETARÍA DE SALUD DE VILLAVICENCIO</h1>
-        <p>PROGRAMA ECNT - UNILLANOS</p>
+    <header class="main-header">
+        <div class="logo-group left-logos">
+            <img src="logos/alcaldia-villavicencio-logo.png" alt="Logo Alcaldía de Villavicencio">
+            <img src="logos/secretaria-salud-villavicencio-logo.png" alt="Logo Secretaría de Salud">
+        </div>
+        
+        <div class="title-block">
+            <h1>Dashboard de Evaluación de la Alineación del Plan de Acción MCEVS con Lineamientos CERS/OPS</h1>
+            <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
+        </div>
+
+        <div class="logo-group right-logos">
+            <img src="logos/unillanos-logo.png" alt="Logo Universidad de los Llanos">
+            <img src="logos/ops-logo.png" alt="Logo OPS">
+        </div>
     </header>
 
     <div class="container">
 
         <div class="sync-status-section">
-            <p>ESTADO DE LA SINCRONIZACIÓN:</p>
-            <div class="sync-status status-loading" id="sync-status">CONECTANDO CON LA MATRIZ DE EVALUACIÓN...</div>
+            <p>Estado de la sincronización:</p>
+            <div class="sync-status status-loading" id="sync-status">Conectando con la matriz de evaluación...</div>
         </div>
 
         <div class="kpi-container">
             <div class="kpi kpi-promedio">
-                <div class="kpi-title">PROMEDIO GENERAL DE COINCIDENCIA (AVANCE %)</div>
+                <div class="kpi-title">Promedio General de Coincidencia (Avance %)</div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
                     <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
                 </div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">LÍNEAS EN NIVEL ALTO</div>
+                <div class="kpi-title">Líneas en Nivel Alto</div>
                 <div class="kpi-value alto" id="kpi-alto">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">LÍNEAS EN NIVEL MEDIO</div>
+                <div class="kpi-title">Líneas en Nivel Medio</div>
                 <div class="kpi-value medio" id="kpi-medio">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">LÍNEAS EN NIVEL BAJO (CRÍTICO)</div>
+                <div class="kpi-title">Líneas en Nivel Bajo (Crítico)</div>
                 <div class="kpi-value bajo" id="kpi-bajo">0</div>
             </div>
         </div>
 
         <div class="charts-container">
             <div class="chart-box">
-                <h2>DISTRIBUCIÓN DE NIVELES DE ARTICULACIÓN</h2>
+                <h2>Distribución de Niveles de Articulación</h2>
                 <canvas id="graficoNiveles"></canvas>
             </div>
             <div class="chart-box">
-                <h2>AVANCE % POR LÍNEA ESTRATÉGICA</h2>
+                <h2>Avance % por Línea Estratégica</h2>
                 <canvas id="graficoLineas"></canvas>
             </div>
         </div>
         
         <div class="data-table-section">
-            <h2>RESULTADOS DETALLADOS Y RECOMENDACIONES</h2>
+            <h2>Resultados Detallados y Recomendaciones</h2>
             <table id="results-table">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">LÍNEA ESTRATÉGICA / EJE CERS</th>
-                        <th style="width: 10%;">COINCIDENCIA (%)</th>
-                        <th style="width: 15%;">NIVEL DE ARTICULACIÓN</th>
-                        <th style="width: 50%;">RECOMENDACIONES DE MEJORA (PROYECTO)</th>
+                        <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
+                        <th style="width: 10%;">Coincidencia (%)</th>
+                        <th style="width: 15%;">Nivel de Articulación</th>
+                        <th style="width: 50%;">Recomendaciones de Mejora (Proyecto)</th>
                     </tr>
                 </thead>
                 <tbody id="data-table-body">
@@ -260,47 +266,39 @@
         </div>
         
         <div class="conclusions">
-            <h2>CONCLUSIONES PARA EL PROYECTO DE MEJORA</h2>
-            <p>LA EVALUACIÓN IDENTIFICA LOS PUNTOS CRÍTICOS Y LAS OPORTUNIDADES DE **INSTITUCIONALIZACIÓN** NECESARIAS PARA QUE EL PLAN DE ACCIÓN ALCANCE UN NIVEL **ALTO** DE ARTICULACIÓN CON LA POLÍTICA PÚBLICA CERS/CERSS:</p>
+            <h2>Conclusiones para el Proyecto de Mejora</h2>
+            <p>La evaluación identifica los puntos críticos y las oportunidades de **institucionalización** necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
             <ol>
-                <li>**PRIORIZAR LÍNEAS CRÍTICAS (NIVEL BAJO):** FOCALIZAR EL PROYECTO DE MEJORA EN ÁREAS CON BAJO PUNTAJE (DESARROLLO DE INFRAESTRUCTURA, GESTIÓN AMBIENTAL Y MONITOREO/EVALUACIÓN) PARA FORZAR LA ARTICULACIÓN INTERSECTORIAL Y LA FORMALIZACIÓN.</li>
-                <li>**INSTITUCIONALIZAR LAS ACCIONES (NIVEL MEDIO):** SE RECOMIENDA FORMALIZAR PROCESOS, CREAR CONVENIOS E INCLUIR INDICADORES POBLACIONALES EN TODAS LAS LÍNEAS PARA CUMPLIR CON EL CRITERIO DE "INSTITUCIONALIZADO".</li>
-                <li>**ENFOQUE ECNT:** EL PROYECTO DE MEJORA PUEDE CENTRARSE EN INTEGRAR LA LÍNEA DE **MONITOREO Y EVALUACIÓN** CON LAS ACTIVIDADES DE **PROMOCIÓN DE LA SALUD** PARA MEDIR EL IMPACTO REAL DE LAS INTERVENCIONES ECNT EN LA POBLACIÓN.</li>
+                <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
+                <li>**Institucionalizar las Acciones (Nivel Medio):** Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
+                <li>**Enfoque ECNT:** El proyecto de mejora puede centrarse en integrar la línea de **Monitoreo y Evaluación** con las actividades de **Promoción de la Salud** para medir el impacto real de las intervenciones ECNT en la población.</li>
             </ol>
         </div>
         
     </div>
 
     <footer class="formal-footer">
-        <div class="logo-group">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Escudo_de_Villavicencio.svg/1200px-Escudo_de_Villavicencio.svg.png" alt="Logo Alcaldía de Villavicencio">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Logotipo_de_la_Universidad_de_los_Llanos.svg/1200px-Logotipo_de_la_Universidad_de_los_Llanos.svg.png" alt="Logo Universidad de los Llanos">
-            <img src="logos/secretaria-salud-villavicencio-logo.png" alt="Logo Secretaría de Salud">
-            <img src="logos/ops-logo.png" alt="Logo OPS">
-        </div>
         <div class="credits">
-            <p>PRODUCTO DE PROYECTO DE MEJORA DE LA PRÁCTICA ADMINISTRATIVA EN EL PROGRAMA ECNT.</p>
-            <p>ELABORADO POR: **CATALINA SANTOS GONZÁLEZ**, ESTUDIANTE IX SEMESTRE ENFERMERÍA, UNIVERSIDAD DE LOS LLANOS.</p>
+            <p>Este dashboard es un producto del proyecto de mejora de la práctica administrativa en el Programa ECNT.</p>
+            <p>Elaborado por: **Catalina Santos González**, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
         </div>
     </footer>
 
     <script>
-        // Resto del código JavaScript (MANTENIDO IGUAL PARA PRESERVAR LA FUNCIONALIDAD DINÁMICA)
-
         // Variables globales para los gráficos
         let chartNiveles = null;
         let chartLineas = null;
 
         // Paleta de colores consistente
         const PALETA = {
-            primario: '#0D47A1',
+            primario: '#1a4369', 
             alto: '#28a745',
             medio: '#ffc107',
             bajo: '#dc3545'
         };
 
         // === CONFIGURACIÓN DE DATOS (CRÍTICO) ===
-        // URL CSV actualizada con la última URL proporcionada por el usuario
+        // URL CSV que extrae los datos de tu Google Sheet
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1329201944&single=true&output=csv'; 
 
         // Columnas de tu MATRIZ GENERAL (índice base 0)
@@ -308,15 +306,13 @@
         const COL_PORCENTAJE = 4; // Columna E (% avance)
         const COL_NIVEL = 5; // Columna F (Nivel de avance)
         const COL_RECOMENDACION = 6; // Columna G (Recomendaciones de mejora)
-        
-        // Se mantiene el valor más seguro para saltar títulos y encabezados dobles.
-        const HEADER_SKIP_ROWS = 4; 
+        const HEADER_SKIP_ROWS = 4; // Fila a partir de la cual se leen los datos (Fila 5 en Google Sheets)
         // ===========================================
 
         // --- FUNCIÓN PRINCIPAL DE CARGA CSV ---
         function loadData() {
             const statusElement = document.getElementById('sync-status');
-            statusElement.innerText = "CARGANDO DATOS...";
+            statusElement.innerText = "Cargando datos...";
             statusElement.className = "sync-status status-loading";
 
             Papa.parse(CSV_URL, {
@@ -327,24 +323,24 @@
                         const { kpiData, lineasData, tablaData } = processData(results.data);
                         
                         actualizarVisuals(kpiData, lineasData);
-                        renderTable(tablaData); // NUEVA FUNCIÓN para dibujar la tabla
+                        renderTable(tablaData);
                         
-                        // Formato de hora ajustado
+                        // Formato de hora y fecha para el estado de sincronización
                         const now = new Date();
                         const timeString = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
                         const dateString = now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
                         
-                        statusElement.innerText = `✅ SINCRONIZADO EXITOSAMENTE. ÚLTIMA ACTUALIZACIÓN: ${dateString.toUpperCase()}, ${timeString}`;
+                        statusElement.innerText = `✅ Sincronizado exitosamente. Última actualización: ${dateString}, ${timeString}`;
                         statusElement.className = "sync-status status-success";
                     } catch (e) {
                         console.error("Error al procesar datos:", e);
-                        statusElement.innerText = `❌ ERROR: NO SE ENCONTRARON DATOS VÁLIDOS. VERIFICA LA URL Y EL VALOR DE HEADER_SKIP_ROWS (${HEADER_SKIP_ROWS}).`;
+                        statusElement.innerText = `❌ Error: No se encontraron datos válidos. Revisa la URL y el valor de HEADER_SKIP_ROWS (${HEADER_SKIP_ROWS}).`;
                         statusElement.className = "sync-status status-error";
                     }
                 },
                 error: function(error) {
                     console.error("Error al cargar datos del CSV:", error);
-                    statusElement.innerText = `❌ ERROR DE CONEXIÓN. POR FAVOR, VERIFICA LA URL PUBLICADA.`;
+                    statusElement.innerText = `❌ Error de Conexión. Por favor, verifica la URL publicada.`;
                     statusElement.className = "sync-status status-error";
                 }
             });
@@ -364,8 +360,9 @@
             for (let i = HEADER_SKIP_ROWS; i < data.length; i++) {
                 const row = data[i];
                 
+                // Salta filas vacías o que contengan la palabra "PROMEDIO"
                 if (!row[COL_LINEA] || row[COL_LINEA].trim() === "" || row[COL_LINEA].toUpperCase().includes('PROMEDIO')) { 
-                    break; // Detenerse al encontrar una celda vacía o la fila de promedios
+                    break;
                 }
 
                 if (row.length > COL_RECOMENDACION) { 
@@ -380,11 +377,9 @@
                     else if (nivel === 'Medio') medioCount++;
                     else if (nivel === 'Alto') altoCount++;
 
-                    // Almacenar para el gráfico de barras
                     lineasData.labels.push(row[COL_LINEA]);
                     lineasData.avances.push(porcentaje);
                     
-                    // Almacenar para la tabla detallada
                     tablaData.push({
                         linea: row[COL_LINEA],
                         porcentaje: porcentaje,
@@ -395,10 +390,9 @@
             }
 
             if (totalLineas === 0) {
-                 throw new Error(`NO SE ENCONTRARON DATOS VÁLIDOS. REVISA TU MATRIZ.`);
+                 throw new Error(`No se encontraron datos válidos.`);
             }
 
-            // Devolver los datos calculados
             return {
                 kpiData: {
                     alto: altoCount,
@@ -417,7 +411,7 @@
             let html = '';
 
             if (tablaData.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">NO HAY DATOS PARA MOSTRAR EN LA TABLA.</td></tr>';
+                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay datos para mostrar en la tabla.</td></tr>';
                  return;
             }
 
@@ -429,7 +423,7 @@
                     <tr class="${isCritical}">
                         <td>${item.linea}</td>
                         <td>${item.porcentaje}%</td>
-                        <td><span class="${levelClass}">${item.nivel.toUpperCase()}</span></td>
+                        <td><span class="${levelClass}">${item.nivel}</span></td>
                         <td>${item.recomendacion}</td>
                     </tr>
                 `;
@@ -487,7 +481,7 @@
             chartNiveles = new Chart(ctxNiveles, {
                 type: 'doughnut',
                 data: {
-                    labels: ['BAJO (CRÍTICO)', 'MEDIO', 'ALTO'],
+                    labels: ['Bajo (Crítico)', 'Medio', 'Alto'],
                     datasets: [{
                         data: [kpiData.bajo, kpiData.medio, kpiData.alto],
                         backgroundColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
@@ -512,7 +506,7 @@
                 data: {
                     labels: lineasData.labels,
                     datasets: [{
-                        label: '% AVANCE (COINCIDENCIA)',
+                        label: '% Avance (Coincidencia)',
                         data: lineasData.avances,
                         backgroundColor: lineasData.avances.map(val => {
                             if (val >= 80) return PALETA.alto;
@@ -523,7 +517,7 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Barras HORIZONTALES
+                    indexAxis: 'y',
                     responsive: true,
                     aspectRatio: 1.8,
                     animation: { duration: 1000, easing: 'easeOutCubic' },
