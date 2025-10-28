@@ -3,513 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard CERS Dinámico - Secretaría de Salud</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
+    <title>Dashboard de Evaluación: Plan de Acción MCEVS - Villavicencio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --color-primario: #0D47A1; 
-            --color-secundario: #16a085; 
-            --color-alto: #28a745;       
-            --color-medio: #ffc107;      
-            --color-bajo: #dc3545;       
-            --color-fondo: #f0f4f8;
-            --color-texto: #333;
-            --color-blanco: #ffffff;
-        }
+        /* ------------------------------------------- */
+        /* ESTILOS GENERALES Y TIPOGRAFÍA */
+        /* ------------------------------------------- */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--color-fondo);
-            color: var(--color-texto);
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f7f9;
+            color: #333;
         }
-        header {
-            background-color: var(--color-primario);
-            color: var(--color-blanco);
-            padding: 20px 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background-image: linear-gradient(135deg, #0d47a1 0%, #1a71ca 100%);
-        }
-        h1 { margin: 0; font-size: 1.8em; }
-        header p { margin: 5px 0 0; font-size: 1.1em; opacity: 0.9; }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* --- ESTADO DE SINCRONIZACIÓN --- */
-        .sync-status-section {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            padding: 15px 30px; /* Reducido para que sea un banner */
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--color-secundario);
-            text-align: center;
-        }
-        .sync-status { 
-            font-size: 1.1em;
-            font-weight: 600;
-        }
-        .status-success { color: var(--color-alto); }
-        .status-error { color: var(--color-bajo); }
-        
-        /* --- KPIS Y GRÁFICOS (mantener estilos) --- */
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .kpi {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-            text-align: center;
-        }
-        .kpi-title { font-size: 0.9em; font-weight: 600; color: #555; text-transform: uppercase; }
-        .kpi-value { font-size: 2.8em; font-weight: 700; margin-top: 10px; line-height: 1; }
-        .kpi-value.alto { color: var(--color-alto); }
-        .kpi-value.medio { color: var(--color-medio); }
-        .kpi-value.bajo { color: var(--color-bajo); }
-        .kpi-promedio { grid-column: span 4; padding: 30px; }
-        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 25px; height: 35px; margin-top: 20px; overflow: hidden; position: relative; }
-        .progress-bar { background-color: var(--color-primario); height: 100%; border-radius: 25px; transition: width 1.5s ease-out; }
-        .progress-bar-text { position: absolute; width: 100%; text-align: center; line-height: 35px; color: white; font-weight: 700; font-size: 1.2em; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
 
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .chart-box {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-        }
-        .chart-box h2 { margin-top: 0; text-align: center; color: var(--color-primario); font-size: 1.3em; }
-
-        /* --- TABLA DE RESULTADOS DETALLADA --- */
-        .data-table-section {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-            margin-bottom: 40px;
-        }
-        .data-table-section h2 { 
-            border-left: 5px solid var(--color-secundario);
-            padding-left: 10px;
-            color: #34495e;
-        }
-        #results-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        #results-table th, #results-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            vertical-align: top;
-            font-size: 0.95em;
-        }
-        #results-table th {
-            background-color: #34495e;
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        #results-table tr:nth-child(even) { background-color: #f8f9fa; }
-        
-        /* Estilos para Niveles */
-        .Bajo { background-color: #f5c6cb; color: #721c24; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .Medio { background-color: #ffeeba; color: #856404; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .Alto { background-color: #c3e6cb; color: #155724; padding: 3px 8px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-block;}
-        .linea-critica { font-weight: bold; background-color: #f5c6cb !important; }
-
-        /* --- FOOTER FORMAL (LOGOS) --- */
-        .formal-footer {
+        /* ------------------------------------------- */
+        /* ESTILOS DEL ENCABEZADO (HEADER) */
+        /* ------------------------------------------- */
+        .header-dashboard {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-top: 1px solid #ccc;
-            margin-top: 30px;
+            padding: 15px 30px;
+            background-color: #ffffff;
+            border-bottom: 5px solid #0056b3; /* Color institucional azul */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .formal-footer .logo-group {
+
+        .logo-container {
             display: flex;
+            gap: 10px;
             align-items: center;
-            gap: 15px;
         }
-        .formal-footer img {
-            height: 50px; /* Ajusta el tamaño de los logos */
-            max-width: 100px;
+
+        .logo-container img {
+            height: 55px; /* Altura estándar de los logos */
+            max-width: 120px;
+            object-fit: contain;
+            padding: 5px;
         }
-        .formal-footer p {
-            font-size: 0.9em;
-            color: #555;
-            text-align: right;
+
+        .title-container {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .dashboard-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0056b3;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        /* ------------------------------------------- */
+        /* ESTILOS DEL CUERPO DEL DASHBOARD */
+        /* ------------------------------------------- */
+        .dashboard-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Layout adaptable con Grid */
+            gap: 25px;
+        }
+
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #0056b3; /* Borde izquierdo para destacar */
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
         }
         
-        @media (max-width: 1000px) {
-            .charts-container { grid-template-columns: 1fr; }
-            .formal-footer { flex-direction: column; text-align: center; gap: 15px; }
-            .formal-footer .logo-group { justify-content: center; }
+        /* Estilo para los indicadores (ejemplo) */
+        .indicator {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e6f0ff; /* Azul muy claro para fondo de métrica */
+            border-radius: 4px;
+        }
+
+        .indicator strong {
+            display: block;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .indicator span {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        /* ------------------------------------------- */
+        /* RESPONSIVE DESIGN (Ajuste para móviles) */
+        /* ------------------------------------------- */
+        @media (max-width: 1200px) {
+            .dashboard-title {
+                font-size: 1.3rem; /* Reduce el título para mejor ajuste */
+            }
+            .header-dashboard {
+                flex-wrap: wrap; /* Permite que los elementos se envuelvan */
+            }
+            .logo-container {
+                margin: 5px 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-dashboard {
+                flex-direction: column; /* Apila los elementos en vertical */
+                align-items: center;
+                padding: 15px;
+            }
+            .title-container {
+                order: -1; /* Mueve el título a la parte superior */
+                margin-bottom: 10px;
+            }
+            .logo-container img {
+                height: 40px; /* Logos más pequeños */
+            }
+            .dashboard-body {
+                padding: 15px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Dashboard de Evaluación y Avance CERS Villavicencio</h1>
-        <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
+    <header class="header-dashboard">
+        
+        <div class="logo-container left-logos">
+            <img src="logos/alcaldia-villavicencio-logo.png" alt="Logo Alcaldía de Villavicencio">
+            <img src="logos/secretaria-salud-villavicencio-logo.png" alt="Logo Secretaría de Salud de Villavicencio">
+        </div>
+
+        <div class="title-container">
+            <h1 class="dashboard-title">
+                Dashboard de Evaluación de la Alineación entre el Plan de Acción Política Pública de Modos, Condiciones y Estilos de Vida Saludable y los Lineamientos CERS/OPS en la Secretaría de Salud de Villavicencio
+            </h1>
+        </div>
+
+        <div class="logo-container right-logos">
+            <img src="logos/unillanos-logo.png" alt="Logo Universidad de los Llanos">
+            <img src="logos/ops-logo.png" alt="Logo OPS">
+        </div>
+
     </header>
 
-    <div class="container">
+    <div class="dashboard-body">
 
-        <div class="sync-status-section">
-            <p>Estado de la sincronización:</p>
-            <div class="sync-status status-loading" id="sync-status">Conectando con la matriz de evaluación...</div>
-        </div>
-
-        <div class="kpi-container">
-            <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio General de Coincidencia (Avance %)</div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
-                    <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
-                </div>
+        <div class="card" id="contexto">
+            <h2>1. Datos Generales y Contexto</h2>
+            <div class="indicator">
+                <strong>Vigencia del Plan:</strong>
+                <span>2024-2027</span>
             </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Alto</div>
-                <div class="kpi-value alto" id="kpi-alto">0</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Medio</div>
-                <div class="kpi-value medio" id="kpi-medio">0</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Bajo (Crítico)</div>
-                <div class="kpi-value bajo" id="kpi-bajo">0</div>
+            <div class="indicator">
+                <strong>Población Beneficiaria:</strong>
+                <span>550.000 Habitantes</span>
             </div>
         </div>
 
-        <div class="charts-container">
-            <div class="chart-box">
-                <h2>Distribución de Niveles de Articulación</h2>
-                <canvas id="graficoNiveles"></canvas>
+        <div class="card" id="alineacion">
+            <h2>2. Alineación Estratégica CERS/OPS</h2>
+            <div class="indicator">
+                <strong>% Metas alineadas a Ejes CERS:</strong>
+                <span>85%</span>
             </div>
-            <div class="chart-box">
-                <h2>Avance % por Línea Estratégica</h2>
-                <canvas id="graficoLineas"></canvas>
+            <div class="indicator">
+                <strong>Nivel de Inclusión DSS:</strong>
+                <span>Alto</span>
+            </div>
+        </div>
+
+        <div class="card" id="ejecucion">
+            <h2>3. Ejecución y Avance del Plan</h2>
+            <div class="indicator">
+                <strong>Ejecución Presupuestal:</strong>
+                <span>65%</span>
+            </div>
+            <div class="indicator">
+                <strong>Avance Físico de Actividades:</strong>
+                <span>72%</span>
+            </div>
+        </div>
+
+        <div class="card" id="impacto">
+            <h2>4. Resultados e Impacto (MCEVS)</h2>
+            <div class="indicator">
+                <strong>Tasa de Actividad Física (Meta):</strong>
+                <span>+15%</span>
+            </div>
+            <div class="indicator">
+                <strong>Prevalencia de Tabaquismo (Reducción):</strong>
+                <span>-5%</span>
+            </div>
+        </div>
+
+        <div class="card" id="gobernanza">
+            <h2>5. Gobernanza y Participación</h2>
+            <div class="indicator">
+                <strong>Mesas de Trabajo Intersectoriales:</strong>
+                <span>12 Realizadas</span>
+            </div>
+            <div class="indicator">
+                <strong>Índice de Participación Ciudadana:</strong>
+                <span>3.8 / 5.0</span>
             </div>
         </div>
         
-        <div class="data-table-section">
-            <h2>Resultados Detallados y Recomendaciones</h2>
-            <table id="results-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
-                        <th style="width: 10%;">Coincidencia (%)</th>
-                        <th style="width: 15%;">Nivel de Articulación</th>
-                        <th style="width: 50%;">Recomendaciones de Mejora (Proyecto)</th>
-                    </tr>
-                </thead>
-                <tbody id="data-table-body">
-                    <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
-                </tbody>
-            </table>
+        <div class="card" style="grid-column: span 1; border-left: 5px solid #28a745;">
+            <h2>Resumen Ejecutivo y Gráfico</h2>
+            <p>Aquí se podría insertar un gráfico de barras que muestre el rendimiento por eje temático de la Estrategia CERS.</p>
+            <div style="height: 200px; background-color: #f0f0f0; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center;">
+                [Espacio para Gráfico de Rendimiento]
+            </div>
         </div>
-        
-        <div class="conclusions">
-            <h2>Conclusiones para el Proyecto de Mejora</h2>
-            <p>La evaluación identifica los puntos críticos y las oportunidades de **institucionalización** necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
-            <ol>
-                <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
-                <li>**Institucionalizar las Acciones (Nivel Medio):** Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
-                <li>**Enfoque ECNT:** El proyecto de mejora puede centrarse en integrar la línea de **Monitoreo y Evaluación** con las actividades de **Promoción de la Salud** para medir el impacto real de las intervenciones ECNT en la población.</li>
-            </ol>
-        </div>
-        
+
     </div>
 
-    <footer class="formal-footer">
-        <div class="logo-group">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Escudo_de_Villavicencio.svg/1200px-Escudo_de_Villavicencio.svg.png" alt="Logo Alcaldía de Villavicencio" style="height: 60px;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Logotipo_de_la_Universidad_de_los_Llanos.svg/1200px-Logotipo_de_la_Universidad_de_los_Llanos.svg.png" alt="Logo Universidad de los Llanos" style="height: 50px;">
-        </div>
-        <div>
-            <p>Producto de Práctica Administrativa</p>
-            <p>Elaborado por: Catalina Santos González, Estudiante IX Semestre Enfermería, UNILLANOS.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Variables globales para los gráficos
-        let chartNiveles = null;
-        let chartLineas = null;
-
-        // Paleta de colores consistente
-        const PALETA = {
-            primario: '#0D47A1',
-            alto: '#28a745',
-            medio: '#ffc107',
-            bajo: '#dc3545'
-        };
-
-        // === CONFIGURACIÓN DE DATOS (CRÍTICO) ===
-        // URL CSV actualizada con la última URL proporcionada por el usuario
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1329201944&single=true&output=csv'; 
-
-        // Columnas de tu MATRIZ GENERAL (índice base 0)
-        const COL_LINEA = 0; // Columna A
-        const COL_PORCENTAJE = 4; // Columna E (% avance)
-        const COL_NIVEL = 5; // Columna F (Nivel de avance)
-        const COL_RECOMENDACION = 6; // Columna G (Recomendaciones de mejora)
-        
-        // Se mantiene el valor más seguro para saltar títulos y encabezados dobles.
-        const HEADER_SKIP_ROWS = 4; 
-        // ===========================================
-
-        // --- FUNCIÓN PRINCIPAL DE CARGA CSV ---
-        function loadData() {
-            const statusElement = document.getElementById('sync-status');
-            statusElement.innerText = "Cargando datos...";
-
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: false,
-                complete: function(results) {
-                    try {
-                        const { kpiData, lineasData, tablaData } = processData(results.data);
-                        
-                        actualizarVisuals(kpiData, lineasData);
-                        renderTable(tablaData); // NUEVA FUNCIÓN para dibujar la tabla
-                        
-                        statusElement.innerText = "✅ Sincronizado exitosamente. Última actualización: " + new Date().toLocaleTimeString();
-                        statusElement.className = "sync-status status-success";
-                    } catch (e) {
-                         console.error("Error al procesar datos:", e);
-                         statusElement.innerText = `❌ Error: ${e.message}. Intenta asegurarte de que la MATRIZ GENERAL no tenga celdas combinadas.`;
-                         statusElement.className = "sync-status status-error";
-                    }
-                },
-                error: function(error) {
-                    console.error("Error al cargar datos del CSV:", error);
-                    statusElement.innerText = `❌ Error de Conexión. Por favor, verifica la URL publicada.`;
-                    statusElement.className = "sync-status status-error";
-                }
-            });
-        }
-
-        // --- FUNCIÓN DE PROCESAMIENTO Y CÁLCULO DE KPIs Y TABLA ---
-        function processData(data) {
-            let totalLineas = 0;
-            let sumaPorcentajes = 0;
-            let bajoCount = 0;
-            let medioCount = 0;
-            let altoCount = 0;
-            
-            const lineasData = { labels: [], avances: [] };
-            const tablaData = [];
-
-            // Iniciar el bucle de datos después de saltar las filas de encabezado
-            for (let i = HEADER_SKIP_ROWS; i < data.length; i++) {
-                const row = data[i];
-                
-                if (!row[COL_LINEA] || row[COL_LINEA].trim() === "") { 
-                    break;
-                }
-
-                if (row.length > COL_RECOMENDACION) { 
-                    totalLineas++;
-                    
-                    const porcentaje = parseFloat(row[COL_PORCENTAJE]) || 0; 
-                    const nivel = row[COL_NIVEL] ? row[COL_NIVEL].trim() : "Sin Datos";
-                    
-                    sumaPorcentajes += porcentaje;
-
-                    if (nivel === 'Bajo') bajoCount++;
-                    else if (nivel === 'Medio') medioCount++;
-                    else if (nivel === 'Alto') altoCount++;
-
-                    // Almacenar para el gráfico de barras
-                    lineasData.labels.push(row[COL_LINEA]);
-                    lineasData.avances.push(porcentaje);
-                    
-                    // Almacenar para la tabla detallada
-                    tablaData.push({
-                        linea: row[COL_LINEA],
-                        porcentaje: porcentaje,
-                        nivel: nivel,
-                        recomendacion: row[COL_RECOMENDACION]
-                    });
-                }
-            }
-
-            if (totalLineas === 0) {
-                 // Si aún no funciona, intentar con otro índice
-                 if (HEADER_SKIP_ROWS === 4) {
-                     // Si 4 falla, intentamos con 3 (Fila 4) o 2 (Fila 3).
-                     throw new Error(`No se encontraron datos. Intenta cambiar 'HEADER_SKIP_ROWS' a 3 o 2 en el código. (Actualmente es ${HEADER_SKIP_ROWS})`);
-                 }
-            }
-
-            // Devolver los datos calculados
-            return {
-                kpiData: {
-                    alto: altoCount,
-                    medio: medioCount,
-                    bajo: bajoCount,
-                    promedio: totalLineas > 0 ? (sumaPorcentajes / totalLineas) : 0
-                },
-                lineasData: lineasData,
-                tablaData: tablaData
-            };
-        }
-        
-        // --- FUNCIÓN PARA DIBUJAR LA TABLA DE RESULTADOS ---
-        function renderTable(tablaData) {
-            const tableBody = document.getElementById('data-table-body');
-            let html = '';
-
-            if (tablaData.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay datos para mostrar en la tabla.</td></tr>';
-                 return;
-            }
-
-            tablaData.forEach(item => {
-                const isCritical = item.nivel === 'Bajo' ? 'linea-critica' : '';
-                const levelClass = item.nivel.replace(' ', ''); 
-
-                html += `
-                    <tr class="${isCritical}">
-                        <td>${item.linea}</td>
-                        <td>${item.porcentaje}%</td>
-                        <td><span class="${levelClass}">${item.nivel}</span></td>
-                        <td>${item.recomendacion}</td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
-        }
-
-        // --- FUNCIÓN "PRO" PARA ANIMAR NÚMEROS (Count-Up) ---
-        function animateValue(element, start, end, duration, isDecimal = false) {
-            let startTimestamp = null;
-            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easedProgress = easeOutCubic(progress);
-                
-                const currentValue = start + (end - start) * easedProgress;
-
-                if (isDecimal) {
-                    element.innerText = currentValue.toFixed(1) + '%';
-                } else {
-                    element.innerText = Math.floor(currentValue);
-                }
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    element.innerText = isDecimal ? end.toFixed(1) + '%' : end;
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // --- FUNCIÓN PRINCIPAL PARA ACTUALIZAR EL DASHBOARD (Gráficos) ---
-        function actualizarVisuals(kpiData, lineasData) {
-            
-            // 1. Actualizar KPIs con la animación "Count-Up"
-            const duracionAnimacion = 1500; 
-            
-            animateValue(document.getElementById('kpi-alto'), 0, kpiData.alto ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-medio'), 0, kpiData.medio ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-bajo'), 0, kpiData.bajo ?? 0, duracionAnimacion);
-            
-            const promedio = parseFloat(kpiData.promedio ?? 0);
-            animateValue(document.getElementById('kpi-promedio-text'), 0, promedio, duracionAnimacion, true);
-            
-            setTimeout(() => {
-                document.getElementById('kpi-promedio-bar').style.width = promedio + '%';
-            }, 100);
-
-            // 2. Actualizar Gráfico de Niveles (Dona)
-            if (chartNiveles) { chartNiveles.destroy(); }
-            const ctxNiveles = document.getElementById('graficoNiveles').getContext('2d');
-            chartNiveles = new Chart(ctxNiveles, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Bajo (Crítico)', 'Medio', 'Alto'],
-                    datasets: [{
-                        data: [kpiData.bajo, kpiData.medio, kpiData.alto],
-                        backgroundColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 1,
-                    animation: { duration: 1000, easing: 'easeOutCubic' },
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
-
-            // 3. Actualizar Gráfico de Líneas (Barras Horizontales)
-            if (chartLineas) { chartLineas.destroy(); }
-            const ctxLineas = document.getElementById('graficoLineas').getContext('2d');
-            chartLineas = new Chart(ctxLineas, {
-                type: 'bar',
-                data: {
-                    labels: lineasData.labels,
-                    datasets: [{
-                        label: '% Avance (Coincidencia)',
-                        data: lineasData.avances,
-                        backgroundColor: lineasData.avances.map(val => {
-                            if (val >= 80) return PALETA.alto;
-                            if (val >= 40) return PALETA.medio;
-                            return PALETA.bajo;
-                        }),
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    indexAxis: 'y', // Barras HORIZONTALES
-                    responsive: true,
-                    aspectRatio: 1.8,
-                    animation: { duration: 1000, easing: 'easeOutCubic' },
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { callback: value => value + '%' }
-                        },
-                        y: {
-                            ticks: { font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Cargar los datos al iniciar la página
-        window.onload = loadData;
-
-    </script>
 </body>
 </html>
