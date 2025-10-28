@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Evaluación CERS - Secretaría de Salud Villavicencio</title>
+    <title>Dashboard de evaluación CERS - Secretaría de Salud Villavicencio</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -193,19 +193,17 @@
 
     <header class="main-header">
         <div class="logo-group left-logos">
-            <img src="logos/alcaldia-villavicencio-logo.png" alt="Logo Alcaldía de Villavicencio">
-            <img src="logos/secretaria-salud-villavicencio-logo.png" alt="Logo Secretaría de Salud">
+            <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.youtube.com%2F%40alcaldiadevillavicencio.&psig=AOvVaw2e3mf80xVihNXC7ADrRZy5&ust=1761748279600000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCKCasvWNx5ADFQAAAAAdAAAAABAE" alt="Logo Alcaldía de Villavicencio">
         </div>
         
         <div class="title-block">
-            <h1>Dashboard de Evaluación de la Alineación del Plan de Acción MCEVS con Lineamientos CERS/OPS</h1>
+            <h1>Dashboard de evaluación de la alineación del Plan de Acción MCEVS con lineamientos CERS/OPS</h1>
             <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
         </div>
 
         <div class="logo-group right-logos">
-            <img src="logos/unillanos-logo.png" alt="Logo Universidad de los Llanos">
-            <img src="logos/ops-logo.png" alt="Logo OPS">
-        </div>
+            <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fbiblioteca.unillanos.edu.co%2Fmision.html&psig=AOvVaw14MFmKjnzWCm13DzOB2gnC&ust=1761748053708000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCMiJnImNx5ADFQAAAAAdAAAAABAE" alt="Logo Universidad de los Llanos">
+                </div>
     </header>
 
     <div class="container">
@@ -217,46 +215,46 @@
 
         <div class="kpi-container">
             <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio General de Coincidencia (Avance %)</div>
+                <div class="kpi-title">Promedio general de coincidencia (%)</div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
                     <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
                 </div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Alto</div>
+                <div class="kpi-title">Líneas en nivel alto</div>
                 <div class="kpi-value alto" id="kpi-alto">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Medio</div>
+                <div class="kpi-title">Líneas en nivel medio</div>
                 <div class="kpi-value medio" id="kpi-medio">0</div>
             </div>
             <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Bajo (Crítico)</div>
+                <div class="kpi-title">Líneas en nivel bajo (Crítico)</div>
                 <div class="kpi-value bajo" id="kpi-bajo">0</div>
             </div>
         </div>
 
         <div class="charts-container">
             <div class="chart-box">
-                <h2>Distribución de Niveles de Articulación</h2>
+                <h2>Distribución de niveles de articulación</h2>
                 <canvas id="graficoNiveles"></canvas>
             </div>
             <div class="chart-box">
-                <h2>Avance % por Línea Estratégica</h2>
+                <h2>Cumplimiento % por Línea Estratégica</h2>
                 <canvas id="graficoLineas"></canvas>
             </div>
         </div>
         
         <div class="data-table-section">
-            <h2>Resultados Detallados y Recomendaciones</h2>
+            <h2>Resultados detallados y recomendaciones</h2>
             <table id="results-table">
                 <thead>
                     <tr>
                         <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
                         <th style="width: 10%;">Coincidencia (%)</th>
-                        <th style="width: 15%;">Nivel de Articulación</th>
-                        <th style="width: 50%;">Recomendaciones de Mejora (Proyecto)</th>
+                        <th style="width: 15%;">Nivel de articulación</th>
+                        <th style="width: 50%;">Recomendaciones de mejora (Proyecto)</th>
                     </tr>
                 </thead>
                 <tbody id="data-table-body">
@@ -266,12 +264,12 @@
         </div>
         
         <div class="conclusions">
-            <h2>Conclusiones para el Proyecto de Mejora</h2>
+            <h2>Conclusiones para el proyecto de ejora</h2>
             <p>La evaluación identifica los puntos críticos y las oportunidades de **institucionalización** necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
             <ol>
-                <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
-                <li>**Institucionalizar las Acciones (Nivel Medio):** Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
-                <li>**Enfoque ECNT:** El proyecto de mejora puede centrarse en integrar la línea de **Monitoreo y Evaluación** con las actividades de **Promoción de la Salud** para medir el impacto real de las intervenciones ECNT en la población.</li>
+                <li>Priorizar líneas críticas (nivel bajo): Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
+                <li>Institucionalizar las acciones (nivel medio): Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
+                <li>Enfoque ECNT: El proyecto de mejora puede centrarse en integrar la línea de Monitoreo y Evaluación con las actividades de Promoción de la Salud para medir el impacto real de las intervenciones ECNT en la población.</li>
             </ol>
         </div>
         
