@@ -16,12 +16,13 @@
         :root {
             --color-primario: #1a4369; /* Azul oscuro elegante (Institucional) */
             --color-secundario: #00bcd4; /* Cian/Turquesa para acentos */
-            --color-alto: #28a745;        /* Verde para Alto */
-            --color-medio: #ffc107;      /* Amarillo para Medio */
-            --color-bajo: #dc3545;        /* Rojo para Bajo */
+            --color-alto: #28a745;      /* Verde para Alto */
+            --color-medio: #ffc107;     /* Amarillo para Medio */
+            --color-bajo: #dc3545;      /* Rojo para Bajo */
             --color-fondo: #f8f9fa; 
             --color-texto: #333;
             --color-blanco: #ffffff;
+            --color-gris-claro: #e0e0e0; /* Para elementos neutrales */
         }
         body {
             font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
@@ -29,6 +30,7 @@
             color: var(--color-texto);
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
 
         /* --- HEADER Y TÍTULO (Logos y Título Principal) --- */
@@ -38,8 +40,9 @@
             justify-content: space-between;
             background-color: var(--color-blanco);
             border-bottom: 5px solid var(--color-primario);
-            padding: 20px 40px;
+            padding: 15px 30px; /* Reducido un poco para más balance */
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px; /* Espacio debajo del header */
         }
 
         .title-block {
@@ -49,13 +52,13 @@
         }
         .main-header h1 { 
             margin: 0; 
-            font-size: 1.6em; 
+            font-size: 1.4em; /* Ligeramente más pequeño */
             color: var(--color-primario);
             font-weight: 700;
         }
         .main-header p { 
             margin: 5px 0 0; 
-            font-size: 1em; 
+            font-size: 0.9em; /* Ligeramente más pequeño */
             color: #6c757d;
         }
         .logo-group {
@@ -64,15 +67,19 @@
             gap: 15px;
         }
         .logo-group img {
-            height: 55px; 
-            max-width: 120px;
+            height: 50px; /* Ligeramente más pequeños */
+            max-width: 100px;
             object-fit: contain;
         }
+        /* Ocultar los logos que no queremos, ya que se eliminaron del HTML directamente */
+        .logo-group.left-logos img:not(:first-child) { display: none; } 
+        .logo-group.right-logos img:not(:first-child) { display: none; }
+
 
         .container {
             max-width: 1300px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 20px; /* Ajuste para que no haya padding excesivo si es muy ancho */
         }
         
         /* --- ESTADO DE SINCRONIZACIÓN --- */
@@ -98,7 +105,7 @@
         .status-error { color: var(--color-bajo); }
         .status-loading { color: #888; }
         
-        /* --- KPIS Y GRÁFICOS (Diseño más limpio) --- */
+        /* --- KPIS Y GRÁFICOS --- */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -114,19 +121,62 @@
             border: 1px solid #eee;
         }
         
-        /* === CORRECCIÓN #2: Recuadros de KPI con color === */
+        /* Recuadros de KPI con color */
         .kpi-alto-box { border: 2px solid var(--color-alto); background-color: #e6f7e9; } /* Verde claro */
         .kpi-medio-box { border: 2px solid var(--color-medio); background-color: #fff8e1; } /* Amarillo claro */
         .kpi-bajo-box { border: 2px solid var(--color-bajo); background-color: #fcebeb; } /* Rojo claro */
-        /* ================================================= */
-
+        
         .kpi-title { 
             font-size: 0.85em; 
             font-weight: 600; 
             color: #555; 
+            margin-bottom: 10px;
         }
-        .kpi-promedio { grid-column: span 4; padding: 30px; }
-        .progress-bar { background-color: var(--color-primario); height: 100%; border-radius: 25px; transition: width 1.5s ease-out, background-color 0.5s ease; }
+        .kpi-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--color-texto);
+        }
+        .kpi-value.alto { color: var(--color-alto); }
+        .kpi-value.medio { color: var(--color-medio); }
+        .kpi-value.bajo { color: var(--color-bajo); }
+
+        .kpi-promedio { 
+            grid-column: span 4; 
+            padding: 30px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--color-gris-claro);
+            border-radius: 25px;
+            height: 30px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden; /* Para que la barra no se salga del contenedor */
+        }
+        .progress-bar { 
+            background-color: var(--color-gris-claro); /* Color inicial gris */
+            height: 100%; 
+            border-radius: 25px; 
+            width: 0%; /* Inicialmente 0 */
+            transition: width 1.5s ease-out, background-color 0.5s ease; 
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .progress-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px; /* Centrar verticalmente */
+            color: var(--color-texto);
+            font-weight: 600;
+            z-index: 1; /* Para que el texto esté encima de la barra */
+        }
 
         .charts-container {
             display: grid;
@@ -151,6 +201,57 @@
         }
         .data-table-section h2 { border-left: 5px solid var(--color-secundario); padding-left: 10px;}
         
+        /* --- Tabla --- */
+        .data-table-section {
+            background-color: var(--color-blanco);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            padding: 25px;
+            border: 1px solid #eee;
+            margin-bottom: 40px;
+            overflow-x: auto; /* Para tablas responsive */
+        }
+        #results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #results-table th, #results-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.9em;
+        }
+        #results-table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+            color: var(--color-primario);
+        }
+        #results-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .levelAlto { color: var(--color-alto); font-weight: 600; }
+        .levelMedio { color: var(--color-medio); font-weight: 600; }
+        .levelBajo { color: var(--color-bajo); font-weight: 600; }
+        
+        /* --- Conclusiones --- */
+        .conclusions {
+            background-color: var(--color-blanco);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            padding: 25px;
+            border: 1px solid #eee;
+            margin-bottom: 40px;
+        }
+        .conclusions ol {
+            padding-left: 20px;
+            margin-top: 15px;
+        }
+        .conclusions li {
+            margin-bottom: 10px;
+        }
+
         /* --- FOOTER FORMAL (Créditos) --- */
         .formal-footer {
             display: flex;
@@ -172,16 +273,21 @@
         
         /* Media Queries (Responsividad) */
         @media (max-width: 1000px) {
-            .main-header { flex-direction: column; padding: 15px 20px; }
-            .title-block { margin-bottom: 15px; }
-            .main-header h1 { font-size: 1.4em; }
+            .main-header { flex-direction: column; padding: 15px 20px; text-align: center; }
+            .title-block { margin-bottom: 15px; padding: 0;}
+            .main-header h1 { font-size: 1.2em; }
             .charts-container { grid-template-columns: 1fr; }
-            .kpi-container { grid-template-columns: 1fr 1fr 1fr 1fr; }
-            .kpi-promedio { grid-column: span 4; }
+            .kpi-container { grid-template-columns: 1fr 1fr; }
+            .kpi-promedio { grid-column: span 2; }
+            .logo-group { flex-direction: column; gap: 5px; }
         }
         @media (max-width: 600px) {
-             .kpi-container { grid-template-columns: 1fr 1fr; }
-             .kpi-promedio { grid-column: span 2; }
+             .kpi-container { grid-template-columns: 1fr; }
+             .kpi-promedio { grid-column: span 1; }
+             .logo-group img { height: 40px; max-width: 80px; }
+             .main-header h1 { font-size: 1em; }
+             .main-header p { font-size: 0.8em; }
+             .kpi-value { font-size: 1.5em; }
         }
     </style>
 </head>
@@ -211,7 +317,7 @@
 
         <div class="kpi-container">
             <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio general de coincidencia (%)</div>
+                <div class="kpi-title">Promedio general de alineamiento (Avance %)</div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
                     <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
@@ -238,20 +344,20 @@
                 <canvas id="graficoNiveles"></canvas>
             </div>
             <div class="chart-box">
-                <h2>Cumplimiento % por Línea Estratégica</h2>
+                <h2>Alineamiento % por línea estratégica</h2>
                 <canvas id="graficoLineas"></canvas>
             </div>
         </div>
         
         <div class="data-table-section">
-            <h2>Resultados Detallados y Recomendaciones</h2>
+            <h2>Resultados detallados y recomendaciones</h2>
             <table id="results-table">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">Línea estratégica / Eje CERS</th>
-                        <th style="width: 10%;">Coincidencia (%)</th>
-                        <th style="width: 15%;">Nivel de articulación</th>
-                        <th style="width: 50%;">Recomendaciones de Mejora (Proyecto)</th>
+                        <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
+                        <th style="width: 10%;">Alineamiento (%)</th>
+                        <th style="width: 15%;">Nivel de alineamiento</th>
+                        <th style="width: 50%;">Recomendaciones de mejora</th>
                     </tr>
                 </thead>
                 <tbody id="data-table-body">
@@ -261,11 +367,11 @@
         </div>
         
         <div class="conclusions">
-            <h2>Conclusiones para el Proyecto de Mejora</h2>
-            <p>La evaluación identifica los puntos críticos y las oportunidades de institucionalización necesarias para que el Plan de Acción alcance un nivel Alto de articulación con la política pública CERSS:</p>
+            <h2>Conclusiones para el proyecto de mejora</h2>
+            <p>La evaluación identifica los puntos críticos y las oportunidades de institucionalización necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
             <ol>
-                <li>Priorizar líneas críticas (nivel bajo): Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
-                <li>Institucionalizar las acciones (nivel medio): Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
+                <li>Priorizar líneas críticas (Nivel bajo): Focalizar el proyecto de mejora en áreas con bajo puntaje (Desarrollo de infraestructura, Gestión ambiental y Monitoreo/Evaluación) para forzar la articulación intersectorial y la formalización.</li>
+                <li>Institucionalizar las acciones (Nivel medio): Se recomienda formalizar procesos, crear convenios e incluir indicadores poblacionales en todas las líneas para cumplir con el criterio de "institucionalizado".</li>
                 <li>Enfoque ECNT: El proyecto de mejora puede centrarse en integrar la línea de Monitoreo y Evaluación con las actividades de Promoción de la Salud para medir el impacto real de las intervenciones ECNT en la población.</li>
             </ol>
         </div>
@@ -274,8 +380,8 @@
 
     <footer class="formal-footer">
         <div class="credits">
-            <p>Este dashboard es un producto del proyecto de mejora de la práctica administrativa en el Programa ECNT.</p>
-            <p>Elaborado por: Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
+            <p>Este dashboard es un producto del proyecto de mejora de la práctica profesional en el Programa ECNT.</p>
+            <p>Elaborado por Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
         </div>
     </footer>
 
@@ -288,7 +394,8 @@
             primario: '#1a4369', 
             alto: '#28a745',
             medio: '#ffc107',
-            bajo: '#dc3545'
+            bajo: '#dc3545',
+            neutral: '#6c757d' /* Nuevo color para barra en niveles bajos */
         };
 
         // === CONFIGURACIÓN DE DATOS (CRÍTICO) ===
@@ -330,7 +437,7 @@
                 },
                 error: function(error) {
                     console.error("Error al cargar datos del CSV:", error);
-                    statusElement.innerText = `❌ Error de Conexión. Por favor, verifica la URL publicada.`;
+                    statusElement.innerText = `❌ Error de conexión. Por favor, verifica la URL publicada.`;
                     statusElement.className = "sync-status status-error";
                 }
             });
@@ -397,10 +504,9 @@
                  return;
             }
             tablaData.forEach(item => {
-                const isCritical = item.nivel === 'Bajo' ? 'linea-critica' : '';
-                const levelClass = item.nivel.replace(' ', ''); 
+                const levelClass = `level${item.nivel.replace(' ', '')}`; 
                 html += `
-                    <tr class="${isCritical}">
+                    <tr>
                         <td>${item.linea}</td>
                         <td>${item.porcentaje}%</td>
                         <td><span class="${levelClass}">${item.nivel}</span></td>
@@ -435,7 +541,7 @@
             window.requestAnimationFrame(step);
         }
 
-        // --- FUNCIÓN PRINCIPAL DE VISUALIZACIÓN (CORRECCIÓN BARRA) ---
+        // --- FUNCIÓN PRINCIPAL DE VISUALIZACIÓN (CORRECCIÓN BARRA Y KPIs) ---
         function actualizarVisuals(kpiData, lineasData) {
             
             // 1. Actualizar KPIs con la animación
@@ -447,19 +553,17 @@
             const promedio = parseFloat(kpiData.promedio ?? 0);
             animateValue(document.getElementById('kpi-promedio-text'), 0, promedio, duracionAnimacion, true);
             
-            // === CORRECCIÓN #1: Barra de progreso y color dinámico ===
             setTimeout(() => {
                 const barElement = document.getElementById('kpi-promedio-bar');
                 barElement.style.width = promedio + '%';
                 
-                // Asignar color a la barra según el nivel del promedio
-                let barColor = PALETA.bajo;
+                let barColor = PALETA.neutral; /* Color neutral si no cumple criterios */
                 if (promedio >= 80) barColor = PALETA.alto;
                 else if (promedio >= 40) barColor = PALETA.medio;
-                
+                else barColor = PALETA.bajo; /* Si es bajo, usar el color bajo */
+
                 barElement.style.backgroundColor = barColor;
             }, 100);
-            // ========================================================
 
             // 2. Gráfico de Niveles (Dona)
             if (chartNiveles) { chartNiveles.destroy(); }
