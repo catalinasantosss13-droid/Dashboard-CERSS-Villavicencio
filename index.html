@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Evaluación: Plan de Acción MCEVS - Villavicencio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* ------------------------------------------- */
         /* ESTILOS GENERALES Y TIPOGRAFÍA */
         /* ------------------------------------------- */
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f7f9;
@@ -24,37 +24,59 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 15px 30px;
+            padding: 20px 40px;
             background-color: #ffffff;
-            border-bottom: 5px solid #0056b3; /* Color institucional azul */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-bottom: 6px solid #1a4369; /* Azul oscuro institucional */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .logo-container {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
 
         .logo-container img {
-            height: 55px; /* Altura estándar de los logos */
-            max-width: 120px;
+            height: 65px; 
+            max-width: 130px;
             object-fit: contain;
-            padding: 5px;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-container img:hover {
+            transform: scale(1.05);
         }
 
         .title-container {
             flex-grow: 1;
             text-align: center;
-            padding: 0 20px;
+            padding: 0 30px;
         }
 
         .dashboard-title {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #0056b3;
-            line-height: 1.3;
+            color: #1a4369; 
+            line-height: 1.4;
             margin: 0;
+            text-transform: uppercase; 
+        }
+        
+        .sync-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .sync-status .dot {
+            height: 10px;
+            width: 10px;
+            background-color: #28a745;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
         }
 
         /* ------------------------------------------- */
@@ -63,76 +85,102 @@
         .dashboard-body {
             padding: 30px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Layout adaptable con Grid */
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
         }
 
         .card {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            border-left: 5px solid #0056b3; /* Borde izquierdo para destacar */
-        }
-
-        .card h2 {
-            font-size: 1.3rem;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 10px;
-            margin-top: 0;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
         }
         
-        /* Estilo para los indicadores (ejemplo) */
-        .indicator {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #e6f0ff; /* Azul muy claro para fondo de métrica */
-            border-radius: 4px;
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1a4369;
+            border-bottom: 2px solid #e8ebf0;
+            padding-bottom: 12px;
+            margin-top: 0;
+            margin-bottom: 20px;
         }
-
-        .indicator strong {
+        
+        .indicator {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f7f9fc;
+            border-left: 4px solid #007bff;
+            border-radius: 6px;
+        }
+        
+        .indicator-label {
             display: block;
             font-size: 0.9rem;
             color: #555;
+            font-weight: 400;
+            margin-bottom: 5px;
         }
 
-        .indicator span {
-            font-size: 1.8rem;
+        .indicator-value {
+            font-size: 2.2rem;
             font-weight: 700;
-            color: #007bff;
         }
 
+        .indicator-value.blue { color: #007bff; }
+        .indicator-value.orange { color: #ff8c00; }
+        .indicator-value.green { color: #28a745; }
+
+
         /* ------------------------------------------- */
-        /* RESPONSIVE DESIGN (Ajuste para móviles) */
+        /* ESTILOS DEL PIE DE PÁGINA (FOOTER) - CRÉDITOS */
         /* ------------------------------------------- */
-        @media (max-width: 1200px) {
-            .dashboard-title {
-                font-size: 1.3rem; /* Reduce el título para mejor ajuste */
-            }
-            .header-dashboard {
-                flex-wrap: wrap; /* Permite que los elementos se envuelvan */
-            }
-            .logo-container {
-                margin: 5px 0;
-            }
+        .footer-dashboard {
+            background-color: #e8ebf0; /* Gris claro sutil */
+            color: #4a4a4a;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 0.8rem;
+            border-top: 2px solid #d3d7de;
+            margin-top: 30px;
         }
         
-        @media (max-width: 768px) {
+        .footer-dashboard p {
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+        
+        .footer-dashboard strong {
+            font-weight: 600;
+            color: #1a4369;
+        }
+
+        /* ------------------------------------------- */
+        /* RESPONSIVE DESIGN */
+        /* ------------------------------------------- */
+        @media (max-width: 1000px) {
             .header-dashboard {
-                flex-direction: column; /* Apila los elementos en vertical */
-                align-items: center;
-                padding: 15px;
+                flex-wrap: wrap; 
+                justify-content: center;
+                padding: 15px 20px;
             }
             .title-container {
-                order: -1; /* Mueve el título a la parte superior */
-                margin-bottom: 10px;
+                order: -1; 
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            .dashboard-title {
+                font-size: 1.5rem; 
             }
             .logo-container img {
-                height: 40px; /* Logos más pequeños */
+                height: 45px;
             }
             .dashboard-body {
-                padding: 15px;
+                padding: 20px;
+            }
+            .footer-dashboard {
+                padding: 15px 20px;
             }
         }
     </style>
@@ -148,8 +196,11 @@
 
         <div class="title-container">
             <h1 class="dashboard-title">
-                Dashboard de Evaluación de la Alineación entre el Plan de Acción Política Pública de Modos, Condiciones y Estilos de Vida Saludable y los Lineamientos CERS/OPS en la Secretaría de Salud de Villavicencio
+                DASHBOARD DE EVALUACIÓN DE LA ALINEACIÓN ENTRE EL PLAN DE ACCIÓN POLÍTICA PÚBLICA DE MODOS, CONDICIONES Y ESTILOS DE VIDA SALUDABLE Y LOS LINEAMIENTOS CERS/OPS EN LA SECRETARÍA DE SALUD DE VILLAVICENCIO
             </h1>
+            <div class="sync-status">
+                <span class="dot"></span> ÚLTIMA SINCRONIZACIÓN: 28 DE OCTUBRE DE 2025, 08:30 AM
+            </div>
         </div>
 
         <div class="logo-container right-logos">
@@ -164,72 +215,81 @@
         <div class="card" id="contexto">
             <h2>1. Datos Generales y Contexto</h2>
             <div class="indicator">
-                <strong>Vigencia del Plan:</strong>
-                <span>2024-2027</span>
+                <span class="indicator-label">Vigencia del Plan de Acción:</span>
+                <span class="indicator-value blue">2024 - 2027</span>
             </div>
             <div class="indicator">
-                <strong>Población Beneficiaria:</strong>
-                <span>550.000 Habitantes</span>
+                <span class="indicator-label">Población Objetivo (Estimada):</span>
+                <span class="indicator-value blue">550.000 Habitantes</span>
             </div>
         </div>
 
         <div class="card" id="alineacion">
             <h2>2. Alineación Estratégica CERS/OPS</h2>
             <div class="indicator">
-                <strong>% Metas alineadas a Ejes CERS:</strong>
-                <span>85%</span>
+                <span class="indicator-label">Porcentaje de Metas Alineadas a Ejes CERS:</span>
+                <span class="indicator-value green">85%</span>
             </div>
             <div class="indicator">
-                <strong>Nivel de Inclusión DSS:</strong>
-                <span>Alto</span>
+                <span class="indicator-label">Nivel de Integración de Determinantes Sociales:</span>
+                <span class="indicator-value green">ALTO (9/10)</span>
             </div>
         </div>
 
         <div class="card" id="ejecucion">
             <h2>3. Ejecución y Avance del Plan</h2>
             <div class="indicator">
-                <strong>Ejecución Presupuestal:</strong>
-                <span>65%</span>
+                <span class="indicator-label">Ejecución Presupuestal Acumulada:</span>
+                <span class="indicator-value orange">65%</span>
             </div>
             <div class="indicator">
-                <strong>Avance Físico de Actividades:</strong>
-                <span>72%</span>
+                <span class="indicator-label">Avance Físico de Actividades:</span>
+                <span class="indicator-value orange">72%</span>
             </div>
         </div>
 
         <div class="card" id="impacto">
             <h2>4. Resultados e Impacto (MCEVS)</h2>
             <div class="indicator">
-                <strong>Tasa de Actividad Física (Meta):</strong>
-                <span>+15%</span>
+                <span class="indicator-label">Meta: Incremento Tasa de Actividad Física:</span>
+                <span class="indicator-value green">+15%</span>
             </div>
             <div class="indicator">
-                <strong>Prevalencia de Tabaquismo (Reducción):</strong>
-                <span>-5%</span>
+                <span class="indicator-label">Indicador: Prevalencia de Tabaquismo (Reducción):</span>
+                <span class="indicator-value orange">-5%</span>
             </div>
         </div>
 
         <div class="card" id="gobernanza">
             <h2>5. Gobernanza y Participación</h2>
             <div class="indicator">
-                <strong>Mesas de Trabajo Intersectoriales:</strong>
-                <span>12 Realizadas</span>
+                <span class="indicator-label">Mesas de Trabajo Intersectoriales Realizadas:</span>
+                <span class="indicator-value blue">12</span>
             </div>
             <div class="indicator">
-                <strong>Índice de Participación Ciudadana:</strong>
-                <span>3.8 / 5.0</span>
+                <span class="indicator-label">Nivel de Compromiso Comunitario (Escala 5):</span>
+                <span class="indicator-value green">4.1 / 5.0</span>
             </div>
         </div>
         
-        <div class="card" style="grid-column: span 1; border-left: 5px solid #28a745;">
-            <h2>Resumen Ejecutivo y Gráfico</h2>
-            <p>Aquí se podría insertar un gráfico de barras que muestre el rendimiento por eje temático de la Estrategia CERS.</p>
-            <div style="height: 200px; background-color: #f0f0f0; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center;">
-                [Espacio para Gráfico de Rendimiento]
+        <div class="card" style="grid-column: span 1; background-color: #f0f3f7;">
+            <h2>Gráfico: Rendimiento por Eje CERS</h2>
+            <p style="color: #6c757d;">ESTE ESPACIO ESTÁ RESERVADO PARA VISUALIZAR EL CUMPLIMIENTO POR CADA UNO DE LOS PILARES DE LA ESTRATEGIA CERS.</p>
+            <div style="height: 250px; background-color: #e8ebf0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-style: italic; color: #999;">
+                [ÁREA DE VISUALIZACIÓN DE DATOS / GRÁFICO]
             </div>
         </div>
 
     </div>
+    
+    <footer class="footer-dashboard">
+        <p>
+            ESTE DASHBOARD ES UN PRODUCTO DEL PROYECTO DE MEJORA DE LA PRÁCTICA ADMINISTRATIVA EN EL PROGRAMA ECNT.
+        </p>
+        <p>
+            ELABORADO POR: **CATALINA SANTOS GONZÁLEZ**, ESTUDIANTE IX SEMESTRE ENFERMERÍA, UNIVERSIDAD DE LOS LLANOS.
+        </p>
+    </footer>
 
 </body>
 </html>
