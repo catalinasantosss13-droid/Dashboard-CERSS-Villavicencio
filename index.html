@@ -3,511 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Interactivo CERS Villavicencio</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+    <title>Dashboard CERS Dinámico (Gist)</title>
     <style>
-        :root {
-            --color-primario: #0D47A1; /* Azul (Bandera Villavicencio) */
-            --color-alto: #28a745;      /* Verde (Bandera Villavicencio) */
-            --color-medio: #ffc107;     /* Amarillo (RAG) */
-            --color-bajo: #dc3545;       /* Rojo (Bandera Villavicencio) */
-            --color-fondo: #f4f7f6;
-            --color-texto: #333;
-            --color-blanco: #ffffff;
-        }
+        /* Estilos CSS - Igual que antes */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--color-fondo);
-            color: var(--color-texto);
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: var(--color-primario);
-            color: var(--color-blanco);
-            padding: 20px 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h1 { margin: 0; font-size: 1.8em; }
-        header p { margin: 5px 0 0; font-size: 1.1em; opacity: 0.9; }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
             padding: 20px;
         }
-        
-        /* --- SECCIÓN DE BIENVENIDA (Modificada) --- */
-        .upload-section {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
             padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #007bff;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .summary-cards {
+            display: flex;
+            justify-content: space-around;
             margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--color-primario);
+            flex-wrap: wrap;
         }
-        .upload-section h2 { 
-            margin-top: 0; 
-            color: var(--color-primario); 
-            font-size: 1.6em;
+        .card {
+            background-color: #e6f3ff;
+            border-left: 5px solid #007bff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            flex: 1;
+            margin: 10px;
+            min-width: 250px;
         }
-        .upload-section .intro-text { /* Párrafo de introducción */
-            font-size: 1.05em;
-            line-height: 1.6;
-            margin-bottom: 25px;
+        .card h3 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1em;
         }
-        .upload-section p { margin-bottom: 10px; }
-        .upload-section .instructions-list { /* Lista de instrucciones */
-            margin-top: 15px;
-            margin-bottom: 25px;
-            padding-left: 25px;
-            list-style-type: decimal-leading-zero;
-        }
-        .upload-section .instructions-list li {
-            margin-bottom: 12px;
-            line-height: 1.5;
-            font-size: 1.05em;
-        }
-        .upload-section .instructions-list code {
-            background-color: #e9ecef;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
+        .card .value {
+            font-size: 2.5em;
+            font-weight: bold;
             color: #333;
         }
-        /* --- Fin de la sección --- */
-
-        .upload-controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
-        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
-        .file-upload-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-        .btn-upload {
-            background-color: var(--color-primario);
-            border: none;
-            color: var(--color-blanco);
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1em;
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .file-upload-wrapper:hover .btn-upload { background-color: #0b3a82; }
-        .file-status { font-weight: 600; color: #555; }
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .kpi {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-            text-align: center;
-        }
-        .kpi-title {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #555;
             text-transform: uppercase;
         }
-        .kpi-value {
-            font-size: 2.8em;
-            font-weight: 700;
-            margin-top: 10px;
-            line-height: 1;
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
         }
-        .kpi-value.alto { color: var(--color-alto); }
-        .kpi-value.medio { color: var(--color-medio); }
-        .kpi-value.bajo { color: var(--color-bajo); }
-        .kpi-promedio { grid-column: 1 / -1; padding: 30px; }
-        .kpi-promedio .kpi-title { font-size: 1.2em; }
-        .progress-bar-container {
-            width: 100%;
-            background-color: #e9ecef;
-            border-radius: 25px;
-            height: 35px;
-            margin-top: 20px;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-bar {
-            background-color: var(--color-primario);
-            height: 100%;
-            border-radius: 25px;
-            transition: width 1.5s ease-out; /* Animación de la barra */
-        }
-        .progress-bar-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            line-height: 35px;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2em;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-        }
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 30px;
-        }
-        .chart-box {
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-        }
-        .chart-box h2 { margin-top: 0; text-align: center; color: var(--color-primario); font-size: 1.3em; }
-        footer { text-align: center; margin-top: 40px; font-size: 0.9em; color: #888; }
-        footer p { margin: 5px 0; }
-        @media (max-width: 1000px) { .charts-container { grid-template-columns: 1fr; } }
-        @media (max-width: 600px) {
-            .kpi-container { grid-template-columns: 1fr 1fr; }
-            .kpi-promedio { grid-column: 1 / -1; }
-        }
-
-        /* --- TRANSICIONES "PRO" --- */
-
-        .kpi, .chart-box, .upload-section {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .kpi:hover, .chart-box:hover, .upload-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .upload-section, .kpi-container, .charts-container {
-            opacity: 0;
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-        .kpi-container { animation-delay: 0.2s; }
-        .charts-container { animation-delay: 0.4s; }
-
+        /* Estilos para Niveles */
+        .Bajo { background-color: #f8d7da; color: #721c24; padding: 5px; border-radius: 4px; font-weight: bold; }
+        .Medio { background-color: #fff3cd; color: #856404; padding: 5px; border-radius: 4px; font-weight: bold; }
+        .Alto { background-color: #d4edda; color: #155724; padding: 5px; border-radius: 4px; font-weight: bold; }
+        .linea-critica { font-weight: bold; color: #721c24; }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>Dashboard de Avance CERS Villavicencio</h1>
-        <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
-    </header>
-
     <div class="container">
+        <h1>Dashboard de Evaluación CERS Villavicencio 2025 📈 (DINÁMICO)</h1>
+        <p>Evaluación de la **Articulación y Coincidencia** del Plan de Acción con los Lineamientos CERS/CERSS.</p>
 
-        <div class="upload-section">
-            <h2>¡Bienvenido al Dashboard de Seguimiento!</h2>
-            
-            <p class="intro-text">
-                Esta es una herramienta interactiva para evaluar el grado de avance de las líneas estratégicas del programa de <strong>Enfermedades Crónicas No Transmisibles (ECNT)</strong> y la iniciativa <strong>CERS</strong> (Comunidades, Entornos y Ruralidades Saludables) en Villavicencio.
-            </p>
-            
-            <h3>Instrucciones de Uso</h3>
-            
-            <ol class="instructions-list">
-                <li>Haz clic en el botón <strong>"Subir Archivo Excel"</strong>.</li>
-                <li>Selecciona el archivo maestro <code>.xlsx</code> de la matriz (ej. <code>Matriz_comparativa_CERS...</code>).</li>
-                <li>¡Listo! El dashboard leerá automáticamente las pestañas <strong>"RESUMEN"</strong> y <strong>"DASHBOARD"</strong> y animará los gráficos con la información más reciente.</li>
-            </ol>
-
-            <div class="upload-controls">
-                <div class="file-upload-wrapper">
-                    <button class="btn-upload">Subir Archivo Excel</button>
-                    <input type="file" id="uploadExcel" accept=".xlsx, .xls">
-                </div>
-                <span class="file-status" id="file-status">Esperando archivo...</span>
-            </div>
+        <div class="summary-cards" id="summary-cards">
+            <div class="card"><h3>Cargando Datos...</h3><div class="value">...</div></div>
         </div>
+        
+        <h2>Detalle por Línea Estratégica</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Línea Estratégica / Eje CERS</th>
+                    <th>Coincidencia con Lineamiento (% Avance)</th>
+                    <th>Nivel de Articulación</th>
+                    <th>Recomendaciones Clave para Mejorar Articulación</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body">
+                </tbody>
+        </table>
 
-        <div class="kpi-container">
-            <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio General de Avance</div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
-                    <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
-                </div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Alto</div>
-                <div class="kpi-value alto" id="kpi-alto">0</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Medio</div>
-                <div class="kpi-value medio" id="kpi-medio">0</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-title">Líneas en Nivel Bajo</div>
-                <div class="kpi-value bajo" id="kpi-bajo">0</div>
-            </div>
-        </div>
-
-        <div class="charts-container">
-            <div class="chart-box">
-                <h2>Líneas por Nivel</h2>
-                <canvas id="graficoNiveles"></canvas>
-            </div>
-            <div class="chart-box">
-                <h2>Avance % por Línea Estratégica</h2>
-                <canvas id="graficoLineas"></canvas>
-            </div>
-        </div>
+        <h2>Conclusiones para el Proyecto de Mejora</h2>
+        <p>Para elevar el nivel de **Articulación y Coincidencia** con las políticas (CERS, CAF, ENT):</p>
+        <ol>
+            <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en **Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación**, ya que su bajo puntaje indica una débil articulación intersectorial y falta de formalización en la planificación.</li>
+            <li>**Institucionalizar las Acciones (Medio a Alto):** Para las 9 líneas en nivel Medio, la prioridad debe ser formalizar los procesos y las alianzas intersectoriales (ej. convenios, actas, indicadores poblacionales) para cumplir con el criterio de **"institucionalizado, tiene indicadores y seguimiento"** (Nivel Alto en la rúbrica INSTRUCTIVO).</li>
+            <li>**Enfoque ENT:** Ya que estás en el programa de ENT, el proyecto puede enfocarse en la línea de **Promoción de la Salud (60%)**, específicamente en cómo el **Monitoreo y Evaluación (30%)** de las actividades de promoción puede integrarse con indicadores poblacionales de ENT (como sugieren las Orientaciones OPS/ENT 2023–2030).</li>
+        </ol>
     </div>
 
-    <footer>
-        <p>Este dashboard es un producto del proyecto de práctica administrativa.</p>
-        <p>Elaborado por: Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
-    </footer>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        // Variables globales para los gráficos
-        let chartNiveles = null;
-        let chartLineas = null;
+        // === 1. COLOCA AQUÍ LA URL CSV DE TU GOOGLE SHEET ===
+        // VE A ARCHIVO > COMPARTIR > PUBLICAR EN LA WEB > CSV > COPIA LA URL
+        const CSV_URL = 'COLOCA_AQUÍ_LA_URL_DE_TU_GOOGLE_SHEET_CSV'; 
+        // ====================================================
 
-        // Colores de la paleta
-        const PALETA = {
-            primario: '#0D47A1',
-            alto: '#28a745',
-            medio: '#ffc107',
-            bajo: '#dc3545'
-        };
-
-        // --- MANEJADOR DE CARGA DEL ARCHIVO EXCEL ---
+        const COL_LINEA = 0;
+        const COL_PORCENTAJE = 4;
+        const COL_NIVEL = 5;
+        const COL_RECOMENDACION = 6;
+        const HEADER_ROW = 1; // La fila de encabezados en el CSV publicado
         
-        const uploadInput = document.getElementById('uploadExcel');
-        if (uploadInput) {
-            uploadInput.addEventListener('change', handleExcelFile);
-        } else {
-            alert("Error Crítico: El elemento 'uploadExcel' no se pudo encontrar en la página.");
-        }
-
-
-        function handleExcelFile(event) {
-            const fileStatus = document.getElementById('file-status');
-            let file;
-
-            try {
-                if (!event.target.files || event.target.files.length === 0) {
-                    fileStatus.innerText = "No se seleccionó ningún archivo.";
-                    return;
-                }
-
-                file = event.target.files[0];
-                fileStatus.innerText = `Cargando: ${file.name}...`;
-
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    try {
-                        const data = e.target.result;
-                        const workbook = XLSX.read(data, { type: 'array' });
-
-                        // --- 1. Parsear la pestaña "DASHBOARD" ---
-                        const dashboardSheetName = 'DASHBOARD';
-                        if (!workbook.SheetNames.includes(dashboardSheetName)) {
-                            throw new Error(`No se encontró la pestaña '${dashboardSheetName}'.`);
-                        }
-                        const dashboardSheet = workbook.Sheets[dashboardSheetName];
-                        const dashboardJson = XLSX.utils.sheet_to_json(dashboardSheet, { range: 4 }); // Títulos en Fila 5
-
-                        const kpiData = {};
-                        dashboardJson.forEach(row => {
-                            const key = row['Nivel de cumplimiento Línea Estratégica / Eje'];
-                            const value = row['Cantidad'];
-                            
-                            if (key === 'Bajo') kpiData.bajo = value;
-                            if (key === 'Medio') kpiData.medio = value;
-                            if (key === 'Alto') kpiData.alto = value;
-                            if (key === 'Promedio general %') kpiData.promedio = value;
-                        });
-
-                        if (kpiData.bajo === undefined || kpiData.promedio === undefined) {
-                             throw new Error("Formato 'DASHBOARD' no reconocido. Cabeceras deben estar en Fila 5.");
-                        }
-
-                        // --- 2. Parsear la pestaña "RESUMEN" ---
-                        const resumenSheetName = 'RESUMEN';
-                        if (!workbook.SheetNames.includes(resumenSheetName)) {
-                            throw new Error(`No se encontró la pestaña '${resumenSheetName}'.`);
-                        }
-                        const resumenSheet = workbook.Sheets[resumenSheetName];
-                        const resumenJson = XLSX.utils.sheet_to_json(resumenSheet, { range: 1 }); // Títulos en Fila 2
-
-                        const lineasData = {
-                            labels: [],
-                            avances: []
-                        };
-                        
-                        resumenJson.forEach(row => {
-                            const label = row['Línea Estratégica / Eje'];
-                            const avance = row['% avance'];
-                            
-                            if (label && avance !== undefined) {
-                                lineasData.labels.push(label);
-                                lineasData.avances.push(avance);
-                            }
-                        });
-                        
-                        if (lineasData.labels.length === 0) {
-                            throw new Error("No se pudieron leer datos de 'RESUMEN'.");
-                        }
-
-                        // --- 3. Actualizar todas las visualizaciones ---
-                        actualizarVisuals(kpiData, lineasData);
-                        fileStatus.innerText = `¡Éxito! Datos de "${file.name}" cargados.`;
-
-                    } catch (error) {
-                        console.error("Error procesando el archivo Excel:", error);
-                        fileStatus.innerText = `Error: ${error.message}`;
-                    }
-                };
-                
-                reader.onerror = function(error) {
-                    fileStatus.innerText = "Error fatal al leer el archivo.";
-                };
-
-                reader.readAsArrayBuffer(file);
-
-            } catch (error) {
-                fileStatus.innerText = `Error inesperado: ${error.message}`;
-            }
-        }
-
-        // --- FUNCIÓN "PRO" PARA ANIMAR NÚMEROS (Count-Up) ---
-        function animateValue(element, start, end, duration, isDecimal = false) {
-            let startTimestamp = null;
-            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easedProgress = easeOutCubic(progress);
-                
-                const currentValue = start + (end - start) * easedProgress;
-
-                if (isDecimal) {
-                    element.innerText = currentValue.toFixed(1) + '%';
-                } else {
-                    element.innerText = Math.floor(currentValue);
-                }
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    if (isDecimal) {
-                        element.innerText = end.toFixed(1) + '%';
-                    } else {
-                        element.innerText = end;
-                    }
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-
-        // --- FUNCIÓN PRINCIPAL PARA ACTUALIZAR EL DASHBOARD ---
-        function actualizarVisuals(kpiData, lineasData) {
-            
-            // 1. Actualizar KPIs con la animación "Count-Up"
-            const duracionAnimacion = 1500; // 1.5 segundos
-            
-            animateValue(document.getElementById('kpi-alto'), 0, kpiData.alto ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-medio'), 0, kpiData.medio ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-bajo'), 0, kpiData.bajo ?? 0, duracionAnimacion);
-            
-            const promedio = kpiData.promedio ?? 0;
-            animateValue(document.getElementById('kpi-promedio-text'), 0, promedio, duracionAnimacion, true);
-            
-            setTimeout(() => {
-                document.getElementById('kpi-promedio-bar').style.width = promedio + '%';
-            }, 100);
-
-
-            // 2. Actualizar Gráfico de Niveles (Dona)
-            if (chartNiveles) {
-                chartNiveles.destroy();
-            }
-            const ctxNiveles = document.getElementById('graficoNiveles').getContext('2d');
-            chartNiveles = new Chart(ctxNiveles, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Bajo', 'Medio', 'Alto'],
-                    datasets: [{
-                        data: [kpiData.bajo, kpiData.medio, kpiData.alto],
-                        backgroundColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderWidth: 1
-                    }]
+        function loadData() {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: false, // El CSV de Google Sheets no siempre tiene un buen header
+                complete: function(results) {
+                    processData(results.data);
                 },
-                options: {
-                    responsive: true,
-                    animation: {
-                        duration: 1000, 
-                        easing: 'easeOutCubic'
-                    },
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
-            });
-
-            // 3. Actualizar Gráfico de Líneas (Barras Horizontales)
-            if (chartLineas) {
-                chartLineas.destroy();
-            }
-            const ctxLineas = document.getElementById('graficoLineas').getContext('2d');
-            chartLineas = new Chart(ctxLineas, {
-                type: 'bar',
-                data: {
-                    labels: lineasData.labels,
-                    datasets: [{
-                        label: '% Avance',
-                        data: lineasData.avances,
-                        backgroundColor: lineasData.avances.map(val => {
-                            if (val >= 80) return PALETA.alto;
-                            if (val >= 40) return PALETA.medio;
-                            return PALETA.bajo;
-                        }),
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    indexAxis: 'y', // Barras HORIZONTALES
-                    responsive: true,
-                    aspectRatio: 1.2, // Proporción fija
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutCubic'
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { callback: value => value + '%' }
-                        },
-                        y: {
-                            ticks: { font: { size: 10 } }
-                        }
-                    }
+                error: function(error) {
+                    console.error("Error al cargar datos del CSV:", error);
+                    document.getElementById('summary-cards').innerHTML = '<div class="card" style="border-left: 5px solid red;"><h3>Error de Carga</h3><div class="value">Verifica la URL del CSV</div></div>';
                 }
             });
         }
+
+        function processData(data) {
+            let totalLineas = 0;
+            let sumaPorcentajes = 0;
+            let bajoCount = 0;
+            let medioCount = 0;
+            let altoCount = 0;
+            const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv';;
+            let html = '';
+
+            // Iterar sobre las filas de datos (asumiendo que los datos comienzan después de la fila de encabezados)
+            for (let i = HEADER_ROW + 1; i < data.length; i++) {
+                const row = data[i];
+                if (row.length > COL_RECOMENDACION && row[COL_LINEA] && row[COL_PORCENTAJE]) {
+                    totalLineas++;
+                    const porcentaje = parseFloat(row[COL_PORCENTAJE]);
+                    const nivel = row[COL_NIVEL];
+                    
+                    sumaPorcentajes += porcentaje;
+
+                    if (nivel === 'Bajo') bajoCount++;
+                    else if (nivel === 'Medio') medioCount++;
+                    else if (nivel === 'Alto') altoCount++;
+
+                    const isCritical = nivel === 'Bajo' ? 'linea-critica' : '';
+                    const levelClass = nivel.replace(' ', ''); 
+
+                    html += `
+                        <tr class="${isCritical}">
+                            <td>${row[COL_LINEA]}</td>
+                            <td>${porcentaje}%</td>
+                            <td><span class="${levelClass}">${nivel}</span></td>
+                            <td>${row[COL_RECOMENDACION]}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Calcular y mostrar resumen general
+            const promedio = totalLineas > 0 ? (sumaPorcentajes / totalLineas).toFixed(1) : 0;
+            const cardsContainer = document.getElementById('summary-cards');
+            cardsContainer.innerHTML = `
+                <div class="card">
+                    <h3>Promedio General de Coincidencia</h3>
+                    <div class="value">${promedio}%</div>
+                </div>
+                <div class="card">
+                    <h3>Líneas Estratégicas en Nivel Medio</h3>
+                    <div class="value">${medioCount}/${totalLineas}</div>
+                </div>
+                <div class="card">
+                    <h3>Líneas Estratégicas Críticas (Bajo)</h3>
+                    <div class="value" style="color: #dc3545;">${bajoCount}/${totalLineas}</div>
+                </div>
+            `;
+            tableBody.innerHTML = html;
+        }
+
+        // Ejecutar la carga de datos al cargar la página
+        window.onload = loadData;
     </script>
 </body>
-</html>
+</html>      
