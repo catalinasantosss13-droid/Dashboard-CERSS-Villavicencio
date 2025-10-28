@@ -3,56 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard CERS Dinámico (Gist)</title>
+    <title>Dashboard CERS Villavicencio: Evaluación de Políticas</title>
     <style>
-        /* Estilos CSS - Sin cambios */
+        /* ESTÉTICA MEJORADA */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8; /* Fondo más claro */
+            color: #2c3e50; /* Texto oscuro profesional */
             line-height: 1.6;
             padding: 20px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: auto;
-            background: #fff;
+            background: #ffffff;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
         }
-        h1, h2 {
-            color: #007bff;
-            border-bottom: 2px solid #e9ecef;
+        h1 {
+            color: #16a085; /* Verde azulado para énfasis (Salud/Gobierno) */
+            border-bottom: 3px solid #bdc3c7;
             padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 2em;
+            text-align: center;
+        }
+        h2 {
+            color: #34495e; /* Azul oscuro para títulos de sección */
+            border-left: 5px solid #16a085;
+            padding-left: 10px;
+            margin-top: 30px;
             margin-bottom: 20px;
         }
         .summary-cards {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
+            gap: 20px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
         .card {
-            background-color: #e6f3ff;
-            border-left: 5px solid #007bff;
-            padding: 20px;
+            background-color: #f7f9fb;
+            border: 1px solid #e0e6ec;
+            padding: 25px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
             text-align: center;
             flex: 1;
-            margin: 10px;
             min-width: 250px;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
         .card h3 {
             margin-top: 0;
-            color: #007bff;
+            color: #16a085;
             font-size: 1em;
+            text-transform: uppercase;
         }
         .card .value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
+            font-size: 3em;
+            font-weight: 700;
+            color: #34495e;
         }
         table {
             width: 100%;
@@ -63,68 +78,83 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            vertical-align: top;
         }
         th {
-            background-color: #007bff;
+            background-color: #34495e;
             color: white;
             font-weight: 600;
             text-transform: uppercase;
+            font-size: 0.9em;
         }
         tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+        tr:hover {
+            background-color: #e6f3ff;
+        }
+        
         /* Estilos para Niveles */
-        .Bajo { background-color: #f8d7da; color: #721c24; padding: 5px; border-radius: 4px; font-weight: bold; }
-        .Medio { background-color: #fff3cd; color: #856404; padding: 5px; border-radius: 4px; font-weight: bold; }
-        .Alto { background-color: #d4edda; color: #155724; padding: 5px; border-radius: 4px; font-weight: bold; }
-        .linea-critica { font-weight: bold; color: #721c24; }
+        .Bajo { background-color: #f5c6cb; color: #721c24; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85em; }
+        .Medio { background-color: #ffeeba; color: #856404; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85em; }
+        .Alto { background-color: #c3e6cb; color: #155724; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85em; }
+        .linea-critica { font-weight: bold; background-color: #f5c6cb !important; }
+        
+        /* Contenedor de conclusiones */
+        .conclusions ol {
+            padding-left: 20px;
+        }
+        .conclusions li {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard de Evaluación CERS Villavicencio 2025 📈 (DINÁMICO)</h1>
-        <p>Evaluación de la **Articulación y Coincidencia** del Plan de Acción con los Lineamientos CERS/CERSS.</p>
+        <h1>Dashboard de Evaluación CERS Villavicencio 2025 📈</h1>
+        <p>Evaluación Dinámica de la **Articulación y Coincidencia** del Plan de Acción con los Lineamientos CERS/CERSS.</p>
 
         <div class="summary-cards" id="summary-cards">
             <div class="card"><h3>Cargando Datos...</h3><div class="value">...</div></div>
         </div>
         
-        <h2>Detalle por Línea Estratégica</h2>
+        <h2>Detalle de Coincidencia por Línea Estratégica</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Línea Estratégica / Eje CERS</th>
-                    <th>Coincidencia con Lineamiento (% Avance)</th>
-                    <th>Nivel de Articulación</th>
-                    <th>Recomendaciones Clave para Mejorar Articulación</th>
+                    <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
+                    <th style="width: 10%;">Coincidencia (%)</th>
+                    <th style="width: 10%;">Nivel de Articulación</th>
+                    <th style="width: 55%;">Recomendaciones Clave para Mejorar Articulación</th>
                 </tr>
             </thead>
             <tbody id="data-table-body">
                 </tbody>
         </table>
 
-        <h2>Conclusiones para el Proyecto de Mejora</h2>
-        <p>Para elevar el nivel de **Articulación y Coincidencia** con las políticas (CERS, CAF, ENT):</p>
-        <ol>
-            <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en **Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación**, ya que su bajo puntaje indica una débil articulación intersectorial y falta de formalización en la planificación.</li>
-            <li>**Institucionalizar las Acciones (Medio a Alto):** Para las 9 líneas en nivel Medio, la prioridad debe ser formalizar los procesos y las alianzas intersectoriales (ej. convenios, actas, indicadores poblacionales) para cumplir con el criterio de **"institucionalizado, tiene indicadores y seguimiento"** (Nivel Alto en la rúbrica INSTRUCTIVO).</li>
-            <li>**Enfoque ENT:** Ya que estás en el programa de ENT, el proyecto puede enfocarse en la línea de **Promoción de la Salud (60%)**, específicamente en cómo el **Monitoreo y Evaluación (30%)** de las actividades de promoción puede integrarse con indicadores poblacionales de ENT (como sugieren las Orientaciones OPS/ENT 2023–2030).</li>
-        </ol>
+        <div class="conclusions">
+            <h2>Conclusiones Clave y Proyecto de Mejora</h2>
+            <p>La siguiente evaluación, basada en los lineamientos CERS/CERSS, identifica los puntos críticos y las oportunidades de **institucionalización** necesarias para alcanzar un nivel **Alto** de articulación con la política pública:</p>
+            <ol>
+                <li>**Priorizar Líneas Críticas (Nivel Bajo):** Focalizar el proyecto de mejora en **Desarrollo de Infraestructura, Gestión Ambiental y Monitoreo/Evaluación**. Su baja puntuación (30%) indica fallas severas en la articulación intersectorial y la falta de formalización en la planificación.</li>
+                <li>**Institucionalizar las Acciones (Nivel Medio):** Para las líneas en nivel Medio (60%), la prioridad debe ser formalizar los procesos y las alianzas intersectoriales (ej. convenios, actas, indicadores poblacionales) para cumplir con el criterio de **"institucionalizado, tiene indicadores y seguimiento"** (Nivel Alto en la rúbrica).</li>
+                <li>**Enfoque ENT:** Ya que el proyecto está en el programa de ENT, el foco debe ser la línea de **Promoción de la Salud**. Se recomienda integrar las actividades de promoción con la línea de **Monitoreo y Evaluación (30%)** para medir el impacto poblacional y cumplir con las directrices de la OPS/ENT.</li>
+            </ol>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        // === 1. URL DEL CSV PROPORCIONADA POR EL USUARIO ===
-        // ¡ACTUALIZADA con la última URL!
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=103211230&single=true&output=csv'; 
+        // === 1. URL DEL CSV PROPORCIONADA POR EL USUARIO (ACTUALIZADA) ===
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1329201944&single=true&output=csv'; 
         // ====================================================
 
         const COL_LINEA = 0;
         const COL_PORCENTAJE = 4;
         const COL_NIVEL = 5;
         const COL_RECOMENDACION = 6;
-        // *** CAMBIO CLAVE: Empezar a leer datos desde la fila 3 (índice 2), que es donde empiezan los datos reales. ***
-        const HEADER_ROW = 2; 
+        // *** AJUSTE CLAVE: Se incrementa a 4 para saltar cualquier fila de título y asegurar el inicio correcto de los datos. ***
+        const HEADER_ROW = 4; 
         
         function loadData() {
             Papa.parse(CSV_URL, {
@@ -135,7 +165,7 @@
                 },
                 error: function(error) {
                     console.error("Error al cargar datos del CSV:", error);
-                    document.getElementById('summary-cards').innerHTML = '<div class="card" style="border-left: 5px solid red;"><h3>Error de Carga</h3><div class="value">Verifica la URL del CSV</div></div>';
+                    document.getElementById('summary-cards').innerHTML = '<div class="card" style="border-left: 5px solid #dc3545;"><h3>Error de Carga</h3><div class="value">Verifica la URL del CSV o el índice de fila.</div></div>';
                 }
             });
         }
@@ -149,7 +179,7 @@
             const tableBody = document.getElementById('data-table-body');
             let html = '';
 
-            // Iterar sobre las filas de datos, comenzando desde la fila de datos real (HEADER_ROW = 2)
+            // Iterar sobre las filas de datos, comenzando desde la fila de datos real (HEADER_ROW)
             for (let i = HEADER_ROW; i < data.length; i++) {
                 const row = data[i];
                 
@@ -158,11 +188,9 @@
                     break;
                 }
 
-                // Asegura que las columnas de porcentaje, nivel y recomendación existan
                 if (row.length > COL_RECOMENDACION) { 
                     totalLineas++;
                     
-                    // Manejo del porcentaje: si no es un número válido (ej. vacío o texto), se usa 0
                     const porcentaje = parseFloat(row[COL_PORCENTAJE]) || 0; 
                     const nivel = row[COL_NIVEL] || "Sin Datos";
                     
@@ -173,7 +201,6 @@
                     else if (nivel === 'Alto') altoCount++;
 
                     const isCritical = nivel === 'Bajo' ? 'linea-critica' : '';
-                    // Reemplaza espacios en el nivel (ej. "Sin Datos" -> "SinDatos") para la clase CSS
                     const levelClass = nivel.replace(' ', ''); 
 
                     html += `
@@ -199,9 +226,9 @@
                     <h3>Líneas Estratégicas en Nivel Medio</h3>
                     <div class="value">${medioCount}/${totalLineas}</div>
                 </div>
-                <div class="card">
+                <div class="card" style="border-left: 5px solid #e74c3c;">
                     <h3>Líneas Estratégicas Críticas (Bajo)</h3>
-                    <div class="value" style="color: #dc3545;">${bajoCount}/${totalLineas}</div>
+                    <div class="value" style="color: #e74c3c;">${bajoCount}/${totalLineas}</div>
                 </div>
             `;
             tableBody.innerHTML = html;
