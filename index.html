@@ -115,6 +115,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
         // === 1. URL DEL CSV PROPORCIONADA POR EL USUARIO ===
+        // ¡ACTUALIZADA con la última URL!
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=103211230&single=true&output=csv'; 
         // ====================================================
 
@@ -122,7 +123,8 @@
         const COL_PORCENTAJE = 4;
         const COL_NIVEL = 5;
         const COL_RECOMENDACION = 6;
-        const HEADER_ROW = 3; // *** CAMBIO CLAVE: Empezar a leer datos desde la fila 4 (índice 3), saltando las 3 primeras filas que no son datos. ***
+        // *** CAMBIO CLAVE: Empezar a leer datos desde la fila 3 (índice 2), que es donde empiezan los datos reales. ***
+        const HEADER_ROW = 2; 
         
         function loadData() {
             Papa.parse(CSV_URL, {
@@ -147,14 +149,22 @@
             const tableBody = document.getElementById('data-table-body');
             let html = '';
 
-            // Iterar sobre las filas de datos, comenzando desde la fila de datos real (HEADER_ROW)
+            // Iterar sobre las filas de datos, comenzando desde la fila de datos real (HEADER_ROW = 2)
             for (let i = HEADER_ROW; i < data.length; i++) {
                 const row = data[i];
-                // Se asegura que la fila tenga suficientes columnas y que la columna de línea no esté vacía
-                if (row.length > COL_RECOMENDACION && row[COL_LINEA] && row[COL_PORCENTAJE]) { 
+                
+                // Si la primera columna (Línea) está vacía, asumimos que terminaron los datos.
+                if (!row[COL_LINEA] || row[COL_LINEA].trim() === "") { 
+                    break;
+                }
+
+                // Asegura que las columnas de porcentaje, nivel y recomendación existan
+                if (row.length > COL_RECOMENDACION) { 
                     totalLineas++;
-                    const porcentaje = parseFloat(row[COL_PORCENTAJE]);
-                    const nivel = row[COL_NIVEL];
+                    
+                    // Manejo del porcentaje: si no es un número válido (ej. vacío o texto), se usa 0
+                    const porcentaje = parseFloat(row[COL_PORCENTAJE]) || 0; 
+                    const nivel = row[COL_NIVEL] || "Sin Datos";
                     
                     sumaPorcentajes += porcentaje;
 
@@ -163,6 +173,7 @@
                     else if (nivel === 'Alto') altoCount++;
 
                     const isCritical = nivel === 'Bajo' ? 'linea-critica' : '';
+                    // Reemplaza espacios en el nivel (ej. "Sin Datos" -> "SinDatos") para la clase CSS
                     const levelClass = nivel.replace(' ', ''); 
 
                     html += `
@@ -173,9 +184,6 @@
                             <td>${row[COL_RECOMENDACION]}</td>
                         </tr>
                     `;
-                } else if (i > HEADER_ROW && row[COL_LINEA] === "") {
-                    // Romper el bucle si encontramos una fila vacía después de los datos
-                    break;
                 }
             }
 
