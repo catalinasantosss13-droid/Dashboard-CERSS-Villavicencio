@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard CERS – Villavicencio (auto-CSV)</title>
+<title>Dashboard CERS – Villavicencio (Síntesis General)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -28,8 +28,8 @@ header img{height:54px}
 h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
 .subtitle{color:var(--muted);font-size:.9rem;margin-top:4px}
 
-/* Tabs */
-.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap}
+/* Tabs - Reducidos al mínimo */
+.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap; display: none !important;} /* Ocultamos si solo hay una pestaña */
 .tab-btn{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
 .tab-btn.active{background:var(--sec);color:#003242}
 .container{max-width:1300px;margin:20px auto;padding:0 16px}
@@ -55,16 +55,6 @@ th,td{padding:10px;border-bottom:1px solid #eef6fb;text-align:left}
 thead th{background:var(--primario);color:#fff}
 tbody tr:nth-child(even){background:#fbfdff}
 
-/* validation */
-.validation-list{max-height:420px;overflow:auto;border-radius:8px;padding:8px;background:#fff;border:1px solid #e6eef6}
-.validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f3f8fb}
-.validation-item:last-child{border-bottom:0}
-.btn{padding:8px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
-.ok{background:var(--alto);color:#fff}
-.pend{background:var(--medio);color:#003242}
-.rej{background:var(--bajo);color:#fff}
-.small{font-size:.85rem;color:var(--muted)}
-
 /* Indicador de Sincronización */
 .sync-status {
     padding: 6px 10px;
@@ -75,38 +65,6 @@ tbody tr:nth-child(even){background:#fbfdff}
     color: #fff;
     white-space: nowrap; 
 }
-
-/* Layout de Validación */
-.validation-item {
-    flex-direction: column; 
-    gap: 12px; 
-    padding: 10px;
-}
-.validation-item-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-.validation-buttons {
-    display: flex;
-    gap: 8px;
-}
-.validation-item-meta {
-    font-size: 0.95rem;
-    flex: 1;
-}
-.validation-item-meta > div {
-    margin-top: 4px;
-}
-.obs-input {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #e6eef6;
-    margin-top: 6px; 
-}
-
 /* responsive */
 @media (max-width:900px){
   .grid-2,.grid-3{grid-template-columns:1fr}
@@ -120,147 +78,61 @@ tbody tr:nth-child(even){background:#fbfdff}
 <header>
   <img src="logos/alcaldia.png" alt="alcaldia">
   <div class="header-center">
-    <h1>Dashboard de Alineación CERS / OPS — Villavicencio</h1>
-    <div class="subtitle">Carga automática desde las hojas publicadas (CSV)</div>
+    <h1>Dashboard de Alineación CERS / OPS — Síntesis General</h1>
+    <div class="subtitle">Carga automática desde la Matriz Consolidada (CSV)</div>
   </div>
   <img src="logos/unillanos.png" alt="unillanos">
 </header>
 
 <div class="tabs" role="tablist" aria-label="Secciones">
-  <button class="tab-btn active" data-target="panel-nal">Referentes Nacionales</button>
-  <button class="tab-btn" data-target="panel-int">Referentes Internacionales</button>
-  <button class="tab-btn" data-target="panel-mat">Matriz General</button>
-  <button class="tab-btn" data-target="panel-val">Validación Técnica</button>
+  <button class="tab-btn active" data-target="panel-general">Síntesis General</button> 
 </div>
 
 <div class="container">
 
-  <section id="panel-nal" class="panel active" role="region" aria-label="Referentes Nacionales">
-    <div class="title">Referentes Nacionales</div>
-    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES NACIONALES</strong></div>
-
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-      <div class="small">Fuente:</div>
-      <a id="link-nal" href="#" target="_blank" class="small">CSV Nacional</a>
-      <button id="refresh-nal" class="btn" style="background:#163653;color:#fff">Recargar</button>
-      <span class="sync-status">Sincronizado</span>
-    </div>
-
-    <div class="grid-3" style="margin-bottom:12px">
-      <div class="card kpi"><div class="label">Total ítems</div><div id="nal-total" class="value">—</div></div>
-      <div class="card kpi"><div class="label">Alto (≥80%)</div><div id="nal-alto" class="value">—</div></div>
-      <div class="card kpi"><div class="label">Bajo (<40%)</div><div id="nal-bajo" class="value">—</div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card"><h4 style="margin:0 0 8px">Distribución por nivel</h4><canvas id="chartNalLevels" height="200"></canvas></div>
-      <div class="card"><h4 style="margin:0 0 8px">Alineamiento % por línea</h4><canvas id="chartNalLines" height="200"></canvas></div>
-    </div>
-
-    <div style="margin-top:14px" class="card">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <label class="small">Filtrar nivel:</label>
-        <select id="filter-nal"><option value="all">Todos</option><option>Alto</option><option>Medio</option><option>Bajo</option></select>
-      </div>
-      <div class="table-wrap" id="tablewrap-nal"><table id="table-nal"><thead><tr><th>Línea / Ítem</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
-    </div>
-  </section>
-
-  <section id="panel-int" class="panel" role="region" aria-label="Referentes Internacionales">
-    <div class="title">Referentes Internacionales</div>
-    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES INTERNACIONAL</strong></div>
-
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-      <div class="small">Fuente:</div>
-      <a id="link-int" href="#" target="_blank" class="small">CSV Internacional</a>
-      <button id="refresh-int" class="btn" style="background:#163653;color:#fff">Recargar</button>
-      <span class="sync-status">Sincronizado</span>
-    </div>
-
-    <div class="grid-2" style="margin-bottom:12px">
-      <div class="card kpi"><div class="label">Total ítems</div><div id="int-total" class="value">—</div></div>
-      <div class="card kpi"><div class="label">Alto (≥80%)</div><div id="int-alto" class="value">—</div></div>
-    </div>
-
-    <div class="card" style="margin-top:8px">
-      <h4 style="margin:0 0 8px">Comparativo por nivel</h4>
-      <canvas id="chartIntCompare" height="220"></canvas>
-    </div>
-
-    <div style="margin-top:12px" class="card">
-      <div class="table-wrap" id="tablewrap-int"><table id="table-int"><thead><tr><th>Ítem</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
-    </div>
-  </section>
-
-  <section id="panel-mat" class="panel" role="region" aria-label="Matriz General">
-    <div class="title">Matriz General Consolidada</div>
+  <section id="panel-general" class="panel active" role="region" aria-label="Síntesis General">
+    <div class="title">Síntesis General Consolidada</div>
     <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ GENERAL</strong></div>
 
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
       <div class="small">Fuente:</div>
-      <a id="link-mat" href="#" target="_blank" class="small">CSV Matriz general</a>
-      <button id="refresh-mat" class="btn" style="background:#163653;color:#fff">Recargar</button>
+      <a id="link-general" href="#" target="_blank" class="small">CSV Matriz general</a>
+      <button id="refresh-general" class="btn" style="background:#163653;color:#fff">Recargar</button>
       <span class="sync-status">Sincronizado</span>
     </div>
 
     <div class="grid-2" style="margin-bottom:12px">
-      <div class="card kpi"><div class="label">Promedio de alineamiento</div><div id="mat-prom" class="value">—</div></div>
-      <div class="card kpi"><div class="label">Ítems totales</div><div id="mat-total" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Promedio de alineamiento</div><div id="general-prom" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Ítems totales</div><div id="general-total" class="value">—</div></div>
     </div>
 
     <div class="card" style="margin-bottom:12px">
-      <h4 style="margin:0 0 8px">Mapa de calor / Barras</h4>
-      <canvas id="chartMatBars" height="220"></canvas>
+      <h4 style="margin:0 0 8px">Distribución por nivel</h4>
+      <canvas id="chartGeneralLevels" height="220"></canvas>
     </div>
 
     <div class="card">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
         <label class="small">Buscar:</label>
-        <input id="search-mat" type="search" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #e6eef6;flex:1">
+        <input id="search-general" type="search" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #e6eef6;flex:1">
       </div>
-      <div class="table-wrap" id="tablewrap-mat"><table id="table-mat"><thead><tr><th>Línea estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
+      <div class="table-wrap" id="tablewrap-general"><table id="table-general"><thead><tr><th>Línea estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
     </div>
   </section>
-
-  <section id="panel-val" class="panel" role="region" aria-label="Validación técnica">
-    <div class="title">Validación Técnica — Comité</div>
-    <div class="muted">Marca cada ítem como <strong>Aprobado</strong>, <strong>Pendiente</strong> o <strong>No aprobado</strong>. Guarda en local y descarga CSV.</div>
-
-    <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-      <button id="save-valid" class="btn" style="background:var(--primario);color:#fff">Guardar local</button>
-      <button id="download-valid" class="btn" style="background:var(--sec);color:#003242">Descargar CSV</button>
-      <button id="clear-valid" class="btn" style="background:#444;color:#fff">Limpiar</button>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h4 style="margin:0 0 8px">Lista de ítems</h4>
-        <div id="validation-list" class="validation-list"><div class="small">Cargando ítems de la matriz...</div></div>
-      </div>
-
-      <div class="card">
-        <h4 style="margin:0 0 8px">Resumen rápido</h4>
-        <ul id="val-summary" class="small"><li>Total: —</li></ul>
-      </div>
-    </div>
-  </section>
-
-</div> <script>
+  
+  </div> <script>
 /*
-  URLs CSV (públicas en Google Sheets) - ACTUALIZADAS Y CONFIRMADAS
+  URLs CSV (públicas en Google Sheets) - Usamos solo la Matriz General
 */
-const URL_NAL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv';
-const URL_INT    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv';
-const URL_MATRIZ = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv';
+const URL_GENERAL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv';
 
 /* Global caches */
-let dataNal = [], dataInt = [], dataMat = [];
-let chartNalLevels=null, chartNalLines=null, chartIntCompare=null, chartMatBars=null;
+let dataGeneral = [];
+let chartGeneralLevels=null;
 
 /* ---------- Utilidades ---------- */
 function toNumber(v){ 
   if(v===undefined||v===null||v==='') return 0; 
-  // Reforzamos la limpieza de valores numéricos
   const s=String(v).replace('%','').replace(',','.').trim(); 
   const n=Number(s); 
   return isNaN(n)?0:n; 
@@ -272,6 +144,7 @@ function formatPct(v){
 }
 function truncate(s,n=80){ if(s===undefined||s===null) return ''; s=String(s); return s.length>n? s.slice(0,n-1)+'…': s; }
 function getCSSVar(name, fallback){ try{ const v = getComputedStyle(document.documentElement).getPropertyValue(name); return (v||fallback).trim(); }catch(e){ return fallback; } }
+
 
 /* ------------------ Render tabla simple ------------------ */
 function renderTable(wrapperSelector, data, cols){
@@ -333,161 +206,24 @@ function guessCol(rows, candidates){
   return keys[0] || candidates[0];
 }
 
-/* ========== NACIONALES ========== */
-async function refreshNacionales(){
+/* ========== SÍNTESIS GENERAL ========== */
+async function refreshGeneral(){
   try{
-    document.getElementById('link-nal').href = URL_NAL;
-    const rows = await loadCSV(URL_NAL);
-    dataNal = rows.map(r=>{
-      const out = {};
-      Object.keys(r).forEach(k=> out[k.trim()] = (typeof r[k] === 'string') ? r[k].trim() : r[k]);
-      return out;
-    });
-
-    // Búsqueda de columnas con nombres universales y cortos para mayor probabilidad de coincidencia
-    const colLinea = guessCol(dataNal, ['Línea', 'Item', 'Eje', 'Col1', 'Línea estratégica / Eje']);
-    const colPorc  = guessCol(dataNal, ['Porcentaje', 'Alineamiento', '%', 'Col2']);
-    const colNivel = guessCol(dataNal, ['Nivel', 'Categoria', 'Col3']);
-    const colRec   = guessCol(dataNal, ['Recomendación', 'Observación', 'Col4']);
-
-    // KPIs
-    const total = dataNal.length;
-    let altoCount = dataNal.filter(r => toNumber(r[colPorc]) >= 80).length;
-    let bajoCount = dataNal.filter(r => toNumber(r[colPorc]) < 40).length;
-    
-    // Fallback si la columna de porcentaje no fue numérica
-    if (altoCount + bajoCount === 0 && dataNal.length > 0 && colNivel) {
-       altoCount = dataNal.filter(r => String((r[colNivel]||'')).toLowerCase().includes('alto')).length;
-       bajoCount = dataNal.filter(r => String((r[colNivel]||'')).toLowerCase().includes('bajo')).length;
-    }
-    
-    document.getElementById('nal-total').innerText = total;
-    document.getElementById('nal-alto').innerText = altoCount;
-    document.getElementById('nal-bajo').innerText = bajoCount;
-
-    // Tabla
-    const tableData = dataNal.map(r => ({
-      [colLinea]: truncate(r[colLinea], 120),
-      [colPorc]: (r[colPorc] !== undefined ? formatPct(r[colPorc]) : '0.0%'), 
-      [colNivel]: r[colNivel] || '—', 
-      [colRec]: r[colRec] || '—'
-    }));
-    renderTable('#tablewrap-nal', tableData, [colLinea, colPorc, colNivel, colRec]);
-
-    // Charts
-    const counts = [
-      dataNal.filter(r => toNumber(r[colPorc]) < 40).length,
-      dataNal.filter(r => toNumber(r[colPorc]) >= 40 && toNumber(r[colPorc]) < 80).length,
-      dataNal.filter(r => toNumber(r[colPorc]) >= 80).length
-    ];
-    if(chartNalLevels) chartNalLevels.destroy();
-    chartNalLevels = new Chart(document.getElementById('chartNalLevels'), {
-      type: 'doughnut',
-      data: { labels: ['Bajo','Medio','Alto'], datasets: [{ data: counts, backgroundColor: [getCSSVar('--bajo','#dc3545'), getCSSVar('--medio','#ffc107'), getCSSVar('--alto','#28a745')] }] },
-      options: { plugins: { legend: { position: 'top' } } }
-    });
-
-    const labels = dataNal.slice(0,30).map(r => truncate(r[colLinea] || 'Item', 40));
-    const datos = dataNal.slice(0,30).map(r => toNumber(r[colPorc]));
-    if(chartNalLines) chartNalLines.destroy();
-    chartNalLines = new Chart(document.getElementById('chartNalLines'), {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Alineamiento %', data: datos, backgroundColor: datos.map(v => v>=80?getCSSVar('--alto','#28a745'):v>=40?getCSSVar('--medio','#ffc107'):getCSSVar('--bajo','#dc3545')) }] },
-      options: { indexAxis: 'y', scales: { x: { beginAtZero: true, max: 100, ticks: { callback: val => val + '%' } } }, plugins: { legend: { display: false } } }
-    });
-
-    return true;
-  } catch (err) {
-    console.error('Error NACIONALES:', err);
-    alert('Error al cargar datos nacionales: ' + (err.message || String(err)));
-    return false;
-  }
-}
-
-/* ========== INTERNACIONALES ========== */
-async function refreshInternacionales(){
-  try{
-    document.getElementById('link-int').href = URL_INT;
-    const rows = await loadCSV(URL_INT);
-    dataInt = rows.map(r=>{
+    document.getElementById('link-general').href = URL_GENERAL;
+    const rows = await loadCSV(URL_GENERAL);
+    dataGeneral = rows.map(r=>{
       const out = {};
       Object.keys(r).forEach(k=> out[k.trim()] = (typeof r[k] === 'string') ? r[k].trim() : r[k]);
       return out;
     });
 
     // Búsqueda de columnas con nombres universales y cortos
-    const colItem = guessCol(dataInt, ['Ítem','Item','Línea','Eje', 'Col1']);
-    const colPorc = guessCol(dataInt, ['Porcentaje','Alineamiento','%','Col2']);
-    const colNivel = guessCol(dataInt, ['Nivel','Categoria', 'Col3']);
-    const colRec = guessCol(dataInt, ['Recomendación','Observación', 'Col4']);
+    const colLinea = guessCol(dataGeneral, ['Línea', 'Eje', 'Descripción', 'Item', 'Col1', 'Línea estratégica / Eje']);
+    const colPorc  = guessCol(dataGeneral, ['Porcentaje', 'Alineamiento', '%', 'Avance', 'Col2']);
+    const colNivel = guessCol(dataGeneral, ['Nivel', 'Categoria', 'Col3']);
+    const colRec   = guessCol(dataGeneral, ['Recomendación', 'Observación', 'Col4']);
 
-    const total = dataInt.length;
-    let altoCount = dataInt.filter(r=> toNumber(r[colPorc])>=80).length;
-    
-    document.getElementById('int-total').innerText = total;
-    document.getElementById('int-alto').innerText = altoCount;
-
-    // Table
-    const tableData = dataInt.map(r => ({
-      [colItem]: truncate(r[colItem],120),
-      [colPorc]: formatPct(r[colPorc]),
-      [colNivel]: r[colNivel]||'—',
-      [colRec]: r[colRec]||'—'
-    }));
-    renderTable('#tablewrap-int', tableData, [colItem, colPorc, colNivel, colRec]);
-
-    // Pie/Bar
-    const buckets = { Alto:0, Medio:0, Bajo:0 };
-    dataInt.forEach(r=>{
-      const v = toNumber(r[colPorc]);
-      if (v>=80) buckets.Alto++;
-      else if (v>=40 && v<80) buckets.Medio++;
-      else buckets.Bajo++;
-    });
-    
-    // Fallback si la columna de porcentaje no fue numérica
-    if (buckets.Alto + buckets.Medio + buckets.Bajo === 0 && dataInt.length > 0 && colNivel) {
-       dataInt.forEach(r=>{
-          const nivel = String((r[colNivel]||'')).toLowerCase();
-          if (nivel.includes('alto')) buckets.Alto++;
-          else if (nivel.includes('medio')) buckets.Medio++;
-          else buckets.Bajo++;
-      });
-    }
-
-    if(chartIntCompare) chartIntCompare.destroy();
-    chartIntCompare = new Chart(document.getElementById('chartIntCompare'), {
-      type: 'pie',
-      data: { labels: Object.keys(buckets), datasets: [{ data: Object.values(buckets), backgroundColor: [getCSSVar('--alto','#28a745'), getCSSVar('--medio','#ffc107'), getCSSVar('--bajo','#dc3545')] }] },
-      options: { plugins: { legend: { position: 'top' } } }
-    });
-
-    return true;
-  } catch (err) {
-    console.error('Error INTERNACIONALES:', err);
-    alert('Error al cargar datos internacionales: ' + (err.message || String(err)));
-    return false;
-  }
-}
-
-/* ========== MATRIZ GENERAL ========== */
-async function refreshMatriz(){
-  try{
-    document.getElementById('link-mat').href = URL_MATRIZ;
-    const rows = await loadCSV(URL_MATRIZ);
-    dataMat = rows.map(r=>{
-      const out = {};
-      Object.keys(r).forEach(k=> out[k.trim()] = (typeof r[k] === 'string') ? r[k].trim() : r[k]);
-      return out;
-    });
-
-    // Búsqueda de columnas con nombres universales y cortos
-    const colLinea = guessCol(dataMat, ['Línea', 'Eje', 'Descripción', 'Item', 'Col1', 'Línea estratégica / Eje']);
-    const colPorc  = guessCol(dataMat, ['Porcentaje', 'Alineamiento', '%', 'Avance', 'Col2']);
-    const colNivel = guessCol(dataMat, ['Nivel', 'Categoria', 'Col3']);
-    const colRec   = guessCol(dataMat, ['Recomendación', 'Observación', 'Col4']);
-
-    const mapped = dataMat.map(r => ({
+    const mapped = dataGeneral.map(r => ({
       linea: r[colLinea] || '',
       porcentajeNum: toNumber(r[colPorc]),
       porcentaje: formatPct(r[colPorc]),
@@ -497,200 +233,59 @@ async function refreshMatriz(){
 
     const total = mapped.length;
     const prom = mapped.reduce((s,i)=> s + (i.porcentajeNum||0), 0) / Math.max(1, total);
-    document.getElementById('mat-total').innerText = total;
-    document.getElementById('mat-prom').innerText = prom.toFixed(1) + '%';
+    document.getElementById('general-total').innerText = total;
+    document.getElementById('general-prom').innerText = prom.toFixed(1) + '%';
+    
+    // Charts (Distribución por nivel)
+    const counts = [
+      dataGeneral.filter(r => toNumber(r[colPorc]) < 40).length,
+      dataGeneral.filter(r => toNumber(r[colPorc]) >= 40 && toNumber(r[colPorc]) < 80).length,
+      dataGeneral.filter(r => toNumber(r[colPorc]) >= 80).length
+    ];
+    
+    // Fallback si la columna de porcentaje no fue numérica
+    if (counts.every(c => c === 0) && dataGeneral.length > 0 && colNivel) {
+       dataGeneral.forEach(r=>{
+          const nivel = String((r[colNivel]||'')).toLowerCase();
+          if (nivel.includes('alto')) counts[2]++;
+          else if (nivel.includes('medio')) counts[1]++;
+          else counts[0]++;
+      });
+    }
 
-    // Chart (top 25)
-    const top = mapped.slice(0,25);
-    const labels = top.map(x=> truncate(x.linea,60));
-    const datos = top.map(x=> x.porcentajeNum);
-    if(chartMatBars) chartMatBars.destroy();
-    chartMatBars = new Chart(document.getElementById('chartMatBars'), {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Alineamiento %', data: datos, backgroundColor: datos.map(v=> v>=80?getCSSVar('--alto','#28a745'): v>=40?getCSSVar('--medio','#ffc107'): getCSSVar('--bajo','#dc3545')) }] },
-      options: { scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+
+    if(chartGeneralLevels) chartGeneralLevels.destroy();
+    chartGeneralLevels = new Chart(document.getElementById('chartGeneralLevels'), {
+      type: 'doughnut',
+      data: { labels: ['Bajo','Medio','Alto'], datasets: [{ data: counts, backgroundColor: [getCSSVar('--bajo','#dc3545'), getCSSVar('--medio','#ffc107'), getCSSVar('--alto','#28a745')] }] },
+      options: { plugins: { legend: { position: 'top' } } }
     });
 
     // Table
-    renderTable('#tablewrap-mat', mapped.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+    renderTable('#tablewrap-general', mapped.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
 
     // Search
-    document.getElementById('search-mat').oninput = (e) => {
+    document.getElementById('search-general').oninput = (e) => {
       const q = e.target.value.trim().toLowerCase();
       const fil = mapped.filter(it => (it.linea + ' ' + it.recomendacion + ' ' + it.nivel).toLowerCase().includes(q));
-      renderTable('#tablewrap-mat', fil.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+      renderTable('#tablewrap-general', fil.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
     };
 
     return true;
   } catch (err) {
-    console.error('Error MATRIZ:', err);
-    alert('Error al cargar matriz general: ' + (err.message || String(err)));
+    console.error('Error GENERAL:', err);
+    alert('Error al cargar la síntesis general: ' + (err.message || String(err)));
     return false;
   }
 }
 
-/* ========== VALIDACIÓN ========== */
-const VALID_KEY = 'cers_validations_v1';
-let currentValidationState = null;
-
-function setupValidationFromData(){
-  // Build base from dataMat
-  if(!dataMat || dataMat.length === 0){
-    document.getElementById('validation-list').innerHTML = '<div class="small">Primero carga la Matriz General.</div>';
-    return;
-  }
-  const colLinea = guessCol(dataMat, ['Línea', 'Eje', 'Descripción', 'Item', 'Col1', 'Línea estratégica / Eje']);
-  // base items
-  const base = dataMat.map((r, idx) => ({
-    id: idx + 1,
-    linea: r[colLinea] || `Item ${idx+1}`,
-    porcentaje: formatPct(r[guessCol(dataMat, ['Porcentaje','Alineamiento','%'])]),
-    nivel: r[guessCol(dataMat, ['Nivel','Categoria'])] || '',
-    recomendacion: r[guessCol(dataMat, ['Recomendación','Observacion','Recomendacion'])] || '',
-    estado: 'Pendiente',
-    observacion: ''
-  }));
-
-  // try load saved
-  const saved = JSON.parse(localStorage.getItem(VALID_KEY) || 'null');
-  if(saved && Array.isArray(saved) && saved.length === base.length){
-    currentValidationState = saved;
-  } else {
-    currentValidationState = base;
-  }
-
-  renderValidationList();
-  updateValSummary();
-}
-
-function renderValidationList(){
-  const root = document.getElementById('validation-list');
-  root.innerHTML = '';
-  currentValidationState.forEach(item=>{
-    const el = document.createElement('div');
-    el.className = 'validation-item';
-    
-    // Nueva estructura más ordenada para la validación
-    el.innerHTML = `
-      <div class="validation-item-meta">
-        <div style="font-weight:700">${item.id}. ${escapeHTML(item.linea)}</div>
-        <div class="small">Nivel: ${escapeHTML(item.nivel)} — %: ${item.porcentaje}</div>
-        <div class="small">${escapeHTML(item.recomendacion)}</div>
-      </div>
-      <input type="text" placeholder="Observación (opcional)" value="${escapeHTML(item.observacion||'')}" data-id="${item.id}" class="obs-input">
-      <div class="validation-item-controls">
-          <label class="small">Estado actual: <span style="font-weight:700; color: ${item.estado.includes('Aprobado') ? 'var(--alto)' : item.estado.includes('Pendiente') ? 'var(--medio)' : 'var(--bajo)'}">${item.estado}</span></label>
-          <div class="validation-buttons">
-            <button class="btn ok" data-id="${item.id}">A</button>
-            <button class="btn pend" data-id="${item.id}">P</button>
-            <button class="btn rej" data-id="${item.id}">N</button>
-          </div>
-      </div>
-    `;
-    root.appendChild(el);
-  });
-
-  // listeners
-  root.querySelectorAll('.ok').forEach(b => b.onclick = () => { setValidationState(+b.dataset.id, 'Aprobado'); });
-  root.querySelectorAll('.pend').forEach(b => b.onclick = () => { setValidationState(+b.dataset.id, 'Pendiente'); });
-  root.querySelectorAll('.rej').forEach(b => b.onclick = () => { setValidationState(+b.dataset.id, 'No aprobado'); });
-  root.querySelectorAll('.obs-input').forEach(inp => inp.onchange = () => {
-    const id = +inp.dataset.id; const val = inp.value;
-    const obj = currentValidationState.find(s => s.id === id);
-    if(obj) obj.observacion = val;
-    updateValSummary();
-  });
-
-  document.getElementById('save-valid').onclick = () => {
-    localStorage.setItem(VALID_KEY, JSON.stringify(currentValidationState));
-    alert('Validaciones guardadas localmente.');
-    updateValSummary();
-  };
-
-  document.getElementById('download-valid').onclick = () => {
-    // Lógica de descarga mantenida solo para Validación Técnica
-    const out = currentValidationState.map(s => ({ id: s.id, linea: s.linea, porcentaje: s.porcentaje, nivel: s.nivel, estado: s.estado, observacion: s.observacion }));
-    
-    // Función local para CSV (simplificada)
-    const localToCSV = (rows) => {
-        if(!rows || rows.length===0) return '';
-        const keys = Object.keys(rows[0]);
-        const lines = [keys.join(',')];
-        for(const r of rows){
-          const vals = keys.map(k=>{
-            let v = r[k]===undefined||r[k]===null?'':String(r[k]);
-            v = v.replace(/"/g,'""');
-            if(v.includes(',')||v.includes('"')||v.includes('\n')) v = `"${v}"`;
-            return v;
-          });
-          lines.push(vals.join(','));
-        }
-        return lines.join('\n');
-    }
-
-    const localDownloadCSV = (text, filename) => {
-        const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=> URL.revokeObjectURL(url), 1000);
-    }
-    
-    localDownloadCSV(localToCSV(out), 'validacion_comite.csv');
-  };
-
-  document.getElementById('clear-valid').onclick = () => {
-    if(!confirm('Limpiar validaciones guardadas?')) return;
-    localStorage.removeItem(VALID_KEY);
-    currentValidationState.forEach(s => { s.estado = 'Pendiente'; s.observacion = ''; });
-    renderValidationList();
-    updateValSummary();
-  };
-}
-
-function setValidationState(id, estado){
-  const obj = currentValidationState.find(x => x.id === id);
-  if(!obj) return;
-  obj.estado = estado;
-  renderValidationList();
-  updateValSummary();
-}
-
-function updateValSummary(){
-  const ul = document.getElementById('val-summary');
-  const tot = currentValidationState.length;
-  const apro = currentValidationState.filter(l => l.estado === 'Aprobado').length;
-  const pen = currentValidationState.filter(l => l.estado === 'Pendiente').length;
-  const noap = currentValidationState.filter(l => l.estado === 'No aprobado').length;
-  ul.innerHTML = `<li>Total: ${tot}</li><li>Aprobados: ${apro}</li><li>Pendientes: ${pen}</li><li>No aprobados: ${noap}</li>`;
-}
-
 /* ========== UI wiring: tabs & refresh buttons ========== */
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.target).classList.add('active');
-  });
-});
-document.getElementById('refresh-nal').onclick = refreshNacionales;
-document.getElementById('refresh-int').onclick = refreshInternacionales;
-document.getElementById('refresh-mat').onclick = refreshMatriz;
+document.getElementById('refresh-general').onclick = refreshGeneral;
 
 /* ========== STARTUP: run sequentially to avoid race conditions ========== */
 async function initAll(){
   try{
-    // run sequentially and bail gracefully on error
-    const ok1 = await refreshNacionales();
-    const ok2 = await refreshInternacionales();
-    const ok3 = await refreshMatriz();
-    if(!ok3){
-      // If matriz didn't load, still try to setup validation with existing data
-      setupValidationFromData();
-      return;
-    }
-    // Now that matriz is loaded, initialize validation (uses dataMat)
-    setupValidationFromData();
+    await refreshGeneral();
   } catch(e){
     console.error('Error en initAll:', e);
     alert('Error iniciando el dashboard: ' + (e.message || String(e)));
