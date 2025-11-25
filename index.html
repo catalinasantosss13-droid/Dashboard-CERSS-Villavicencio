@@ -1,80 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Matrices CSV</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+<style>
+  body { 
+    font-family: Arial, sans-serif; 
+    padding: 20px; 
+    background: #f7f7f7;
+  }
+  h2 { margin-top: 40px; }
+  table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin-top: 10px; 
+    background: white;
+  }
+  th, td { 
+    border: 1px solid #ccc; 
+    padding: 8px; 
+    font-size: 14px;
+  }
+  th { background: #eaeaea; }
+</style>
+</head>
+
+<body>
+
+<h1>Matrices cargadas desde Google Sheets CSV</h1>
+
+<h2>Matriz General</h2>
+<div id="tabla-general"></div>
+
+<h2>Matriz Nacional</h2>
+<div id="tabla-nacional"></div>
+
+<h2>Matriz Internacional</h2>
+<div id="tabla-internacional"></div>
+
 <script>
-// URLs de tus CSV
 const urls = {
   general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv",
   nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv",
-  internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv"
+  internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv",
 };
 
-// Cargar un CSV y convertirlo automáticamente según cabeceras
-function loadCSV(url) {
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
-      header: true, // convierte la primera fila en llaves
-      skipEmptyLines: true,
-      complete: function (results) {
-        resolve(results.data);
-      },
-      error: function (err) {
-        reject(err);
-      }
-    });
+// Cargar CSV
+function loadCSV(url, destino) {
+  Papa.parse(url, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function (results) {
+      renderTable(results.data, destino);
+    },
+    error: function (err) {
+      document.getElementById(destino).innerHTML = 
+        "<p style='color:red'>Error cargando CSV.</p>";
+      console.error(err);
+    }
   });
 }
 
-// Cargar los tres CSV y procesarlos
-async function loadAllCSVs() {
-  try {
-    const [general, nacional, internacional] = await Promise.all([
-      loadCSV(urls.general),
-      loadCSV(urls.nacional),
-      loadCSV(urls.internacional),
-    ]);
-
-    // Mostrar en consola para verificar
-    console.log("Matriz General:", general);
-    console.log("Nacional:", nacional);
-    console.log("Internacional:", internacional);
-
-    // ====== EJEMPLO DE PROCESAMIENTO ======
-    // Auto-detección de columnas importantes
-    function detectarColumnas(dataset) {
-      if (!dataset.length) return {};
-
-      const cols = Object.keys(dataset[0]).reduce((acc, col) => {
-        const c = col.toLowerCase();
-        if (c.includes("%") || c.includes("porcentaje")) acc.porcentaje = col;
-        if (c.includes("nivel")) acc.nivel = col;
-        if (c.includes("recom")) acc.recomendacion = col;
-        return acc;
-      }, {});
-
-      return cols;
-    }
-
-    const columnasGeneral = detectarColumnas(general);
-    const columnasNacional = detectarColumnas(nacional);
-    const columnasInternacional = detectarColumnas(internacional);
-
-    console.log("Columnas detectadas (General):", columnasGeneral);
-    console.log("Columnas detectadas (Nacional):", columnasNacional);
-    console.log("Columnas detectadas (Internacional):", columnasInternacional);
-
-    // Ejemplo: imprimir recomendaciones
-    general.forEach(row => {
-      if (columnasGeneral.recomendacion) {
-        console.log("Recomendación:", row[columnasGeneral.recomendacion]);
-      }
-    });
-
-  } catch (error) {
-    console.error("Error cargando CSV:", error);
+// Renderizar tabla HTML
+function renderTable(data, destino) {
+  if (!data.length) {
+    document.getElementById(destino).innerHTML = "<p>No hay datos.</p>";
+    return;
   }
+
+  let table = "<table><thead><tr>";
+
+  // Cabeceras
+  Object.keys(data[0]).forEach(col => {
+    table += `<th>${col}</th>`;
+  });
+
+  table += "</tr></thead><tbody>";
+
+  // Filas
+  data.forEach(row => {
+    table += "<tr>";
+    Object.values(row).forEach(val => {
+      table += `<td>${val}</td>`;
+    });
+    table += "</tr>";
+  });
+
+  table += "</tbody></table>";
+
+  document.getElementById(destino).innerHTML = table;
 }
 
-// Ejecutar carga
-loadAllCSVs();
+// Cargar las 3 tablas
+loadCSV(urls.general, "tabla-general");
+loadCSV(urls.nacional, "tabla-nacional");
+loadCSV(urls.internacional, "tabla-internacional");
 </script>
+
+</body>
+</html>
