@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero de Gestión CERS - Villavicencio</title>
+    <title>Tablero de Proyección Técnica - CERS</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -51,26 +51,30 @@
         .tab-btn:hover { background: #eef7ff; color: var(--primary); }
         .tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Estilo especial para la pestaña de validación */
-        .tab-btn.tab-exec { border-color: var(--final); color: var(--final); }
-        .tab-btn.tab-exec.active { background: var(--final); color: white; }
+        /* Estilo especial para la pestaña 4 */
+        .tab-btn.tab-valid { border-color: var(--final); color: var(--final); }
+        .tab-btn.tab-valid.active { background: var(--final); color: white; }
 
-        /* PANEL DE PROYECCIÓN (Visibilidad controlada) */
+        /* PANEL DE INFORMACIÓN */
         .simulation-panel {
             display: flex; align-items: center; gap: 20px; width: 100%;
             background: #f0fdf4; padding: 15px 25px; border-radius: 12px; border: 1px solid #bbf7d0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
         .sim-icon { font-size: 1.8rem; color: var(--final); }
+        .legend-box { display: flex; gap: 20px; font-size: 0.8rem; font-weight: 600; margin-left: auto; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
 
         /* CONTAINER */
         .container { max-width: 1300px; margin: 30px auto; padding: 0 30px; }
 
-        /* VISTAS */
-        .view-section { display: none; }
+        /* VISTAS (Switch entre detalle y validación) */
+        .view-section { display: none; animation: fadeIn 0.5s; }
         .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-        /* ESTILOS DE LA VISTA DETALLADA (Original) */
+        /* KPI GRID */
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
         .kpi-card { 
             background: var(--white); padding: 25px; border-radius: 12px; text-align: center; 
@@ -78,7 +82,9 @@
         }
         .kpi-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #95a5a6; font-weight: 700; }
         .kpi-value { font-size: 2.5rem; font-weight: 800; display: block; margin-top: 10px; color: var(--text-dark); }
-        
+        .kpi-trend { font-size: 0.9rem; font-weight: 700; display: block; margin-top: 5px; color: var(--final); }
+
+        /* CHARTS & TABLES */
         .chart-card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); height: 450px; margin-bottom: 30px;}
         .section-header { margin-bottom: 20px; border-left: 4px solid var(--accent); padding-left: 12px; color: var(--primary); font-size: 1.1rem; font-weight: 700; }
 
@@ -88,52 +94,63 @@
         th { background: #f8f9fa; color: var(--primary); padding: 15px; text-align: left; border-bottom: 2px solid #eee; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
         td { padding: 15px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; color: #4a5568; }
         
-        /* ESTILOS DE LA VISTA EJECUTIVA (Validación Express) */
-        .exec-card {
-            background: white; border-radius: 15px; padding: 30px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 70vh;
+        .input-proj {
+            width: 65px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; 
+            text-align: center; font-weight: 700; color: var(--final); background: #fafffb;
         }
-        .exec-controls { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-        .btn-capture {
-            background: var(--final); color: white; padding: 10px 20px; border: none; border-radius: 8px;
-            font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
-        }
-        .btn-capture:hover { background: #219150; transform: translateY(-2px); }
-        
-        /* MODAL */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; z-index: 2000;
-        }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
-        
-        .input-score { 
-            font-size: 2.5rem; width: 100px; text-align: center; border: 2px solid #eee; 
-            border-radius: 10px; margin: 20px 0; color: var(--primary); font-weight: 800; padding: 10px;
-        }
-        .modal-btns { display: flex; gap: 10px; justify-content: center; }
-        .btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
-        .btn-save { background: var(--primary); color: white; }
-        .btn-cancel { background: #f1f1f1; color: #666; }
+        .input-proj:focus { border-color: var(--final); outline: none; background: #fff; }
 
         .improvement-tag {
             background: #dcfce7; color: var(--final); padding: 4px 8px; border-radius: 4px; 
             font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
         }
-        
-        .input-proj {
-            width: 65px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; 
-            text-align: center; font-weight: 700; color: var(--final); background: #fafffb;
+
+        .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
+        .tooltip-icon { color: var(--accent); font-size: 1rem; transition: transform 0.2s; }
+        .tooltip-icon:hover { transform: scale(1.2); }
+        .tooltip-content {
+            visibility: hidden; width: 250px; background-color: #333; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%;
+            margin-left: -125px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; line-height: 1.4;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        .tooltip-content::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-content { visibility: visible; opacity: 1; }
+
+        /* ESTILOS DE VISTA DE VALIDACIÓN (NUEVO) */
+        .validation-area {
+            display: flex; flex-direction: column; height: 600px; background: white; border-radius: 12px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .validation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-capture {
+            background: var(--primary); color: white; padding: 10px 20px; border-radius: 6px; border: none;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .btn-capture:hover { background: #002244; transform: translateY(-2px); }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .input-score { 
+            font-size: 2.5rem; width: 100px; text-align: center; border: 2px solid #eee; 
+            border-radius: 10px; margin: 20px 0; color: var(--primary); font-weight: 800; padding: 5px;
+        }
+        .btn-save { padding: 10px 20px; background: var(--final); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
 
         @media (max-width: 900px) { 
             .kpi-grid { grid-template-columns: 1fr; } 
+            .simulation-panel { flex-direction: column; align-items: flex-start; }
             .header-top { flex-direction: column; text-align: center; gap: 15px; }
-            .simulation-panel { display: none; }
         }
     </style>
 </head>
@@ -141,8 +158,9 @@
 
     <header class="header-top">
         <div class="header-info">
-            <h1>DASHBOARD DE GESTIÓN CERS</h1>
-            <p class="subtitle">Análisis de Alineación y Validación de Brechas</p>
+            <h1>ANÁLISIS DE ALINEACIÓN CERS</h1>
+            <p class="subtitle">Evaluación de Conformidad y Proyección Técnica</p>
+            <div style="font-size:0.75rem; opacity:0.8; margin-top:5px; font-weight:600;">Investigadora: Catalina Santos Gonzalez</div>
         </div>
         
         <div class="header-right">
@@ -158,16 +176,20 @@
             <button class="tab-btn active" onclick="loadTab('NACIONAL')">1. Ref. Nacionales</button>
             <button class="tab-btn" onclick="loadTab('INTERNACIONAL')">2. Ref. Internacionales</button>
             <button class="tab-btn" onclick="loadTab('GENERAL')">3. Matriz General</button>
-            <button class="tab-btn tab-exec" onclick="loadTab('VALIDACION')"><i class="fas fa-check-circle"></i> 4. Validación Rápida</button>
+            <button class="tab-btn tab-valid" onclick="loadTab('VALIDACION')"><i class="fas fa-check-circle"></i> 4. Validación Técnica</button>
         </nav>
 
         <div id="panel-info" class="simulation-panel">
             <div style="display:flex; align-items:center; gap:15px;">
-                <i class="fas fa-chart-pie sim-icon"></i>
+                <i class="fas fa-chart-line sim-icon"></i>
                 <div>
-                    <strong style="color:var(--primary); font-size:1rem;">Fase 6.2.1.3: VERIFICAR Y PROYECTAR</strong>
-                    <div style="font-size:0.8rem; color:#666;">Seleccione una pestaña para ver el detalle. Use la Pestaña 4 para validar con el comité.</div>
+                    <strong style="color:var(--primary); font-size:1rem;">Panel de Control y Proyección</strong>
+                    <div style="font-size:0.8rem; color:#666;">Visualización de alineación actual vs metas propuestas.</div>
                 </div>
+            </div>
+            <div class="legend-box">
+                <div class="legend-item"><div class="dot" style="background:var(--initial);"></div> <span>Línea Base</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--final);"></div> <span>Meta</span></div>
             </div>
         </div>
     </div>
@@ -182,36 +204,38 @@
         <div id="detail-view" class="view-section active">
             <div class="kpi-grid">
                 <div class="kpi-card" style="border-top-color: var(--initial);">
-                    <span class="kpi-title">Cumplimiento Base</span>
+                    <span class="kpi-title">Cumplimiento Actual</span>
                     <span class="kpi-value" id="kpi-inicial" style="color:var(--initial);">0%</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--final);">
-                    <span class="kpi-title">Meta Ajustada</span>
+                    <span class="kpi-title">Meta Proyectada</span>
                     <span class="kpi-value" id="kpi-final" style="color:var(--final);">0%</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--accent);">
-                    <span class="kpi-title">Brecha a Cubrir</span>
-                    <span class="kpi-value" id="kpi-delta" style="color:var(--accent);">0%</span>
+                    <span class="kpi-title">Potencial de Mejora</span>
+                    <span class="kpi-value" id="kpi-delta" style="color:var(--accent);">+0%</span>
+                    <span class="kpi-trend">Impacto Estimado</span>
                 </div>
             </div>
 
             <div class="chart-card">
-                <div class="section-header">Gráfico de Brechas (Detallado)</div>
+                <div class="section-header">Gráfico Comparativo: Actual vs Deseado</div>
                 <div style="height: 380px; position: relative;">
                     <canvas id="chartComparativo"></canvas>
                 </div>
             </div>
 
             <div class="table-card">
-                <div class="section-header">Matriz de Datos y Sustento</div>
+                <div class="section-header">Matriz de Datos y Sustento Técnico</div>
                 <div class="table-responsive">
                     <table id="tablaDetalle">
                         <thead>
                             <tr>
-                                <th style="width: 40%;">Línea Estratégica</th>
-                                <th style="width: 15%; text-align:center;">Base Documental</th>
-                                <th style="width: 15%; text-align:center;">Dato Validado</th>
-                                <th style="width: 30%; text-align:center;">Evidencia / Observación</th>
+                                <th style="width: 35%;">Línea Estratégica</th>
+                                <th style="width: 12%; text-align:center;">Base</th>
+                                <th style="width: 12%; text-align:center;">Meta</th>
+                                <th style="width: 12%; text-align:center;">Delta</th>
+                                <th style="width: 29%; text-align:center;">Sustento Técnico</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -220,20 +244,19 @@
             </div>
         </div>
 
-        <div id="executive-view" class="view-section">
-            <div class="exec-card">
-                <div class="exec-controls">
-                    <div style="margin-right:auto; align-self:center;">
-                        <h2 style="margin:0; font-size:1.2rem; color:var(--primary);">VALIDACIÓN GERENCIAL</h2>
-                        <span style="font-size:0.8rem; color:#666;">Toque las barras para ajustar valores en vivo.</span>
+        <div id="validation-view" class="view-section">
+            <div class="validation-area">
+                <div class="validation-header">
+                    <div>
+                        <h2 style="margin:0; color:var(--primary); font-size:1.3rem;">VALIDACIÓN ESTRATÉGICA</h2>
+                        <span style="font-size:0.85rem; color:#666;">Seleccione las barras para ajustar el nivel de alineación en tiempo real.</span>
                     </div>
                     <button class="btn-capture" onclick="captureValidation()">
-                        <i class="fas fa-camera"></i> CAPTURAR PANTALLA
+                        <i class="fas fa-camera"></i> CAPTURAR EVIDENCIA
                     </button>
                 </div>
-                
                 <div style="flex:1; position:relative;">
-                    <canvas id="chartExecutive"></canvas>
+                    <canvas id="chartValidation"></canvas>
                 </div>
             </div>
         </div>
@@ -242,12 +265,12 @@
 
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle" style="margin-top:0; font-size:1rem; color:#333;">Ajustar Alineación</h3>
-            <p style="font-size:0.8rem; color:#666;">Ingrese el % acordado con el comité:</p>
+            <h3 id="modalTitle" style="margin-top:0; color:#333;">Ajustar Alineación</h3>
+            <p style="font-size:0.8rem; color:#666;">Ingrese el nuevo % validado:</p>
             <input type="number" id="newScore" class="input-score" min="0" max="100">
-            <div class="modal-btns">
-                <button class="btn-modal btn-save" onclick="saveEdit()">Guardar</button>
-                <button class="btn-modal btn-cancel" onclick="closeModal()">Cancelar</button>
+            <div>
+                <button class="btn-save" onclick="saveEdit()">Guardar Cambio</button>
+                <button onclick="closeModal()" style="padding:10px; background:none; border:none; cursor:pointer; color:#666;">Cancelar</button>
             </div>
         </div>
     </div>
@@ -257,7 +280,7 @@
         const SHEETS_CONFIG = {
             'GENERAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
-                colIndex: { name: 0, pct: 3, rec: 5 }
+                colIndex: { name: 0, pct: 3, rec: 5 } 
             },
             'NACIONAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv',
@@ -267,206 +290,5 @@
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv',
                 colIndex: { name: 0, pct: 4, rec: 6 }
             },
-            // La pestaña de validación carga la matriz general por defecto
-            'VALIDACION': {
-                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
-                colIndex: { name: 0, pct: 3, rec: 5 }
-            }
-        };
-
-        let currentData = [];
-        let chartComparativo = null;
-        let chartExecutive = null;
-        let isExecutiveMode = false;
-        let activeIndex = -1; // Para edición
-
-        window.onload = function() { loadTab('NACIONAL'); };
-
-        function loadTab(tabName) {
-            // Manejo de UI de Pestañas
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.onclick.toString().includes(`'${tabName}'`));
-            if(activeBtn) activeBtn.classList.add('active');
-
-            document.getElementById('loading').style.display = 'block';
-            
-            // Alternar Vistas
-            if (tabName === 'VALIDACION') {
-                isExecutiveMode = true;
-                document.getElementById('detail-view').classList.remove('active');
-                document.getElementById('executive-view').classList.add('active');
-                document.getElementById('panel-info').style.display = 'none';
-            } else {
-                isExecutiveMode = false;
-                document.getElementById('detail-view').classList.add('active');
-                document.getElementById('executive-view').classList.remove('active');
-                document.getElementById('panel-info').style.display = 'flex';
-            }
-
-            const config = SHEETS_CONFIG[tabName];
-            Papa.parse(config.url, {
-                download: true, header: false,
-                complete: function(results) { processCSV(results.data, config.colIndex); },
-                error: function() { alert('Error de conexión.'); }
-            });
-        }
-
-        function processCSV(data, mapping) {
-            const clean = [];
-            for (let i = 2; i < data.length; i++) {
-                const row = data[i];
-                if (row[mapping.name] && row[mapping.name].trim() !== "" && !row[mapping.name].includes("Elaborado por")) {
-                    let rawPct = row[mapping.pct];
-                    if(typeof rawPct === 'string') rawPct = rawPct.replace('%', '').replace(',', '.');
-                    let val = parseFloat(rawPct) || 0;
-                    
-                    // Inicialmente Final = Inicial (Hasta que se valide)
-                    clean.push({
-                        id: i,
-                        linea: row[mapping.name],
-                        inicial: val,
-                        final: val,
-                        recomendacion: row[mapping.rec] || "Sin observación.",
-                    });
-                }
-            }
-            currentData = clean;
-            document.getElementById('loading').style.display = 'none';
-            
-            if(isExecutiveMode) {
-                renderExecutiveDashboard();
-            } else {
-                renderDetailDashboard();
-            }
-        }
-
-        // --- LÓGICA VISTA DETALLADA ---
-        function renderDetailDashboard() {
-            updateKPIs();
-            const tbody = document.querySelector('#tablaDetalle tbody');
-            tbody.innerHTML = '';
-            
-            currentData.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.linea}</strong></td>
-                    <td style="text-align:center; color:#95a5a6;">${item.inicial}%</td>
-                    <td style="text-align:center;">
-                        <input type="number" class="input-proj" value="${item.final}" 
-                        onchange="updateValue(${index}, this.value)" min="0" max="100">
-                    </td>
-                    <td style="text-align:center; font-size:0.75rem;">${item.recomendacion.substring(0,80)}...</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            updateDetailChart();
-        }
-
-        function updateValue(index, newValue) {
-            let val = parseFloat(newValue);
-            if(isNaN(val)) val = 0; if(val > 100) val = 100;
-            currentData[index].final = val;
-            
-            if(!isExecutiveMode) {
-                updateKPIs();
-                updateDetailChart();
-            } else {
-                renderExecutiveDashboard();
-            }
-        }
-
-        function updateKPIs() {
-            const total = currentData.length;
-            const avgInit = total ? currentData.reduce((a,b)=>a+b.inicial,0)/total : 0;
-            const avgFinal = total ? currentData.reduce((a,b)=>a+b.final,0)/total : 0;
-            const delta = 100 - avgFinal; // Brecha vs 100%
-
-            document.getElementById('kpi-inicial').innerText = Math.round(avgInit) + '%';
-            document.getElementById('kpi-final').innerText = Math.round(avgFinal) + '%';
-            document.getElementById('kpi-delta').innerText = '-' + Math.round(delta) + '%';
-        }
-
-        function updateDetailChart() {
-            const ctx = document.getElementById('chartComparativo').getContext('2d');
-            if (chartComparativo) chartComparativo.destroy();
-
-            chartComparativo = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: currentData.map(d => d.linea.length > 30 ? d.linea.substring(0,30)+'...' : d.linea),
-                    datasets: [
-                        { label: 'Documental', data: currentData.map(d => d.inicial), backgroundColor: '#bdc3c7', borderRadius: 4 },
-                        { label: 'Validado', data: currentData.map(d => d.final), backgroundColor: '#003366', borderRadius: 4 }
-                    ]
-                },
-                options: { 
-                    indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { max: 100 } }
-                }
-            });
-        }
-
-        // --- LÓGICA VISTA EJECUTIVA (VALIDACIÓN RÁPIDA) ---
-        function renderExecutiveDashboard() {
-            const ctx = document.getElementById('chartExecutive').getContext('2d');
-            if (chartExecutive) chartExecutive.destroy();
-
-            // Colores Semáforo
-            const colors = currentData.map(d => {
-                if(d.final < 40) return '#e74c3c'; // Rojo
-                if(d.final < 80) return '#f1c40f'; // Amarillo
-                return '#27ae60'; // Verde
-            });
-
-            chartExecutive = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: currentData.map(d => d.linea.length > 40 ? d.linea.substring(0,40)+'...' : d.linea),
-                    datasets: [{
-                        label: '% Alineación Validada',
-                        data: currentData.map(d => d.final),
-                        backgroundColor: colors,
-                        borderRadius: 6,
-                        barPercentage: 0.7
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: (e, elements) => {
-                        if(elements.length > 0) {
-                            activeIndex = elements[0].index;
-                            openModal(currentData[activeIndex].linea, currentData[activeIndex].final);
-                        }
-                    },
-                    scales: { x: { max: 100, beginAtZero: true } },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-
-        // Funciones del Modal
-        function openModal(title, val) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('newScore').value = val;
-            document.getElementById('editModal').style.display = 'flex';
-            document.getElementById('newScore').focus();
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        function saveEdit() {
-            const val = document.getElementById('newScore').value;
-            updateValue(activeIndex, val);
-            closeModal();
-        }
-
-        function captureValidation() {
-            alert("¡Vista congelada para captura!\n\nInstrucción: Usa la herramienta 'Recortes' de Windows o Cmd+Shift+4 en Mac para tomar la foto del gráfico ahora.");
-        }
-    </script>
-</body>
-</html>
+            'VALIDACION': { // Usa la General por defecto
+                url: '
