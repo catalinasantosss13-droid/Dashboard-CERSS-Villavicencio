@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz Comparativa - Actualización Automática</title>
+    <title>Matriz Comparativa - BI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -14,7 +15,7 @@
         }
         h1, h2 { 
             text-align: center; 
-            color: #1e3c72; /* Color oscuro para títulos */
+            color: #1e3c72; 
             margin-bottom: 20px;
         }
         .container { 
@@ -25,55 +26,51 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 50px; 
-            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        /* Estilo para el área de gráficos */
+        #chart-section {
+            padding: 30px 0;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 30px;
         }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px 15px; 
-            text-align: left; 
+        #chart-container {
+            width: 80%; /* Ancho del contenedor del gráfico */
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        th { 
-            background-color: #2a5298; /* Azul más intenso para encabezados */
-            color: white;
-            cursor: pointer; 
-            position: sticky;
-            top: 0;
-            user-select: none;
-        }
-        th:hover {
-            background-color: #1e3c72;
-        }
-        /* Indicadores de ordenamiento */
+        /* Estilos de tabla (mantenidos del código anterior) */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 50px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
+        th { background-color: #2a5298; color: white; cursor: pointer; position: sticky; top: 0; user-select: none; }
         th[data-sort-direction="asc"]::after { content: " ▲"; }
         th[data-sort-direction="desc"]::after { content: " ▼"; }
-
-        .loading, .error { 
-            text-align: center; 
-            font-size: 1.1em; 
-            padding: 15px;
-            border-radius: 4px;
-        }
+        .loading, .error { text-align: center; font-size: 1.1em; padding: 15px; border-radius: 4px; }
         .loading { color: #007bff; }
         .error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; }
-        
-        section {
-            padding: 20px 0;
-            border-bottom: 1px dashed #ccc;
-        }
-        section:last-of-type {
-            border-bottom: none;
-        }
+        section { padding: 20px 0; border-bottom: 1px dashed #ccc; }
+        section:last-of-type { border-bottom: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Resultados de Matriz Comparativa</h1>
-        <p class="loading" id="loading-message">Cargando datos de las matrices...</p>
+        <h1>📊 Herramienta BI para Matriz Comparativa</h1>
+        <p class="loading" id="loading-message">Cargando datos y generando visualizaciones...</p>
 
+        <section id="chart-section">
+            <h2>📈 Gráfico de Resumen (Matriz General)</h2>
+            <div id="chart-container">
+                <canvas id="generalChart"></canvas>
+            </div>
+        </section>
+
+        <section id="general-section">
+            <h2>Matriz GENERAL (Referencia de Datos)</h2>
+            <div id="general-table"></div>
+        </section>
+        
         <section id="nacional-section">
             <h2>Matriz NACIONAL</h2>
             <div id="nacional-table"></div>
@@ -83,55 +80,41 @@
             <h2>Matriz INTERNACIONAL</h2>
             <div id="internacional-table"></div>
         </section>
-
-        <section id="general-section">
-            <h2>Matriz GENERAL</h2>
-            <div id="general-table"></div>
-        </section>
+        
     </div>
 
     <script>
         // --- CONFIGURACIÓN DE MATRICES ---
         const MATRICES = [
+            // El orden se cambia para procesar GENERAL primero, si es la fuente principal del gráfico.
+            {
+                name: "GENERAL",
+                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv",
+                targetId: "general-table",
+                skipRows: 1,
+                isChartSource: true // Marcamos esta como la fuente de datos para el gráfico
+            },
             {
                 name: "NACIONAL",
                 url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
                 targetId: "nacional-table",
-                // Indica al parser que omita la primera fila (el encabezado fantasma)
-                skipRows: 1 
+                skipRows: 1
             },
             {
                 name: "INTERNACIONAL",
                 url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
                 targetId: "internacional-table",
                 skipRows: 1
-            },
-            {
-                name: "GENERAL",
-                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv",
-                targetId: "general-table",
-                skipRows: 1
             }
         ];
 
-        // --- FUNCIONES CENTRALES ---
+        // --- FUNCIONES CENTRALES (parseCSV y renderTable se mantienen igual) ---
 
-        /**
-         * Parsea una cadena CSV en un array de arrays. 
-         * Maneja el salto de filas y la limpieza básica de celdas.
-         */
         function parseCSV(csvText, skipRows = 0) {
-            // Divide por líneas y filtra líneas vacías
             const rows = csvText.trim().split('\n').filter(row => row.trim() !== '');
-
-            // Omite el número de filas especificado
             const dataRows = rows.slice(skipRows);
-
             return dataRows.map(row => {
-                // Divide por comas. Nota: Google Sheets CSV exporta texto entre comillas (")
-                // si contiene comas internas. El siguiente código maneja esto de forma básica.
                 return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => {
-                    // Remueve comillas iniciales/finales y espacios en blanco
                     let content = cell.trim();
                     if (content.startsWith('"') && content.endsWith('"')) {
                         content = content.slice(1, -1);
@@ -141,9 +124,6 @@
             });
         }
 
-        /**
-         * Crea una tabla HTML a partir de los datos y la inserta en el contenedor.
-         */
         function renderTable(data, targetId) {
             const container = document.getElementById(targetId);
             if (!data || data.length < 2) {
@@ -151,23 +131,20 @@
                 return;
             }
 
-            const headers = data[0]; // La primera fila después del salto es la cabecera real
+            const headers = data[0];
             const rows = data.slice(1);
 
             let html = '<table><thead><tr>';
-            
-            // Crea los encabezados (TH)
             headers.forEach((header, index) => {
                 const headerText = header.replace(/\s+/g, ' ').trim() || `Columna ${index + 1}`;
                 html += `<th data-column-index="${index}">${headerText}</th>`;
             });
             html += '</tr></thead><tbody>';
 
-            // Crea las filas (TR) y celdas (TD)
             rows.forEach(row => {
                 html += '<tr>';
                 row.forEach(cell => {
-                    const cellContent = cell.trim() || '&nbsp;'; // Usa &nbsp; para celdas vacías
+                    const cellContent = cell.trim() || '&nbsp;';
                     html += `<td>${cellContent}</td>`;
                 });
                 html += '</tr>';
@@ -176,10 +153,72 @@
             html += '</tbody></table>';
             container.innerHTML = html;
         }
-        
+
+        // --- FUNCIÓN DE GRÁFICOS ---
+
         /**
-         * Realiza la petición, parseo y renderizado para una matriz.
+         * Crea un gráfico de barras simple usando los datos de una matriz.
+         * ESTA FUNCIÓN DEBE SER PERSONALIZADA según la estructura EXACTA de tu CSV.
+         * * @param {Array<Array<string>>} data - Datos parseados de la matriz.
+         * @param {number} labelColIndex - Índice de la columna que será usada como etiqueta (eje X).
+         * @param {number} valueColIndex - Índice de la columna que será usada como valor (eje Y).
+         * @param {string} chartTitle - Título del gráfico.
          */
+        function createBarChart(data, labelColIndex, valueColIndex, chartTitle) {
+            const chartData = data.slice(1); // Datos sin encabezados
+
+            // 1. Extraer Etiquetas y Valores
+            const labels = chartData.map(row => row[labelColIndex] || 'N/A');
+            const values = chartData.map(row => {
+                // Intenta convertir el valor a un número, eliminando separadores de miles (puntos)
+                // y usando coma o punto como separador decimal.
+                let val = row[valueColIndex].replace(/\./g, '').replace(',', '.');
+                return parseFloat(val) || 0; // Si no es un número válido, usa 0
+            });
+
+            // 2. Preparar el contexto del canvas
+            const ctx = document.getElementById('generalChart').getContext('2d');
+            
+            // 3. Destruir gráfico anterior si existe (para prevenir errores al recargar)
+            if (window.generalChartInstance) {
+                window.generalChartInstance.destroy();
+            }
+
+            // 4. Crear el nuevo gráfico
+            window.generalChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: data[0][valueColIndex] || 'Valor', // Usa el encabezado de la columna como etiqueta
+                        data: values,
+                        backgroundColor: 'rgba(42, 82, 152, 0.8)', // Color de las barras
+                        borderColor: 'rgba(42, 82, 152, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chartTitle
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- FUNCIÓN DE CARGA Y RENDERIZADO (MODIFICADA) ---
+
         async function fetchAndRenderMatrix(matrixConfig) {
             const container = document.getElementById(matrixConfig.targetId);
             container.innerHTML = `<p class="loading">Cargando ${matrixConfig.name}...</p>`;
@@ -194,16 +233,28 @@
                 const data = parseCSV(csvText, matrixConfig.skipRows);
                 
                 renderTable(data, matrixConfig.targetId);
+
+                // Si esta matriz está marcada como fuente del gráfico, generarlo.
+                if (matrixConfig.isChartSource) {
+                    // *** CONFIGURACIÓN CLAVE PARA EL GRÁFICO ***
+                    // ** DEBES AJUSTAR ESTOS ÍNDICES **
+                    // 1. Columna de Etiquetas (ej. Nombre del Competidor/Ítem)
+                    const labelColumn = 0; 
+                    // 2. Columna de Valores (ej. Puntaje Total/Resultado Clave)
+                    const valueColumn = 5; 
+                    // Título del Gráfico
+                    const chartTitle = `Comparativa Clave: ${data[0][labelColumn]} vs. ${data[0][valueColumn]}`;
+                    
+                    createBarChart(data, labelColumn, valueColumn, chartTitle);
+                }
                 
             } catch (error) {
                 console.error(`Error al cargar la matriz ${matrixConfig.name}:`, error);
-                container.innerHTML = `<p class="error">⚠️ Error al cargar los datos de la matriz ${matrixConfig.name}. Verifica el enlace y que el archivo esté publicado correctamente. Detalle: ${error.message}</p>`;
+                container.innerHTML = `<p class="error">⚠️ Error al cargar los datos de la matriz ${matrixConfig.name}. Detalle: ${error.message}</p>`;
             }
         }
-
-        /**
-         * Función para agregar la funcionalidad de ordenamiento al hacer clic.
-         */
+        
+        // --- FUNCIONES DE ORDENAMIENTO (Mantenidas) ---
         function addTableSorting() {
             document.querySelectorAll('table').forEach(table => {
                 const headers = table.querySelectorAll('th');
@@ -216,9 +267,6 @@
             });
         }
         
-        /**
-         * Ordena una tabla por una columna específica.
-         */
         function sortTableByColumn(table, column) {
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -231,7 +279,6 @@
                 direction = 'desc';
             }
             
-            // Limpia los indicadores de ordenamiento en la tabla y los encabezados
             table.setAttribute('data-sort-column', column);
             table.setAttribute('data-sort-direction', direction);
             table.querySelectorAll('th').forEach(th => th.removeAttribute('data-sort-direction'));
@@ -241,31 +288,25 @@
                 const cellA = rowA.querySelectorAll('td')[column].textContent.trim();
                 const cellB = rowB.querySelectorAll('td')[column].textContent.trim();
                 
-                // Intenta ordenar numéricamente si el contenido parece ser un número
-                const valA = parseFloat(cellA.replace(',', '.'));
-                const valB = parseFloat(cellB.replace(',', '.'));
+                const valA = parseFloat(cellA.replace(/\./g, '').replace(',', '.'));
+                const valB = parseFloat(cellB.replace(/\./g, '').replace(',', '.'));
                 
                 let comparison;
                 if (!isNaN(valA) && !isNaN(valB)) {
                     comparison = valA - valB;
                 } else {
-                    // Ordenamiento alfabético, sensible al idioma
                     comparison = cellA.localeCompare(cellB, 'es', { numeric: true, sensitivity: 'base' });
                 }
                 
                 return direction === 'asc' ? comparison : comparison * -1;
             });
 
-            // Re-adjunta las filas ordenadas al cuerpo de la tabla
             while (tbody.firstChild) {
                 tbody.removeChild(tbody.firstChild);
             }
             tbody.append(...sortedRows);
         }
 
-        /**
-         * Función principal para cargar todas las matrices al inicio.
-         */
         async function loadAllMatrices() {
             const generalLoading = document.getElementById('loading-message');
             generalLoading.textContent = 'Procesando...';
@@ -274,15 +315,13 @@
                 const promises = MATRICES.map(fetchAndRenderMatrix);
                 await Promise.all(promises);
                 
-                // Oculta el mensaje de carga general y añade el ordenamiento
                 generalLoading.style.display = 'none';
                 addTableSorting();
             } catch(e) {
-                generalLoading.textContent = 'Fallo en la carga de alguna matriz. Revisa los errores en la consola.';
+                 generalLoading.textContent = 'Fallo en la carga. Revisa los errores en la consola.';
             }
         }
 
-        // Ejecutar la función principal al cargar la página
         document.addEventListener('DOMContentLoaded', loadAllMatrices);
     </script>
 </body>
