@@ -1,185 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard CERS — Alineamiento</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard CERS – Villavicencio</title>
 
+<!-- Fuentes + Chart.js + PapaParse -->
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
     body {
-        font-family: 'Montserrat', sans-serif;
-        margin: 0;
-        background: #f4f6f9;
+        font-family: "Montserrat", sans-serif;
+        padding: 30px;
+        background: #f5f7fa;
     }
-    header {
-        background: #0a1128;
-        padding: 25px 20px;
-        color: white;
-        font-size: 26px;
+    h1 {
         font-weight: 700;
+        margin-bottom: 20px;
     }
-    .tabs {
-        display: flex;
+    canvas { 
+        margin: 40px 0;
         background: #fff;
-        border-bottom: 2px solid #ddd;
-    }
-    .tab {
-        padding: 15px 20px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-    .tab.active {
-        border-bottom: 3px solid #0a1128;
-        color: #0a1128;
-    }
-    .content {
         padding: 20px;
-        display: none;
-    }
-    .content.active {
-        display: block;
-    }
-    .kpi-container {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        margin-bottom: 25px;
-    }
-    .kpi {
-        background: white;
-        padding: 15px;
         border-radius: 10px;
-        flex: 1 1 200px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .kpi h3 {
-        margin: 0;
-        font-size: 14px;
-        color: #666;
-    }
-    .kpi p {
-        margin: 5px 0 0;
-        font-size: 24px;
-        font-weight: 700;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     }
 </style>
-</head>
 
+</head>
 <body>
 
-<header>Dashboard CERS — % de alineamiento</header>
+<h1>Dashboard – Alineamiento (Estimado)</h1>
+<p><strong>Archivo CSV cargado automáticamente:</strong> <span id="archivo"></span></p>
 
-<div class="tabs">
-    <div class="tab active" onclick="openTab('nacional')">NACIONAL</div>
-    <div class="tab" onclick="openTab('internacional')">INTERNACIONAL</div>
-    <div class="tab" onclick="openTab('general')">GENERAL</div>
-</div>
-
-<div id="nacional" class="content active">
-    <h2>Nacional</h2>
-    <div class="kpi-container">
-        <div class="kpi"><h3>Total registros</h3><p id="nat_total">0</p></div>
-        <div class="kpi"><h3>Promedio alineamiento</h3><p id="nat_avg">0%</p></div>
-        <div class="kpi"><h3>Mediana</h3><p id="nat_med">0%</p></div>
-        <div class="kpi"><h3>% ≥ 80%</h3><p id="nat_80">0%</p></div>
-    </div>
-    <canvas id="nat_chart"></canvas>
-</div>
-
-<div id="internacional" class="content">
-    <h2>Internacional</h2>
-    <div class="kpi-container">
-        <div class="kpi"><h3>Total registros</h3><p id="int_total">0</p></div>
-        <div class="kpi"><h3>Promedio alineamiento</h3><p id="int_avg">0%</p></div>
-        <div class="kpi"><h3>Mediana</h3><p id="int_med">0%</p></div>
-        <div class="kpi"><h3>% ≥ 80%</h3><p id="int_80">0%</p></div>
-    </div>
-    <canvas id="int_chart"></canvas>
-</div>
-
-<div id="general" class="content">
-    <h2>General</h2>
-    <div class="kpi-container">
-        <div class="kpi"><h3>Total registros</h3><p id="gen_total">0</p></div>
-        <div class="kpi"><h3>Promedio alineamiento</h3><p id="gen_avg">0%</p></div>
-        <div class="kpi"><h3>Mediana</h3><p id="gen_med">0%</p></div>
-        <div class="kpi"><h3>% ≥ 80%</h3><p id="gen_80">0%</p></div>
-    </div>
-    <canvas id="gen_chart"></canvas>
-</div>
-
-<script>
-// URLs de las tres pestañas (tu archivo en Google Sheets)
-const urls = {
-    nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
-    internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
-    general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv"
-};
-
-// columnas distintas según pestaña
-const columns = {
-    nacional: "% alineamiento (estimado)",
-    internacional: "% alineamiento (estimado)",
-    general: "% global"
-};
-
-// utilidades
-const median = arr => arr.sort((a,b)=>a-b)[Math.floor(arr.length/2)] || 0;
-
-function loadCSV(type) {
-    fetch(urls[type])
-    .then(r => r.text())
-    .then(text => {
-        const rows = text.split("\n").map(r => r.split(","));
-        const headers = rows[0];
-
-        const colName = columns[type];
-        const idx = headers.indexOf(colName);
-
-        if (idx === -1) {
-            console.error("No se encontró la columna:", colName);
-            return;
-        }
-
-        const values = rows.slice(1)
-            .map(r => parseFloat(r[idx].replace("%","").replace(",","").trim()))
-            .filter(v => !isNaN(v));
-
-        document.getElementById(`${type}_total`).textContent = values.length;
-        document.getElementById(`${type}_avg`).textContent = (values.reduce((a,b)=>a+b,0)/values.length || 0).toFixed(1)+"%";
-        document.getElementById(`${type}_med`).textContent = median(values).toFixed(1)+"%";
-        document.getElementById(`${type}_80`).textContent = (100 * values.filter(v=>v>=80).length / (values.length||1)).toFixed(1)+"%";
-
-        new Chart(document.getElementById(`${type}_chart`), {
-            type: "bar",
-            data: {
-                labels: values.map((v,i)=>"Fila "+(i+1)),
-                datasets: [{
-                    label: colName,
-                    data: values
-                }]
-            },
-            options: { responsive: true }
-        });
-    });
-}
-
-// cargar todo
-loadCSV("nacional");
-loadCSV("internacional");
-loadCSV("general");
-
-// cambio de pestañas
-function openTab(id) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-    document.querySelector(`.tab[onclick="openTab('${id}')"]`).classList.add("active");
-    document.getElementById(id).classList.add("active");
-}
-</script>
-
-</body>
-</html>
+<canvas id="graficoGeneral"><
