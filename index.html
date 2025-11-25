@@ -40,10 +40,17 @@ h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
 .title{color:var(--primario);font-weight:700;font-size:1.15rem;margin-bottom:6px}
 .muted{color:var(--muted);margin-bottom:12px}
 
-/* grid & cards */
+/* GRÁFICAS: Corrección del tamaño */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:12px}
 .card{background:#fff;padding:12px;border-radius:8px;border:1px solid #e9f0f6}
+.card canvas {
+    /* Limita el tamaño de la gráfica dentro del contenedor */
+    max-height: 220px; 
+    max-width: 500px; 
+    margin: 0 auto;
+}
+
 .kpi{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:#fafcff;border-left:6px solid var(--primario)}
 .kpi .label{font-size:.9rem;color:var(--muted)}
 .kpi .value{font-size:1.6rem;font-weight:800}
@@ -55,7 +62,7 @@ th,td{padding:10px;border-bottom:1px solid #eef6fb;text-align:left}
 thead th{background:var(--primario);color:#fff}
 tbody tr:nth-child(even){background:#fbfdff}
 
-/* validation */
+/* validation styles (mantener por si se reintroducen) */
 .validation-list{max-height:420px;overflow:auto;border-radius:8px;padding:8px;background:#fff;border:1px solid #e6eef6}
 .validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f3f8fb}
 .validation-item:last-child{border-bottom:0}
@@ -74,37 +81,6 @@ tbody tr:nth-child(even){background:#fbfdff}
     background: var(--alto);
     color: #fff;
     white-space: nowrap; 
-}
-
-/* Layout de Validación */
-.validation-item {
-    flex-direction: column; 
-    gap: 12px; 
-    padding: 10px;
-}
-.validation-item-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-.validation-buttons {
-    display: flex;
-    gap: 8px;
-}
-.validation-item-meta {
-    font-size: 0.95rem;
-    flex: 1;
-}
-.validation-item-meta > div {
-    margin-top: 4px;
-}
-.obs-input {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #e6eef6;
-    margin-top: 6px; 
 }
 
 /* responsive */
@@ -172,7 +148,7 @@ const URL_GENERAL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV
 let dataGeneral = [];
 let chartGeneralLevels=null;
 
-// Nombres de columna exactos, sin espacios, generados por PapaParse
+// Nombres de columna exactos, forzados para la Matriz General:
 const COL_LINEA = 'Dimensión de análisis (agrupación por determinantes)Referentes técnicos y/o normativosEstado actual (síntesis de hallazgos)';
 const COL_NIVEL = 'Nivel de alineamiento (estimado)';
 const COL_OPORTUNIDAD = 'Oportunidad de mejora priorizada';
@@ -247,7 +223,7 @@ async function refreshGeneral(){
     const colNivel = COL_NIVEL;
     const colRec   = COL_OPORTUNIDAD;
     
-    // Convertimos los datos para uso interno (asumiendo que Nivel es texto: Alto/Medio/Bajo)
+    // Mapeamos los datos para usarlos en la interfaz
     const mapped = dataGeneral.map(r => {
       const nivelTexto = String(r[colNivel] || '').toLowerCase().trim();
       let porcentajeNum = 0;
@@ -260,7 +236,8 @@ async function refreshGeneral(){
       return {
         linea: r[colLinea] || 'Ítem sin descripción',
         porcentajeNum: porcentajeNum,
-        porcentaje: porcentajeNum > 0 ? (porcentajeNum.toFixed(1) + '%') : '—', // Mostramos texto si no hay %
+        // Si el valor viene del texto, mostramos una aproximación en %
+        porcentaje: porcentajeNum > 0 ? (porcentajeNum.toFixed(1) + '%') : '—', 
         nivel: r[colNivel] || '—',
         recomendacion: r[colRec] || '—'
       };
@@ -278,16 +255,23 @@ async function refreshGeneral(){
       mapped.filter(r => r.porcentajeNum >= 80).length
     ];
     
+    // CORRECCIÓN GRÁFICA: Destruir y crear nueva para asegurar el renderizado
     if(chartGeneralLevels) chartGeneralLevels.destroy();
     chartGeneralLevels = new Chart(document.getElementById('chartGeneralLevels'), {
       type: 'doughnut',
       data: { labels: ['Bajo','Medio','Alto'], datasets: [{ data: counts, backgroundColor: [getCSSVar('--bajo','#dc3545'), getCSSVar('--medio','#ffc107'), getCSSVar('--alto','#28a745')] }] },
-      options: { plugins: { legend: { position: 'top' } } }
+      options: { 
+        plugins: { 
+          legend: { position: 'top' } 
+        },
+        responsive: true,
+        maintainAspectRatio: false // Importante para que el CSS controle el tamaño
+      }
     });
 
     // Table
     renderTable('#tablewrap-general', mapped.map(x=> ({ 
-      'Línea estratégica / Eje': x.linea, 
+      'Línea estratégica / Eje': truncate(x.linea, 120), 
       'Alineamiento (%)': x.porcentaje, 
       'Nivel': x.nivel, 
       'Recomendación': x.recomendacion 
