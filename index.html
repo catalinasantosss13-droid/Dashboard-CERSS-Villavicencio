@@ -3,627 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de evaluación CERS - Secretaría de Salud Villavicencio</title>
+    <title>Evaluación CERS - Secretaría de Salud Villavicencio</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* ---------------------------------------------------- */
-        /* ESTILOS BASE Y VARIABLES */
-        /* ---------------------------------------------------- */
         :root {
-            --color-primario: #1a4369; /* Azul oscuro elegante (Institucional) */
-            --color-secundario: #00bcd4; /* Cian/Turquesa para acentos */
-            --color-alto: #28a745;      /* Verde para Alto */
-            --color-medio: #ffc107;     /* Amarillo para Medio */
-            --color-bajo: #dc3545;      /* Rojo para Bajo */
-            --color-fondo: #f8f9fa; 
-            --color-texto: #333;
-            --color-blanco: #ffffff;
-            --color-gris-claro: #e0e0e0; /* Para elementos neutrales */
+            --color-primario: #003366;
+            --color-secundario: #00AEEF;
+            --color-alto: #2ECC71;      
+            --color-medio: #F1C40F;     
+            --color-bajo: #E74C3C;      
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #2c3e50;
         }
+
         body {
-            font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
-            background-color: var(--color-fondo);
-            color: var(--color-texto);
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            padding-bottom: 40px;
         }
 
-        /* --- HEADER Y TÍTULO (Logos y Título Principal) --- */
-        .main-header {
+        /* HEADER */
+        .header-top {
+            background: linear-gradient(90deg, var(--color-primario) 0%, #001f3f 100%);
+            color: white;
+            padding: 20px 40px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            background-color: var(--color-blanco);
-            border-bottom: 5px solid var(--color-primario);
-            padding: 15px 30px; /* Reducido un poco para más balance */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px; /* Espacio debajo del header */
-        }
-
-        .title-block {
-            flex-grow: 1;
-            text-align: center;
-            padding: 0 20px;
-        }
-        .main-header h1 { 
-            margin: 0; 
-            font-size: 1.4em; /* Ligeramente más pequeño */
-            color: var(--color-primario);
-            font-weight: 700;
-        }
-        .main-header p { 
-            margin: 5px 0 0; 
-            font-size: 0.9em; /* Ligeramente más pequeño */
-            color: #6c757d;
-        }
-        .logo-group {
-            display: flex;
             align-items: center;
-            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .logo-group img {
-            height: 50px; /* Ligeramente más pequeños */
-            max-width: 100px;
-            object-fit: contain;
-        }
-        /* Ocultar los logos que no queremos, ya que se eliminaron del HTML directamente */
-        .logo-group.left-logos img:not(:first-child) { display: none; } 
-        .logo-group.right-logos img:not(:first-child) { display: none; }
 
+        .header-info h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        .header-info p { margin: 5px 0 0; font-weight: 400; opacity: 0.9; font-size: 0.9rem; }
 
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 0 20px; /* Ajuste para que no haya padding excesivo si es muy ancho */
+        /* NAVEGACIÓN TIPO PESTAÑAS */
+        .nav-tabs {
+            background-color: white;
+            padding: 0 40px;
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        /* --- ESTADO DE SINCRONIZACIÓN --- */
-        .sync-status-section {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            padding: 15px 30px; 
-            margin-bottom: 30px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--color-secundario);
-            text-align: center;
-        }
-        .sync-status-section p:first-child {
-            font-size: 0.9em;
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
-        .sync-status { 
-            font-size: 1em;
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 15px 5px;
+            font-family: inherit;
+            font-size: 0.95rem;
             font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
         }
-        .status-success { color: var(--color-alto); }
-        .status-error { color: var(--color-bajo); }
-        .status-loading { color: #888; }
-        
-        /* --- KPIS Y GRÁFICOS --- */
-        .kpi-container {
+        .tab-btn:hover { color: var(--color-primario); }
+        .tab-btn.active { color: var(--color-primario); }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-secundario);
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        /* KPI CARDS */
+        .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        .kpi {
-            background-color: var(--color-blanco);
-            border-radius: 8px; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
-            padding: 25px;
-            text-align: center;
-            border: 1px solid #eee;
-        }
-        
-        /* Recuadros de KPI con color */
-        .kpi-alto-box { border: 2px solid var(--color-alto); background-color: #e6f7e9; } /* Verde claro */
-        .kpi-medio-box { border: 2px solid var(--color-medio); background-color: #fff8e1; } /* Amarillo claro */
-        .kpi-bajo-box { border: 2px solid var(--color-bajo); background-color: #fcebeb; } /* Rojo claro */
-        
-        .kpi-title { 
-            font-size: 0.85em; 
-            font-weight: 600; 
-            color: #555; 
-            margin-bottom: 10px;
-        }
-        .kpi-value {
-            font-size: 2em;
-            font-weight: 700;
-            color: var(--color-texto);
-        }
-        .kpi-value.alto { color: var(--color-alto); }
-        .kpi-value.medio { color: var(--color-medio); }
-        .kpi-value.bajo { color: var(--color-bajo); }
-
-        .kpi-promedio { 
-            grid-column: span 4; 
-            padding: 30px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .progress-bar-container {
-            width: 100%;
-            background-color: var(--color-gris-claro);
-            border-radius: 25px;
-            height: 30px;
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden; /* Para que la barra no se salga del contenedor */
-        }
-        .progress-bar { 
-            background-color: var(--color-gris-claro); /* Color inicial gris */
-            height: 100%; 
-            border-radius: 25px; 
-            width: 0%; /* Inicialmente 0 */
-            transition: width 1.5s ease-out, background-color 0.5s ease; 
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        .progress-bar-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            line-height: 30px; /* Centrar verticalmente */
-            color: var(--color-texto);
-            font-weight: 600;
-            z-index: 1; /* Para que el texto esté encima de la barra */
-        }
-
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .chart-box {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-        }
-        .chart-box h2, .data-table-section h2, .conclusions h2 { 
-            color: var(--color-primario);
-            font-size: 1.2em;
-            font-weight: 600;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .data-table-section h2 { border-left: 5px solid var(--color-secundario); padding-left: 10px;}
-        
-        /* --- Tabla --- */
-        .data-table-section {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-            margin-bottom: 40px;
-            overflow-x: auto; /* Para tablas responsive */
-        }
-        #results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        #results-table th, #results-table td {
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 0.9em;
-        }
-        #results-table th {
-            background-color: #f2f2f2;
-            font-weight: 600;
-            color: var(--color-primario);
-        }
-        #results-table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .levelAlto { color: var(--color-alto); font-weight: 600; }
-        .levelMedio { color: var(--color-medio); font-weight: 600; }
-        .levelBajo { color: var(--color-bajo); font-weight: 600; }
-        
-        /* --- Conclusiones --- */
-        .conclusions {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-            margin-bottom: 40px;
-        }
-        .conclusions ol {
-            padding-left: 20px;
-            margin-top: 15px;
-        }
-        .conclusions li {
-            margin-bottom: 10px;
-        }
-
-        /* --- FOOTER FORMAL (Créditos) --- */
-        .formal-footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .kpi-card {
+            background: var(--bg-card);
             padding: 20px;
-            border-top: 2px solid var(--color-secundario); 
-            background-color: #eef1f5; 
-            margin-top: 30px;
-            font-size: 0.85em;
-        }
-        .formal-footer .credits p {
-            font-size: 0.9em;
-            color: #555;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             text-align: center;
-            margin: 5px 0;
-            line-height: 1.4;
+            border-top: 4px solid transparent;
         }
-        
-        /* Media Queries (Responsividad) */
-        @media (max-width: 1000px) {
-            .main-header { flex-direction: column; padding: 15px 20px; text-align: center; }
-            .title-block { margin-bottom: 15px; padding: 0;}
-            .main-header h1 { font-size: 1.2em; }
-            .charts-container { grid-template-columns: 1fr; }
-            .kpi-container { grid-template-columns: 1fr 1fr; }
-            .kpi-promedio { grid-column: span 2; }
-            .logo-group { flex-direction: column; gap: 5px; }
+        .kpi-card.total { border-color: var(--color-primario); }
+        .kpi-card.alto { border-color: var(--color-alto); }
+        .kpi-card.medio { border-color: var(--color-medio); }
+        .kpi-card.bajo { border-color: var(--color-bajo); }
+        .kpi-value { font-size: 2.5rem; font-weight: 700; display: block; margin: 10px 0; }
+        .kpi-label { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* GRÁFICOS */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+            margin-bottom: 30px;
         }
-        @media (max-width: 600px) {
-             .kpi-container { grid-template-columns: 1fr; }
-             .kpi-promedio { grid-column: span 1; }
-             .logo-group img { height: 40px; max-width: 80px; }
-             .main-header h1 { font-size: 1em; }
-             .main-header p { font-size: 0.8em; }
-             .kpi-value { font-size: 1.5em; }
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: 400px;
+            position: relative;
+        }
+        h2.section-title {
+            color: var(--color-primario);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--color-secundario);
+            padding-left: 10px;
+        }
+
+        /* TABLA */
+        .table-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th {
+            background-color: #f8f9fa;
+            color: var(--color-primario);
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 2px solid #eee;
+        }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: top; }
+        tr:hover { background-color: #fcfcfc; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem; }
+        .bg-alto { background-color: rgba(46, 204, 113, 0.15); color: #27ae60; }
+        .bg-medio { background-color: rgba(241, 196, 15, 0.15); color: #d35400; }
+        .bg-bajo { background-color: rgba(231, 76, 60, 0.15); color: #c0392b; }
+
+        @media (max-width: 900px) {
+            .charts-section { grid-template-columns: 1fr; height: auto; }
+            .header-top { flex-direction: column; text-align: center; gap: 15px; }
+            .nav-tabs { padding: 0 10px; overflow-x: auto; }
         }
     </style>
 </head>
 <body>
 
-    <header class="main-header">
-        <div class="logo-group left-logos">
-            <img src="logos/alcaldia.png" alt="Logo Alcaldía de Villavicencio">
+    <header class="header-top">
+        <div class="header-info">
+            <h1>Evaluación de Alineamiento CERS</h1>
+            <p>Plan de Acción vs Referentes Nacionales e Internacionales</p>
         </div>
-        
-        <div class="title-block">
-            <h1>Dashboard de evaluación de la alineación del Plan de Acción MCEVS con Lineamientos CERS/OPS</h1>
-            <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
-        </div>
-
-        <div class="logo-group right-logos">
-            <img src="logos/unillanos.png" alt="Logo Universidad de los Llanos">
-        </div>
-    </header>
-
-    <div class="container">
-
-        <div class="sync-status-section">
-            <p>Estado de la sincronización:</p>
-            <div class="sync-status status-loading" id="sync-status">Conectando con la matriz de evaluación...</div>
-        </div>
-
-        <div class="kpi-container">
-            <div class="kpi kpi-promedio">
-                <div class="kpi-title">Promedio general de alineamiento (Avance %)</div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-text" id="kpi-promedio-text">0%</div>
-                    <div class="progress-bar" id="kpi-promedio-bar" style="width: 0%;"></div>
-                </div>
-            </div>
-            
-            <div class="kpi kpi-alto-box">
-                <div class="kpi-title">Líneas en nivel alto</div>
-                <div class="kpi-value alto" id="kpi-alto">0</div>
-            </div>
-            <div class="kpi kpi-medio-box">
-                <div class="kpi-title">Líneas en nivel medio</div>
-                <div class="kpi-value medio" id="kpi-medio">0</div>
-            </div>
-            <div class="kpi kpi-bajo-box">
-                <div class="kpi-title">Líneas en nivel bajo (Crítico)</div>
-                <div class="kpi-value bajo" id="kpi-bajo">0</div>
-            </div>
-        </div>
-
-        <div class="charts-container">
-            <div class="chart-box">
-                <h2>Distribución de niveles de articulación</h2>
-                <canvas id="graficoNiveles"></canvas>
-            </div>
-            <div class="chart-box">
-                <h2>Alineamiento % por línea estratégica</h2>
-                <canvas id="graficoLineas"></canvas>
-            </div>
-        </div>
-        
-        <div class="data-table-section">
-            <h2>Resultados detallados y recomendaciones</h2>
-            <table id="results-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Línea Estratégica / Eje CERS</th>
-                        <th style="width: 10%;">Alineamiento (%)</th>
-                        <th style="width: 15%;">Nivel de alineamiento</th>
-                        <th style="width: 50%;">Recomendaciones de mejora</th>
-                    </tr>
-                </thead>
-                <tbody id="data-table-body">
-                    <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="conclusions">
-            <h2>Conclusiones para el proyecto de mejora</h2>
-            <p>La evaluación identifica los puntos críticos y las oportunidades de institucionalización necesarias para que el Plan de Acción alcance un nivel **Alto** de articulación con la política pública CERS/CERSS:</p>
-            <ol>
-            </ol>
-        </div>
-        
-    </div>
-
-    <footer class="formal-footer">
-        <div class="credits">
-            <p>Este dashboard es un producto del proyecto de mejora de la práctica profesional en el Programa ECNT.</p>
-            <p>Elaborado por Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Variables globales para los gráficos
-        let chartNiveles = null;
-        let chartLineas = null;
-
-        const PALETA = {
-            primario: '#1a4369', 
-            alto: '#28a745',
-            medio: '#ffc107',
-            bajo: '#dc3545',
-            neutral: '#6c757d' /* Nuevo color para barra en niveles bajos */
-        };
-
-        // === CONFIGURACIÓN DE DATOS (CRÍTICO) ===
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1329201944&single=true&output=csv'; 
-        const COL_LINEA = 0; 
-        const COL_PORCENTAJE = 4; 
-        const COL_NIVEL = 5; 
-        const COL_RECOMENDACION = 6; 
-        const HEADER_SKIP_ROWS = 4;
-        // ===========================================
-
-        // --- FUNCIÓN PRINCIPAL DE CARGA CSV (Mantenida) ---
-        function loadData() {
-            const statusElement = document.getElementById('sync-status');
-            statusElement.innerText = "Cargando datos...";
-            statusElement.className = "sync-status status-loading";
-
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: false,
-                complete: function(results) {
-                    try {
-                        const { kpiData, lineasData, tablaData } = processData(results.data);
-                        
-                        actualizarVisuals(kpiData, lineasData);
-                        renderTable(tablaData);
-                        
-                        const now = new Date();
-                        const timeString = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-                        const dateString = now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-                        
-                        statusElement.innerText = `✅ Sincronizado exitosamente. Última actualización: ${dateString}, ${timeString}`;
-                        statusElement.className = "sync-status status-success";
-                    } catch (e) {
-                        console.error("Error al procesar datos:", e);
-                        statusElement.innerText = `❌ Error: No se encontraron datos válidos. Revisa la URL y el valor de HEADER_SKIP_ROWS (${HEADER_SKIP_ROWS}).`;
-                        statusElement.className = "sync-status status-error";
-                    }
-                },
-                error: function(error) {
-                    console.error("Error al cargar datos del CSV:", error);
-                    statusElement.innerText = `❌ Error de conexión. Por favor, verifica la URL publicada.`;
-                    statusElement.className = "sync-status status-error";
-                }
-            });
-        }
-        
-        // --- FUNCIÓN DE PROCESAMIENTO (Mantenida) ---
-        function processData(data) {
-            let totalLineas = 0;
-            let sumaPorcentajes = 0;
-            let bajoCount = 0;
-            let medioCount = 0;
-            let altoCount = 0;
-            
-            const lineasData = { labels: [], avances: [] };
-            const tablaData = [];
-
-            for (let i = HEADER_SKIP_ROWS; i < data.length; i++) {
-                const row = data[i];
-                if (!row[COL_LINEA] || row[COL_LINEA].trim() === "" || row[COL_LINEA].toUpperCase().includes('PROMEDIO')) { 
-                    break;
-                }
-                if (row.length > COL_RECOMENDACION) { 
-                    totalLineas++;
-                    const porcentaje = parseFloat(row[COL_PORCENTAJE]) || 0; 
-                    const nivel = row[COL_NIVEL] ? row[COL_NIVEL].trim() : "Sin Datos";
-                    
-                    sumaPorcentajes += porcentaje;
-
-                    if (nivel === 'Bajo') bajoCount++;
-                    else if (nivel === 'Medio') medioCount++;
-                    else if (nivel === 'Alto') altoCount++;
-
-                    lineasData.labels.push(row[COL_LINEA]);
-                    lineasData.avances.push(porcentaje);
-                    
-                    tablaData.push({
-                        linea: row[COL_LINEA],
-                        porcentaje: porcentaje,
-                        nivel: nivel,
-                        recomendacion: row[COL_RECOMENDACION]
-                    });
-                }
-            }
-            if (totalLineas === 0) { throw new Error(`No se encontraron datos válidos.`); }
-
-            return {
-                kpiData: {
-                    alto: altoCount,
-                    medio: medioCount,
-                    bajo: bajoCount,
-                    promedio: totalLineas > 0 ? (sumaPorcentajes / totalLineas) : 0
-                },
-                lineasData: lineasData,
-                tablaData: tablaData
-            };
-        }
-        
-        // --- FUNCIONES RENDER Y ANIMATE (Mantenidas) ---
-        function renderTable(tablaData) {
-            const tableBody = document.getElementById('data-table-body');
-            let html = '';
-            if (tablaData.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay datos para mostrar en la tabla.</td></tr>';
-                 return;
-            }
-            tablaData.forEach(item => {
-                const levelClass = `level${item.nivel.replace(' ', '')}`; 
-                html += `
-                    <tr>
-                        <td>${item.linea}</td>
-                        <td>${item.porcentaje}%</td>
-                        <td><span class="${levelClass}">${item.nivel}</span></td>
-                        <td>${item.recomendacion}</td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
-        }
-
-        function animateValue(element, start, end, duration, isDecimal = false) {
-            let startTimestamp = null;
-            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easedProgress = easeOutCubic(progress);
-                const currentValue = start + (end - start) * easedProgress;
-
-                if (isDecimal) {
-                    element.innerText = currentValue.toFixed(1) + '%';
-                } else {
-                    element.innerText = Math.floor(currentValue);
-                }
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    element.innerText = isDecimal ? end.toFixed(1) + '%' : end;
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // --- FUNCIÓN PRINCIPAL DE VISUALIZACIÓN (CORRECCIÓN BARRA Y KPIs) ---
-        function actualizarVisuals(kpiData, lineasData) {
-            
-            // 1. Actualizar KPIs con la animación
-            const duracionAnimacion = 1500; 
-            animateValue(document.getElementById('kpi-alto'), 0, kpiData.alto ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-medio'), 0, kpiData.medio ?? 0, duracionAnimacion);
-            animateValue(document.getElementById('kpi-bajo'), 0, kpiData.bajo ?? 0, duracionAnimacion);
-            
-            const promedio = parseFloat(kpiData.promedio ?? 0);
-            animateValue(document.getElementById('kpi-promedio-text'), 0, promedio, duracionAnimacion, true);
-            
-            setTimeout(() => {
-                const barElement = document.getElementById('kpi-promedio-bar');
-                barElement.style.width = promedio + '%';
-                
-                let barColor = PALETA.neutral; /* Color neutral si no cumple criterios */
-                if (promedio >= 80) barColor = PALETA.alto;
-                else if (promedio >= 40) barColor = PALETA.medio;
-                else barColor = PALETA.bajo; /* Si es bajo, usar el color bajo */
-
-                barElement.style.backgroundColor = barColor;
-            }, 100);
-
-            // 2. Gráfico de Niveles (Dona)
-            if (chartNiveles) { chartNiveles.destroy(); }
-            const ctxNiveles = document.getElementById('graficoNiveles').getContext('2d');
-            chartNiveles = new Chart(ctxNiveles, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Bajo (Crítico)', 'Medio', 'Alto'],
-                    datasets: [{
-                        data: [kpiData.bajo, kpiData.medio, kpiData.alto],
-                        backgroundColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 1,
-                    animation: { duration: 1000, easing: 'easeOutCubic' },
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
-
-            // 3. Gráfico de Líneas (Barras Horizontales)
-            if (chartLineas) { chartLineas.destroy(); }
-            const ctxLineas = document.getElementById('graficoLineas').getContext('2d');
-            chartLineas = new Chart(ctxLineas, {
-                type: 'bar',
-                data: {
-                    labels: lineasData.labels,
-                    datasets: [{
-                        label: '% Avance (Coincidencia)',
-                        data: lineasData.avances,
-                        backgroundColor: lineasData.avances.map(val => {
-                            if (val >= 80) return PALETA.alto;
-                            if (val >= 40) return PALETA.medio;
-                            return PALETA.bajo;
-                        }),
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    aspectRatio: 1.8,
-                    animation: { duration: 1000, easing: 'easeOutCubic' },
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { callback: value => value + '%' }
-                        },
-                        y: {
-                            ticks: { font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-        
-        window.onload = loadData;
-    </script>
-</body>
-</html>
+        <div>
+            <span style="font-size:0.8rem; opacity:0.8; background:rgba(255,255,255,0.2); padding:5px 10px;
