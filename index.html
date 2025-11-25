@@ -1,38 +1,289 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard CERS – Villavicencio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz Comparativa - Actualización Automática</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1, h2 { 
+            text-align: center; 
+            color: #1e3c72; /* Color oscuro para títulos */
+            margin-bottom: 20px;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: auto; 
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 50px; 
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px 15px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #2a5298; /* Azul más intenso para encabezados */
+            color: white;
+            cursor: pointer; 
+            position: sticky;
+            top: 0;
+            user-select: none;
+        }
+        th:hover {
+            background-color: #1e3c72;
+        }
+        /* Indicadores de ordenamiento */
+        th[data-sort-direction="asc"]::after { content: " ▲"; }
+        th[data-sort-direction="desc"]::after { content: " ▼"; }
 
-<!-- Fuentes + Chart.js + PapaParse -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-<style>
-    body {
-        font-family: "Montserrat", sans-serif;
-        padding: 30px;
-        background: #f5f7fa;
-    }
-    h1 {
-        font-weight: 700;
-        margin-bottom: 20px;
-    }
-    canvas { 
-        margin: 40px 0;
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-    }
-</style>
-
+        .loading, .error { 
+            text-align: center; 
+            font-size: 1.1em; 
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .loading { color: #007bff; }
+        .error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        
+        section {
+            padding: 20px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+        section:last-of-type {
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>📊 Resultados de Matriz Comparativa</h1>
+        <p class="loading" id="loading-message">Cargando datos de las matrices...</p>
 
-<h1>Dashboard – Alineamiento (Estimado)</h1>
-<p><strong>Archivo CSV cargado automáticamente:</strong> <span id="archivo"></span></p>
+        <section id="nacional-section">
+            <h2>Matriz NACIONAL</h2>
+            <div id="nacional-table"></div>
+        </section>
 
-<canvas id="graficoGeneral"><
+        <section id="internacional-section">
+            <h2>Matriz INTERNACIONAL</h2>
+            <div id="internacional-table"></div>
+        </section>
+
+        <section id="general-section">
+            <h2>Matriz GENERAL</h2>
+            <div id="general-table"></div>
+        </section>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE MATRICES ---
+        const MATRICES = [
+            {
+                name: "NACIONAL",
+                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
+                targetId: "nacional-table",
+                // Indica al parser que omita la primera fila (el encabezado fantasma)
+                skipRows: 1 
+            },
+            {
+                name: "INTERNACIONAL",
+                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
+                targetId: "internacional-table",
+                skipRows: 1
+            },
+            {
+                name: "GENERAL",
+                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv",
+                targetId: "general-table",
+                skipRows: 1
+            }
+        ];
+
+        // --- FUNCIONES CENTRALES ---
+
+        /**
+         * Parsea una cadena CSV en un array de arrays. 
+         * Maneja el salto de filas y la limpieza básica de celdas.
+         */
+        function parseCSV(csvText, skipRows = 0) {
+            // Divide por líneas y filtra líneas vacías
+            const rows = csvText.trim().split('\n').filter(row => row.trim() !== '');
+
+            // Omite el número de filas especificado
+            const dataRows = rows.slice(skipRows);
+
+            return dataRows.map(row => {
+                // Divide por comas. Nota: Google Sheets CSV exporta texto entre comillas (")
+                // si contiene comas internas. El siguiente código maneja esto de forma básica.
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => {
+                    // Remueve comillas iniciales/finales y espacios en blanco
+                    let content = cell.trim();
+                    if (content.startsWith('"') && content.endsWith('"')) {
+                        content = content.slice(1, -1);
+                    }
+                    return content.trim();
+                });
+            });
+        }
+
+        /**
+         * Crea una tabla HTML a partir de los datos y la inserta en el contenedor.
+         */
+        function renderTable(data, targetId) {
+            const container = document.getElementById(targetId);
+            if (!data || data.length < 2) {
+                container.innerHTML = '<p class="error">No se encontraron datos válidos o el archivo está vacío (después de saltar la fila fantasma).</p>';
+                return;
+            }
+
+            const headers = data[0]; // La primera fila después del salto es la cabecera real
+            const rows = data.slice(1);
+
+            let html = '<table><thead><tr>';
+            
+            // Crea los encabezados (TH)
+            headers.forEach((header, index) => {
+                const headerText = header.replace(/\s+/g, ' ').trim() || `Columna ${index + 1}`;
+                html += `<th data-column-index="${index}">${headerText}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // Crea las filas (TR) y celdas (TD)
+            rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    const cellContent = cell.trim() || '&nbsp;'; // Usa &nbsp; para celdas vacías
+                    html += `<td>${cellContent}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        /**
+         * Realiza la petición, parseo y renderizado para una matriz.
+         */
+        async function fetchAndRenderMatrix(matrixConfig) {
+            const container = document.getElementById(matrixConfig.targetId);
+            container.innerHTML = `<p class="loading">Cargando ${matrixConfig.name}...</p>`;
+
+            try {
+                const response = await fetch(matrixConfig.url);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const csvText = await response.text();
+                
+                const data = parseCSV(csvText, matrixConfig.skipRows);
+                
+                renderTable(data, matrixConfig.targetId);
+                
+            } catch (error) {
+                console.error(`Error al cargar la matriz ${matrixConfig.name}:`, error);
+                container.innerHTML = `<p class="error">⚠️ Error al cargar los datos de la matriz ${matrixConfig.name}. Verifica el enlace y que el archivo esté publicado correctamente. Detalle: ${error.message}</p>`;
+            }
+        }
+
+        /**
+         * Función para agregar la funcionalidad de ordenamiento al hacer clic.
+         */
+        function addTableSorting() {
+            document.querySelectorAll('table').forEach(table => {
+                const headers = table.querySelectorAll('th');
+                headers.forEach(header => {
+                    header.addEventListener('click', () => {
+                        const columnIndex = header.getAttribute('data-column-index');
+                        sortTableByColumn(table, parseInt(columnIndex));
+                    });
+                });
+            });
+        }
+        
+        /**
+         * Ordena una tabla por una columna específica.
+         */
+        function sortTableByColumn(table, column) {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            let direction = 'asc';
+            const currentColumn = table.getAttribute('data-sort-column');
+            const currentDirection = table.getAttribute('data-sort-direction');
+
+            if (currentColumn == column && currentDirection === 'asc') {
+                direction = 'desc';
+            }
+            
+            // Limpia los indicadores de ordenamiento en la tabla y los encabezados
+            table.setAttribute('data-sort-column', column);
+            table.setAttribute('data-sort-direction', direction);
+            table.querySelectorAll('th').forEach(th => th.removeAttribute('data-sort-direction'));
+            table.querySelector(`th[data-column-index="${column}"]`).setAttribute('data-sort-direction', direction);
+            
+            const sortedRows = rows.sort((rowA, rowB) => {
+                const cellA = rowA.querySelectorAll('td')[column].textContent.trim();
+                const cellB = rowB.querySelectorAll('td')[column].textContent.trim();
+                
+                // Intenta ordenar numéricamente si el contenido parece ser un número
+                const valA = parseFloat(cellA.replace(',', '.'));
+                const valB = parseFloat(cellB.replace(',', '.'));
+                
+                let comparison;
+                if (!isNaN(valA) && !isNaN(valB)) {
+                    comparison = valA - valB;
+                } else {
+                    // Ordenamiento alfabético, sensible al idioma
+                    comparison = cellA.localeCompare(cellB, 'es', { numeric: true, sensitivity: 'base' });
+                }
+                
+                return direction === 'asc' ? comparison : comparison * -1;
+            });
+
+            // Re-adjunta las filas ordenadas al cuerpo de la tabla
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+            tbody.append(...sortedRows);
+        }
+
+        /**
+         * Función principal para cargar todas las matrices al inicio.
+         */
+        async function loadAllMatrices() {
+            const generalLoading = document.getElementById('loading-message');
+            generalLoading.textContent = 'Procesando...';
+            
+            try {
+                const promises = MATRICES.map(fetchAndRenderMatrix);
+                await Promise.all(promises);
+                
+                // Oculta el mensaje de carga general y añade el ordenamiento
+                generalLoading.style.display = 'none';
+                addTableSorting();
+            } catch(e) {
+                generalLoading.textContent = 'Fallo en la carga de alguna matriz. Revisa los errores en la consola.';
+            }
+        }
+
+        // Ejecutar la función principal al cargar la página
+        document.addEventListener('DOMContentLoaded', loadAllMatrices);
+    </script>
+</body>
+</html>
