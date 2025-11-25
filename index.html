@@ -203,13 +203,8 @@ tbody tr:nth-child(even){background:#fbfdff}
 
 </div> <script>
 /*
-  Nota: Se han implementado las URLs de CSV limpio usando QUERY.
-  Se ha mejorado la detección de encabezados de columna.
+  URLs CSV (públicas en Google Sheets) - ACTUALIZADAS Y CONFIRMADAS
 */
-
-/* =========================
-   URLs CSV (públicas en Google Sheets) - ACTUALIZADAS Y CONFIRMADAS
-   ========================= */
 const URL_NAL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv';
 const URL_INT    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv';
 const URL_MATRIZ = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv';
@@ -327,7 +322,6 @@ async function refreshNacionales(){
 
     // KPIs
     const total = dataNal.length;
-    // Usamos el nombre de columna encontrado para toNumber:
     const altoCount = dataNal.filter(r => toNumber(r[colPorc]) >= 80 || String((r[colNivel]||'')).toLowerCase().includes('alto')).length;
     const bajoCount = dataNal.filter(r => toNumber(r[colPorc]) < 40 || String((r[colNivel]||'')).toLowerCase().includes('bajo')).length;
     document.getElementById('nal-total').innerText = total;
@@ -365,11 +359,7 @@ async function refreshNacionales(){
       options: { indexAxis: 'y', scales: { x: { beginAtZero: true, max: 100, ticks: { callback: val => val + '%' } } }, plugins: { legend: { display: false } } }
     });
 
-    // Se mantiene la lógica de exportar aunque el botón esté oculto (por si se necesita en el futuro)
-    document.getElementById('export-nal').onclick = () => {
-      const csv = toCSV(dataNal.map(r => ({ linea: r[colLinea]||'', porcentaje: r[colPorc]||'', nivel: r[colNivel]||'', recomendacion: r[colRec]||'' })));
-      downloadCSV(csv, 'referentes_nacionales.csv');
-    };
+    // Se eliminó la lógica de exportar para evitar el error 'Cannot set properties of null'
 
     return true;
   } catch (err) {
@@ -423,6 +413,8 @@ async function refreshInternacionales(){
       data: { labels: Object.keys(buckets), datasets: [{ data: Object.values(buckets), backgroundColor: [getCSSVar('--alto','#28a745'), getCSSVar('--medio','#ffc107'), getCSSVar('--bajo','#dc3545')] }] },
       options: { plugins: { legend: { position: 'top' } } }
     });
+
+    // Se eliminó la lógica de exportar para evitar el error 'Cannot set properties of null'
 
     return true;
   } catch (err) {
