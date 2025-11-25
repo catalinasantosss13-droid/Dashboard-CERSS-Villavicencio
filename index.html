@@ -3,38 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard análisis Plan de Acción Política Pública MCYEVS - CERS 2025 Villavicencio</title>
+    <title>Dashboard BI - CERS 2025 Villavicencio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     
     <style>
+        /* Estilos Base y Transiciones */
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background-color: #f7f7f7; /* Gris muy claro para el fondo */
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .tab-button {
+            color: #4b5563;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button:hover {
+            color: #1d4ed8;
+        }
         .tab-button.active { 
-            background-color: #3b82f6; 
-            color: white; 
+            color: #1d4ed8; /* Azul más oscuro para activo */
+            background-color: transparent;
+            border-bottom: 3px solid #1d4ed8;
+            font-weight: 700;
         }
-        .kpi-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        
+        /* Estilos de las tarjetas KPI mejoradas */
+        .kpi-card-improved {
+            background-color: white;
             padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem; /* Bordes más suaves */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Sombra más definida */
+            transition: transform 0.2s ease;
         }
+        .kpi-card-improved:hover {
+            transform: translateY(-3px);
+        }
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .kpi-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+        }
+
+        /* Estilos de Gráficos y Tablas */
         .chart-container {
             position: relative;
             height: 400px;
             margin-bottom: 2rem;
         }
+        .data-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
         table {
             border-collapse: collapse;
             width: 100%;
             background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
         }
         th {
-            background-color: #1f2937;
+            background-color: #4b5563; /* Gris oscuro para header de tabla */
             color: white;
             padding: 1rem;
             text-align: left;
@@ -43,68 +82,35 @@
             top: 0;
             z-index: 10;
         }
-        td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        tr:hover {
-            background-color: #f9fafb;
-        }
-        .search-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
-        .search-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 300px;
-        }
-        .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        /* Mantiene estilos de carga */
+        .loading { display: flex; justify-content: center; align-items: center; min-height: 300px; }
+        .spinner { border: 4px solid #e5e7eb; border-top: 4px solid #1d4ed8; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <header class="mb-8 bg-white rounded-lg shadow-md p-6">
+        <header class="mb-8 p-6 rounded-xl shadow-xl" style="background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); color: white;">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <img src="logos/unillanos.png" alt="Universidad de los Llanos" class="h-16 md:h-20">
-                    <img src="logos/alcaldia.png" alt="Alcaldía de Villavicencio" class="h-16 md:h-20">
+                    <img src="logos/unillanos.png" alt="Universidad de los Llanos" class="h-16 md:h-20 bg-white p-1 rounded-lg">
+                    <img src="logos/alcaldia.png" alt="Alcaldía de Villavicencio" class="h-16 md:h-20 bg-white p-1 rounded-lg">
                 </div>
                 <div class="text-center md:text-right">
-                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Dashboard Analítico BI</h1>
-                    <p class="text-gray-600 text-lg">Matriz Comparativa CERS 2025 - Villavicencio</p>
+                    <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Dashboard Analítico BI</h1>
+                    <p class="text-gray-200 text-lg">Matriz Comparativa CERS 2025 - Villavicencio</p>
                 </div>
             </div>
         </header>
 
-        <div class="mb-6 flex flex-wrap gap-2 border-b-2 border-gray-200">
-            <button onclick="switchTab('nacional')" class="tab-button active px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-nacional">
+        <div class="mb-6 flex flex-wrap gap-4 border-b-2 border-gray-300 bg-white p-3 rounded-lg shadow-md">
+            <button onclick="switchTab('nacional')" class="tab-button active px-4 py-2 text-base rounded-md" id="tab-nacional">
                 Nacional
             </button>
-            <button onclick="switchTab('internacional')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-internacional">
+            <button onclick="switchTab('internacional')" class="tab-button px-4 py-2 text-base rounded-md" id="tab-internacional">
                 Internacional
             </button>
-            <button onclick="switchTab('general')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-general">
+            <button onclick="switchTab('general')" class="tab-button px-4 py-2 text-base rounded-md" id="tab-general">
                 General
             </button>
         </div>
@@ -114,16 +120,16 @@
                 <div class="spinner"></div>
             </div>
             <div id="data-nacional" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-nacional"></div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="kpis-nacional"></div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-1"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-2"></canvas>
@@ -132,9 +138,9 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow">
+                <div class="data-card">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
-                    <input type="text" id="search-nacional" class="search-input" placeholder="Buscar...">
+                    <input type="text" id="search-nacional" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-nacional"></table>
                     </div>
@@ -147,16 +153,15 @@
                 <div class="spinner"></div>
             </div>
             <div id="data-internacional" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-internacional"></div>
-                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="kpis-internacional"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-1"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-2"></canvas>
@@ -164,10 +169,9 @@
                         <div id="stats-internacional" class="mt-4 text-center"></div>
                     </div>
                 </div>
-
-                <div class="bg-white p-6 rounded-lg shadow">
+                <div class="data-card">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
-                    <input type="text" id="search-internacional" class="search-input" placeholder="Buscar...">
+                    <input type="text" id="search-internacional" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-internacional"></table>
                     </div>
@@ -180,16 +184,15 @@
                 <div class="spinner"></div>
             </div>
             <div id="data-general" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-general"></div>
-                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="kpis-general"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-1"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="data-card">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-2"></canvas>
@@ -197,10 +200,9 @@
                         <div id="stats-general" class="mt-4 text-center"></div>
                     </div>
                 </div>
-
-                <div class="bg-white p-6 rounded-lg shadow">
+                <div class="data-card">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
-                    <input type="text" id="search-general" class="search-input" placeholder="Buscar...">
+                    <input type="text" id="search-general" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-general"></table>
                     </div>
@@ -209,7 +211,7 @@
         </div>
     </div>
 
-    <footer class="bg-gray-800 text-white py-6 mt-12">
+    <footer class="py-6 mt-12" style="background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); color: white;">
         <div class="container mx-auto px-4 text-center">
             <p class="text-sm md:text-base">
                 Elaborado por <span class="font-semibold">Catalina Santos</span> - Estudiante de enfermería IX Semestre
@@ -227,7 +229,17 @@
 
         let dataCache = {};
         let chartsCache = {};
-        let currentSort = { column: null, direction: 'asc' }; // Estado de ordenamiento
+        let currentSort = { column: null, direction: 'asc' }; 
+
+        // Función para generar una tarjeta KPI mejorada
+        function createKpiCard(label, value, color) {
+            return `
+                <div class="kpi-card-improved border-t-4" style="border-color: ${color};">
+                    <div class="kpi-value text-gray-900">${value}</div>
+                    <div class="kpi-label mt-1" style="color: ${color};">${label}</div>
+                </div>
+            `;
+        }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -239,7 +251,7 @@
             if (!dataCache[tabName]) {
                 loadData(tabName);
             } else {
-                // Si la data está en caché, pero los gráficos fueron destruidos, renderizarlos
+                document.getElementById(`data-${tabName}`).style.display = 'block';
                 if (!chartsCache[tabName] || chartsCache[tabName].length === 0) {
                     renderCharts(tabName, dataCache[tabName]);
                 }
@@ -252,7 +264,6 @@
                 header: true,
                 complete: function(results) {
                     dataCache[source] = results.data.filter(row => {
-                        // Filtra filas completamente vacías
                         return Object.values(row).some(val => val && val.toString().trim() !== '');
                     });
                     renderDashboard(source, dataCache[source]);
@@ -260,7 +271,7 @@
                 error: function(error) {
                     console.error('Error loading data:', error);
                     document.getElementById(`loading-${source}`).innerHTML = 
-                        '<div class="text-red-600 text-center"><p class="text-xl">❌ Error al cargar los datos</p><p class="mt-2">Por favor, verifica la conexión a internet y que las hojas estén publicadas como CSV.</p></div>';
+                        '<div class="text-red-600 text-center"><p class="text-xl">❌ Error al cargar los datos</p><p class="mt-2">Verifica la URL, la conexión y que la hoja esté publicada correctamente como CSV.</p></div>';
                 }
             });
         }
@@ -274,7 +285,6 @@
             renderTable(source, data);
             setupSearch(source, data);
             
-            // Inicializa el estado de ordenamiento para la nueva pestaña
             currentSort = { column: null, direction: 'asc' };
         }
 
@@ -283,18 +293,13 @@
             const analysis = analyzeAlignmentData(data);
             
             const kpis = [
-                { label: 'Total de Líneas', value: data.length, color: '#2563eb' },
-                { label: 'Nivel Alto (≥80%)', value: analysis.alto, color: '#10b981' },
-                { label: 'Nivel Medio (40-79%)', value: analysis.medio, color: '#f59e0b' },
-                { label: 'Nivel Bajo (<40%)', value: analysis.bajo, color: '#ef4444' }
+                { label: 'Total de Líneas', value: data.length, color: '#1d4ed8' }, // Azul fuerte
+                { label: 'Nivel Alto (≥80%)', value: analysis.alto, color: '#10b981' }, // Verde
+                { label: 'Nivel Medio (40-79%)', value: analysis.medio, color: '#f59e0b' }, // Amarillo
+                { label: 'Nivel Bajo (<40%)', value: analysis.bajo, color: '#ef4444' } // Rojo
             ];
 
-            kpisContainer.innerHTML = kpis.map(kpi => `
-                <div class="bg-white p-6 rounded-lg shadow-md border-l-4" style="border-color: ${kpi.color};">
-                    <div class="text-3xl font-bold mb-1" style="color: ${kpi.color};">${kpi.value}</div>
-                    <div class="text-sm text-gray-600 font-medium">${kpi.label}</div>
-                </div>
-            `).join('');
+            kpisContainer.innerHTML = kpis.map(kpi => createKpiCard(kpi.label, kpi.value, kpi.color)).join('');
         }
 
         function analyzeAlignmentData(data) {
@@ -302,11 +307,7 @@
             let totalPercentage = 0;
             let countWithPercentage = 0;
 
-            // Nombres de columna posibles para el porcentaje (normalizadas a minúsculas y sin espacios)
             const possiblePercentageNames = ['%alineamiento', 'alineamiento', 'porcentaje', '%global', 'porcentajeglobal', 'unnamed:4', 'unnamed:3'];
-
-            // Encuentra el nombre real de la columna de porcentaje en los datos
-            const columns = data.length > 0 ? Object.keys(data[0]).map(col => col.toLowerCase().replace(/[^a-z0-9%]/g, '')) : [];
             let percentageColumn = null;
 
             for (const rowKey in data[0]) {
@@ -316,15 +317,12 @@
                     break;
                 }
             }
-            // Si no encuentra por nombre limpio, intenta encontrar la columna con el % en el nombre
             if (!percentageColumn) {
                 percentageColumn = Object.keys(data[0]).find(col => col.toLowerCase().includes('%'));
             }
 
-
             data.forEach(row => {
                 if (percentageColumn && row[percentageColumn]) {
-                    // Limpia el valor (quita %, reemplaza coma por punto si es necesario)
                     const rawValue = row[percentageColumn].toString().replace('%', '').replace(',', '.').trim();
                     const percentage = parseFloat(rawValue);
 
@@ -365,15 +363,11 @@
                     datasets: [{
                         data: [analysis.alto, analysis.medio, analysis.bajo],
                         backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)', // Green
-                            'rgba(245, 158, 11, 0.8)', // Yellow
-                            'rgba(239, 68, 68, 0.8)'   // Red
+                            'rgba(16, 185, 129, 0.9)', // Green
+                            'rgba(245, 158, 11, 0.9)', // Yellow
+                            'rgba(239, 68, 68, 0.9)'   // Red
                         ],
-                        borderColor: [
-                            'rgb(16, 185, 129)',
-                            'rgb(245, 158, 11)',
-                            'rgb(239, 68, 68)'
-                        ],
+                        borderColor: 'white',
                         borderWidth: 2
                     }]
                 },
@@ -406,10 +400,8 @@
                         backgroundColor: analysis.promedio >= 80 ? 'rgba(16, 185, 129, 0.8)' : 
                                                analysis.promedio >= 40 ? 'rgba(245, 158, 11, 0.8)' : 
                                                'rgba(239, 68, 68, 0.8)',
-                        borderColor: analysis.promedio >= 80 ? 'rgb(16, 185, 129)' : 
-                                             analysis.promedio >= 40 ? 'rgb(245, 158, 11)' : 
-                                             'rgb(239, 68, 68)',
-                        borderWidth: 2
+                        borderColor: 'transparent',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -439,8 +431,8 @@
             const nivelText = analysis.promedio >= 80 ? 'Alto' : analysis.promedio >= 40 ? 'Medio' : 'Bajo';
             const nivelColor = analysis.promedio >= 80 ? '#10b981' : analysis.promedio >= 40 ? '#f59e0b' : '#ef4444';
             statsDiv.innerHTML = `
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-5xl font-bold mb-2" style="color: ${nivelColor};">${analysis.promedio}%</div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg border-2 border-dashed" style="border-color: ${nivelColor};">
+                    <div class="text-5xl font-extrabold mb-2" style="color: ${nivelColor};">${analysis.promedio}%</div>
                     <div class="text-lg text-gray-700">Nivel de Alineamiento: <span class="font-semibold" style="color: ${nivelColor};">${nivelText}</span></div>
                 </div>
             `;
@@ -457,7 +449,6 @@
             
             let html = '<thead><tr>';
             columns.forEach(col => {
-                // Usa un ID de columna limpio para el ordenamiento
                 const cleanCol = col.replace(/[^a-zA-Z0-9]/g, ''); 
                 html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}', this)">${col} <span id="sort-icon-${cleanCol}">↕</span></th>`;
             });
@@ -479,7 +470,7 @@
             const searchInput = document.getElementById(`search-${source}`);
             searchInput.oninput = function(e) {
                 const searchTerm = e.target.value.toLowerCase();
-                const filteredData = dataCache[source].filter(row => { // Usa dataCache[source] para el filtro base
+                const filteredData = dataCache[source].filter(row => { 
                     return Object.values(row).some(val => 
                         val && val.toString().toLowerCase().includes(searchTerm)
                     );
@@ -498,7 +489,6 @@
                 currentSort.direction = 'asc';
             }
 
-            // Determinar si la columna es numérica (verifica la primera fila con valor)
             let isNumeric = false;
             const firstNumericRow = data.find(row => row[column] && !isNaN(parseFloat(row[column].toString().replace('%', '').replace(',', '.'))));
             if (firstNumericRow) {
@@ -522,10 +512,8 @@
                 return currentSort.direction === 'asc' ? comparison : -comparison;
             });
 
-            // Actualiza la tabla con los datos ordenados
             renderTable(source, data);
 
-            // Actualiza los iconos de ordenamiento
             document.querySelectorAll(`#table-${source} th span`).forEach(span => {
                 span.innerHTML = '↕';
             });
