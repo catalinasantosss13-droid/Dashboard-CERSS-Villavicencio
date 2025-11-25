@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard BI - CERS 2025 Villavicencio</title>
+    <title>Dashboard análisis Plan de Acción de la Política Pública de MCYEVS Villavicencio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -97,8 +97,8 @@
                     <img src="logos/alcaldia.png" alt="Alcaldía de Villavicencio" class="h-16 md:h-20 bg-white p-1 rounded-lg">
                 </div>
                 <div class="text-center md:text-right">
-                    <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Dashboard Analítico BI</h1>
-                    <p class="text-gray-200 text-lg">Matriz Comparativa CERS 2025 - Villavicencio</p>
+                    <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Dashboard Analítico Plan de Acción Política Pública MCYEVS Villavicencio</h1>
+                    <p class="text-gray-200 text-lg">Matriz comparativaP lan de Acción Política Pública MCYEVS - Villavicencio</p>
                 </div>
             </div>
         </header>
@@ -124,13 +124,13 @@
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de niveles de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-1"></canvas>
                         </div>
                     </div>
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-2"></canvas>
                         </div>
@@ -139,7 +139,7 @@
                 </div>
 
                 <div class="data-card">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de líneas</h3>
                     <input type="text" id="search-nacional" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-nacional"></table>
@@ -156,13 +156,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="kpis-internacional"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de niveles de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-1"></canvas>
                         </div>
                     </div>
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-2"></canvas>
                         </div>
@@ -170,7 +170,7 @@
                     </div>
                 </div>
                 <div class="data-card">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de líneas</h3>
                     <input type="text" id="search-internacional" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-internacional"></table>
@@ -187,13 +187,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="kpis-general"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de niveles de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-1"></canvas>
                         </div>
                     </div>
                     <div class="data-card">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-2"></canvas>
                         </div>
@@ -201,7 +201,7 @@
                     </div>
                 </div>
                 <div class="data-card">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de líneas</h3>
                     <input type="text" id="search-general" class="search-input" placeholder="Buscar en la tabla...">
                     <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-general"></table>
@@ -293,10 +293,10 @@
             const analysis = analyzeAlignmentData(data);
             
             const kpis = [
-                { label: 'Total de Líneas', value: data.length, color: '#1d4ed8' }, // Azul fuerte
-                { label: 'Nivel Alto (≥80%)', value: analysis.alto, color: '#10b981' }, // Verde
-                { label: 'Nivel Medio (40-79%)', value: analysis.medio, color: '#f59e0b' }, // Amarillo
-                { label: 'Nivel Bajo (<40%)', value: analysis.bajo, color: '#ef4444' } // Rojo
+                { label: 'Total de líneas', value: data.length, color: '#1d4ed8' }, // Azul fuerte
+                { label: 'Nivel alto (≥80%)', value: analysis.alto, color: '#10b981' }, // Verde
+                { label: 'Nivel medio (40-79%)', value: analysis.medio, color: '#f59e0b' }, // Amarillo
+                { label: 'Nivel bajo (<40%)', value: analysis.bajo, color: '#ef4444' } // Rojo
             ];
 
             kpisContainer.innerHTML = kpis.map(kpi => createKpiCard(kpi.label, kpi.value, kpi.color)).join('');
