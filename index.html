@@ -165,4 +165,272 @@
             <p>Plan de Acción vs Referentes Nacionales e Internacionales</p>
         </div>
         <div>
-            <span style="font-size:0.8rem; opacity:0.8; background:rgba(255,255,255,0.2); padding:5px 10px;
+            <span style="font-size:0.8rem; opacity:0.8; background:rgba(255,255,255,0.2); padding:5px 10px; border-radius:4px;">Práctica IX Semestre - Unillanos</span>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="loadTab('GENERAL')">Matriz General</button>
+        <button class="tab-btn" onclick="loadTab('NACIONAL')">Referentes Nacionales</button>
+        <button class="tab-btn" onclick="loadTab('INTERNACIONAL')">Referentes Internacionales</button>
+    </nav>
+
+    <div class="container">
+        
+        <div id="loading" style="text-align:center; padding:40px; color:#7f8c8d;">
+            Cargando datos...
+        </div>
+
+        <div id="dashboard-content" style="display:none;">
+            <div class="kpi-grid">
+                <div class="kpi-card total">
+                    <span class="kpi-label">Alineamiento Promedio</span>
+                    <span class="kpi-value" style="color: var(--color-primario);" id="kpi-promedio">0%</span>
+                </div>
+                <div class="kpi-card alto">
+                    <span class="kpi-label">Líneas en Nivel Alto</span>
+                    <span class="kpi-value" style="color: var(--color-alto);" id="kpi-alto">0</span>
+                </div>
+                <div class="kpi-card medio">
+                    <span class="kpi-label">Líneas en Nivel Medio</span>
+                    <span class="kpi-value" style="color: var(--color-medio);" id="kpi-medio">0</span>
+                </div>
+                <div class="kpi-card bajo">
+                    <span class="kpi-label">Líneas en Nivel Bajo</span>
+                    <span class="kpi-value" style="color: var(--color-bajo);" id="kpi-bajo">0</span>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h2 class="section-title">Distribución por Niveles</h2>
+                    <div style="height: 300px;">
+                        <canvas id="chartDona"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2 class="section-title">Detalle por Línea Estratégica</h2>
+                    <div style="height: 300px;">
+                        <canvas id="chartBarras"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h2 class="section-title">Evidencia y Recomendaciones</h2>
+                <table id="tablaDetalle">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%">Línea / Dimensión</th>
+                            <th style="width: 10%">Alineación</th>
+                            <th style="width: 10%">Nivel</th>
+                            <th style="width: 50%">Oportunidad de Mejora / Brecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE PESTAÑAS Y COLUMNAS
+        // Los índices de columna (0, 3, 4...) se basan en la estructura de tu archivo Excel.
+        const SHEETS_CONFIG = {
+            'GENERAL': {
+                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
+                // Matriz General: Nombre(A=0), %(D=3), Nivel(E=4), Recom(F=5)
+                colIndex: { name: 0, pct: 3, level: 4, rec: 5 } 
+            },
+            'NACIONAL': {
+                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv',
+                // Nacional: Nombre(A=0), %(E=4), Nivel(F=5), Recom(G=6) (Tiene columna extra de brechas)
+                colIndex: { name: 0, pct: 4, level: 5, rec: 6 }
+            },
+            'INTERNACIONAL': {
+                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv',
+                // Internacional: Misma estructura que Nacional
+                colIndex: { name: 0, pct: 4, level: 5, rec: 6 }
+            }
+        };
+
+        let chartDonaInstance = null;
+        let chartBarrasInstance = null;
+
+        // Cargar Matriz General al inicio
+        window.onload = function() {
+            loadTab('GENERAL');
+        };
+
+        function loadTab(tabName) {
+            // UI: Actualizar botones activos
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Busca el botón correspondiente
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.onclick.toString().includes(`'${tabName}'`));
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // UI: Mostrar Loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('dashboard-content').style.display = 'none';
+
+            // Obtener configuración
+            const config = SHEETS_CONFIG[tabName];
+            
+            // Fetch Data
+            Papa.parse(config.url, {
+                download: true,
+                header: false,
+                complete: function(results) {
+                    processCSV(results.data, config.colIndex);
+                },
+                error: function(err) {
+                    console.error("Error cargando CSV:", err);
+                    document.getElementById('loading').innerText = "Error cargando datos. Revisa la consola.";
+                }
+            });
+        }
+
+        function processCSV(data, mapping) {
+            const cleanData = [];
+            
+            // Saltamos encabezados. Generalmente fila 3 o 4 empiezan los datos reales.
+            // Usamos un bucle seguro
+            for (let i = 2; i < data.length; i++) {
+                const row = data[i];
+                
+                // Validación básica: que exista nombre y no sea fila de firma o vacía
+                if (row[mapping.name] && row[mapping.name].trim() !== "" && !row[mapping.name].includes("Elaborado por")) {
+                    
+                    // Limpieza del porcentaje
+                    let rawPct = row[mapping.pct];
+                    let porcentaje = 0;
+                    
+                    if(typeof rawPct === 'string') {
+                        // Quitar signo % si viene en el texto y convertir comas a puntos
+                        rawPct = rawPct.replace('%', '').replace(',', '.');
+                    }
+                    porcentaje = parseFloat(rawPct);
+                    if (isNaN(porcentaje)) porcentaje = 0;
+
+                    // Limpieza del Nivel
+                    let nivel = row[mapping.level] ? row[mapping.level].trim() : "Bajo";
+                    // Capitalizar (ej: "alto" -> "Alto")
+                    nivel = nivel.charAt(0).toUpperCase() + nivel.slice(1).toLowerCase(); 
+                    if(nivel !== 'Alto' && nivel !== 'Medio' && nivel !== 'Bajo') nivel = 'Bajo'; // Default
+
+                    cleanData.push({
+                        linea: row[mapping.name],
+                        porcentaje: porcentaje,
+                        nivel: nivel,
+                        recomendacion: row[mapping.rec] || "Sin recomendación específica."
+                    });
+                }
+            }
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            
+            renderDashboard(cleanData);
+        }
+
+        function renderDashboard(data) {
+            updateKPIs(data);
+            updateTable(data);
+            updateCharts(data);
+        }
+
+        function updateKPIs(data) {
+            const alto = data.filter(d => d.nivel === 'Alto').length;
+            const medio = data.filter(d => d.nivel === 'Medio').length;
+            const bajo = data.filter(d => d.nivel === 'Bajo').length;
+            const promedio = data.length ? data.reduce((acc, curr) => acc + curr.porcentaje, 0) / data.length : 0;
+
+            document.getElementById('kpi-alto').innerText = alto;
+            document.getElementById('kpi-medio').innerText = medio;
+            document.getElementById('kpi-bajo').innerText = bajo;
+            document.getElementById('kpi-promedio').innerText = Math.round(promedio) + '%';
+        }
+
+        function updateTable(data) {
+            const tbody = document.querySelector('#tablaDetalle tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                let badgeClass = 'bg-bajo';
+                if(item.nivel === 'Alto') badgeClass = 'bg-alto';
+                if(item.nivel === 'Medio') badgeClass = 'bg-medio';
+
+                const tr = `
+                    <tr>
+                        <td><strong>${item.linea}</strong></td>
+                        <td>${item.porcentaje}%</td>
+                        <td><span class="badge ${badgeClass}">${item.nivel}</span></td>
+                        <td style="font-size:0.85rem; color:#555;">${item.recomendacion}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += tr;
+            });
+        }
+
+        function updateCharts(data) {
+            const alto = data.filter(d => d.nivel === 'Alto').length;
+            const medio = data.filter(d => d.nivel === 'Medio').length;
+            const bajo = data.filter(d => d.nivel === 'Bajo').length;
+
+            // Gráfico Dona
+            const ctxDona = document.getElementById('chartDona').getContext('2d');
+            if (chartDonaInstance) chartDonaInstance.destroy();
+            
+            chartDonaInstance = new Chart(ctxDona, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Alto', 'Medio', 'Bajo'],
+                    datasets: [{
+                        data: [alto, medio, bajo],
+                        backgroundColor: ['#2ECC71', '#F1C40F', '#E74C3C'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // Gráfico Barras
+            const ctxBarras = document.getElementById('chartBarras').getContext('2d');
+            if (chartBarrasInstance) chartBarrasInstance.destroy();
+
+            // Cortar nombres muy largos para que no rompan el gráfico
+            const labels = data.map(d => d.linea.length > 45 ? d.linea.substring(0, 45) + '...' : d.linea);
+
+            chartBarrasInstance = new Chart(ctxBarras, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '% Alineamiento',
+                        data: data.map(d => d.porcentaje),
+                        backgroundColor: data.map(d => {
+                            if(d.nivel === 'Alto') return '#2ECC71';
+                            if(d.nivel === 'Medio') return '#F1C40F';
+                            return '#E74C3C';
+                        }),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, max: 100 }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
