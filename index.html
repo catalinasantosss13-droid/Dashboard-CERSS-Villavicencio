@@ -201,4 +201,384 @@ tbody tr:nth-child(even){background:#fbfdff}
       </div>
 
       <div class="card">
-        <h4 style="mar
+        <h4 style="margin:0 0 8px">Resumen rápido</h4>
+        <ul id="val-summary" class="small"><li>Total: —</li></ul>
+      </div>
+    </div>
+  </section>
+
+</div> <!-- /container -->
+
+<script>
+/* =========================
+   URLs CSV (los proporcionaste)
+   ========================= */
+const URL_MATRIZ = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv';
+const URL_NAL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv';
+const URL_INT    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv';
+
+/* Global caches */
+let dataNal = [], dataInt = [], dataMat = [];
+let chartNalLevels=null, chartNalLines=null, chartIntCompare=null, chartMatBars=null;
+
+/* Utils */
+function toNumber(v){
+  if(v===null||v===undefined) return 0;
+  const s = String(v).replace('%','').replace(',','.').trim();
+  const n = Number(s);
+  return isNaN(n)?0:n;
+}
+function formatPct(v){ const n=toNumber(v); return isNaN(n)?'':n.toFixed(1)+'%'; }
+function downloadCSV(str, filename){
+  const blob=new Blob([str],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function toCSV(rows){
+  if(!rows || rows.length===0) return '';
+  const keys = Object.keys(rows[0]);
+  const lines = [keys.join(',')];
+  for(const r of rows){
+    const vals = keys.map(k=>{
+      const v = r[k]===undefined||r[k]===null?'':String(r[k]).replace(/"/g,'""');
+      return (v.includes(',')||v.includes('"')||v.includes('\n'))? `"${v}"`: v;
+    });
+    lines.push(vals.join(','));
+  }
+  return lines.join('\n');
+}
+
+/* ------------------ Render tables ------------------ */
+function renderTable(idSelector, data, cols){
+  const wrap = document.querySelector(idSelector);
+  if(!wrap) return;
+  if(!data || data.length===0){
+    wrap.innerHTML = '<table><thead><tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody><tr><td colspan="'+cols.length+'" class="small">No hay datos</td></tr></tbody></table>';
+    return;
+  }
+  const head = '<thead><tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead>';
+  const body = data.map(r => '<tr>' + cols.map(c => `<td>${(r[c]!==undefined?r[c]:'')}</td>`).join('') + '</tr>').join('');
+  wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
+}
+
+/* ------------------ Load CSV via PapaParse ------------------ */
+function loadCSV(url){
+  return new Promise((resolve,reject)=>{
+    Papa.parse(url, {
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete: (res) => {
+        if(res && res.data) resolve(res.data);
+        else reject(new Error('No data'));
+      },
+      error: (err) => reject(err)
+    });
+  });
+}
+
+/* ========== NACIONALES: process & render ========== */
+async function refreshNacionales(){
+  try{
+    document.getElementById('link-nal').href = URL_NAL;
+    const arr = await loadCSV(URL_NAL);
+    dataNal = arr.map(r => normalizeRow(r));
+    // detect columns (best-effort)
+    const colLinea = guessCol(dataNal, ['Linea','Línea','Ítem','Item','Eje','Linea estrategica','Linea estratégica']);
+    const colPorc  = guessCol(dataNal, ['Porcentaje','%','Avance','Alineamiento']);
+    const colNivel = guessCol(dataNal, ['Nivel','Nivel de alineamiento','Categoria']);
+    const colRec   = guessCol(dataNal, ['Recomendacion','Recomendación','Observacion','Observación']);
+
+    // kpis
+    const total = dataNal.length;
+    const altos = dataNal.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80)).length;
+    const bajos = dataNal.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('bajo') || toNumber(r[colPorc])<40)).length;
+    document.getElementById('nal-total').innerText = total;
+    document.getElementById('nal-alto').innerText = altos;
+    document.getElementById('nal-bajo').innerText = bajos;
+
+    // table
+    const tableData = dataNal.map(r=> ({
+      [colLinea]: truncate(r[colLinea],120),
+      [colPorc]: (r[colPorc]!==undefined? formatPct(r[colPorc]) : ''),
+      [colNivel]: r[colNivel] || '',
+      [colRec]: r[colRec] || ''
+    }));
+    renderTable('#tablewrap-nal', tableData, [colLinea, colPorc, colNivel, colRec]);
+
+    // charts
+    const counts = [
+      dataNal.filter(r=> String(r[colNivel]||'').toLowerCase().includes('bajo') || toNumber(r[colPorc])<40).length,
+      dataNal.filter(r=> String(r[colNivel]||'').toLowerCase().includes('medio') || (toNumber(r[colPorc])>=40 && toNumber(r[colPorc])<80)).length,
+      dataNal.filter(r=> String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length
+    ];
+    const ctx1 = document.getElementById('chartNalLevels').getContext('2d');
+    if(chartNalLevels) chartNalLevels.destroy();
+    chartNalLevels = new Chart(ctx1, { type:'doughnut', data:{labels:['Bajo','Medio','Alto'], datasets:[{data:counts, backgroundColor:[getCSSVar('--bajo','#dc3545'), getCSSVar('--medio','#ffc107'), getCSSVar('--alto','#28a745')]}] }, options:{plugins:{legend:{position:'top'}}}});
+
+    const labels = dataNal.slice(0,30).map(r=> truncate(r[colLinea]||'Item',40));
+    const datos = dataNal.slice(0,30).map(r=> toNumber(r[colPorc]));
+    const ctx2 = document.getElementById('chartNalLines').getContext('2d');
+    if(chartNalLines) chartNalLines.destroy();
+    chartNalLines = new Chart(ctx2, { type:'bar', data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor: datos.map(v=> v>=80?getCSSVar('--alto','#28a745') : v>=40?getCSSVar('--medio','#ffc107'):getCSSVar('--bajo','#dc3545'))}] }, options:{indexAxis:'y', scales:{x:{beginAtZero:true, max:100, ticks:{callback: val=> val+'%'}}}, plugins:{legend:{display:false}}}});
+
+    // export
+    document.getElementById('export-nal').onclick = ()=> {
+      const csv = toCSV(dataNal.map(r=> ({linea:r[colLinea]||'', porcentaje: r[colPorc]||'', nivel:r[colNivel]||'', recomendacion:r[colRec]||''})));
+      downloadCSV(csv, 'referentes_nacionales.csv');
+    };
+
+  } catch(err){
+    console.error('Error NACIONALES:', err);
+    alert('Error al cargar data nacionales: ' + err.message);
+  }
+}
+
+/* ========== INTERNACIONALES ========== */
+async function refreshInternacionales(){
+  try{
+    document.getElementById('link-int').href = URL_INT;
+    const arr = await loadCSV(URL_INT);
+    dataInt = arr.map(r => normalizeRow(r));
+    const colLinea = guessCol(dataInt, ['Linea','Línea','Ítem','Item','Eje']);
+    const colPorc  = guessCol(dataInt, ['Porcentaje','%','Avance','Alineamiento']);
+    const colNivel = guessCol(dataInt, ['Nivel','Nivel de alineamiento','Categoria']);
+    const colRec   = guessCol(dataInt, ['Recomendacion','Recomendación','Observacion','Observación']);
+
+    document.getElementById('int-total').innerText = dataInt.length;
+    document.getElementById('int-alto').innerText = dataInt.filter(r=> String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length;
+
+    const tableData = dataInt.map(r=> ({ [colLinea]: truncate(r[colLinea],120), [colPorc]: formatPct(r[colPorc]), [colNivel]: r[colNivel]||'', [colRec]: r[colRec]||'' }));
+    renderTable('#tablewrap-int', tableData, [colLinea, colPorc, colNivel, colRec]);
+
+    // pie chart
+    const buckets = { Alto:0, Medio:0, Bajo:0 };
+    dataInt.forEach(r=>{
+      const val = toNumber(r[colPorc]);
+      if(String(r[colNivel]||'').toLowerCase().includes('alto') || val>=80) buckets.Alto++;
+      else if(String(r[colNivel]||'').toLowerCase().includes('medio') || (val>=40 && val<80)) buckets.Medio++;
+      else buckets.Bajo++;
+    });
+    const ctx = document.getElementById('chartIntCompare').getContext('2d');
+    if(chartIntCompare) chartIntCompare.destroy();
+    chartIntCompare = new Chart(ctx, { type:'pie', data:{labels:Object.keys(buckets), datasets:[{data:Object.values(buckets), backgroundColor:[getCSSVar('--alto','#28a745'), getCSSVar('--medio','#ffc107'), getCSSVar('--bajo','#dc3545')]}] }, options:{plugins:{legend:{position:'top'}}}});
+
+  } catch(err){
+    console.error('Error INTERNACIONALES:', err);
+    alert('Error al cargar data internacionales: ' + err.message);
+  }
+}
+
+/* ========== MATRIZ GENERAL ========== */
+async function refreshMatriz(){
+  try{
+    document.getElementById('link-mat').href = URL_MATRIZ;
+    const arr = await loadCSV(URL_MATRIZ);
+    dataMat = arr.map(r => normalizeRow(r));
+    // detect columns
+    const colLinea = guessCol(dataMat, ['Linea','Línea','Línea Estratégica / Eje','Eje','Descripción','Line']);
+    const colPorc  = guessCol(dataMat, ['Porcentaje','%','Alineamiento','Alineamiento (%)','Avance']);
+    const colNivel = guessCol(dataMat, ['Nivel','Nivel de alineamiento','Categoria']);
+    const colRec   = guessCol(dataMat, ['Recomendacion','Recomendación','Recomendaciones','Observacion','Observación']);
+
+    const mapped = dataMat.map(r=> ({
+      linea: r[colLinea] || '',
+      porcentajeNum: toNumber(r[colPorc]),
+      porcentaje: formatPct(r[colPorc]),
+      nivel: r[colNivel] || '',
+      recomendacion: r[colRec] || ''
+    }));
+
+    // KPIs
+    const total = mapped.length;
+    const prom = mapped.reduce((s,x)=> s + (x.porcentajeNum||0), 0) / Math.max(1, total);
+    document.getElementById('mat-total').innerText = total;
+    document.getElementById('mat-prom').innerText = prom.toFixed(1) + '%';
+
+    // chart bars (top 25)
+    const top = mapped.slice(0,25);
+    const labels = top.map(x=> truncate(x.linea,60));
+    const datos = top.map(x=> x.porcentajeNum);
+    const ctx = document.getElementById('chartMatBars').getContext('2d');
+    if(chartMatBars) chartMatBars.destroy();
+    chartMatBars = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor: datos.map(v=> v>=80?getCSSVar('--alto','#28a745'): v>=40?getCSSVar('--medio','#ffc107'):getCSSVar('--bajo','#dc3545'))}] }, options:{scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}}}});
+
+    // table
+    renderTable('#tablewrap-mat', mapped.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+
+    // search
+    document.getElementById('search-mat').addEventListener('input', (e)=>{
+      const q = e.target.value.trim().toLowerCase();
+      const fil = mapped.filter(it => (it.linea + ' ' + it.recomendacion + ' ' + it.nivel).toLowerCase().includes(q));
+      renderTable('#tablewrap-mat', fil.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+    });
+
+    // export
+    document.getElementById('export-mat').onclick = ()=> {
+      const csv = toCSV(mapped.map(x=> ({ linea: x.linea, porcentaje: x.porcentaje, nivel: x.nivel, recomendacion: x.recomendacion })));
+      downloadCSV(csv,'matriz_general_export.csv');
+    };
+
+  } catch(err){
+    console.error('Error MATRIZ:', err);
+    alert('Error al cargar matriz general: ' + err.message);
+  }
+}
+
+/* ========== VALIDACION ========== */
+const VALID_KEY = 'cers_validations_v1';
+function setupValidation(){
+  // use dataMat as source
+  if(!dataMat || dataMat.length===0){ document.getElementById('validation-list').innerHTML = '<div class="small">Primero carga la Matriz General.</div>'; return; }
+
+  // determine columns same way as refreshMatriz
+  const colLinea = guessCol(dataMat, ['Linea','Línea','Línea Estratégica / Eje','Eje','Descripción']);
+  const colPorc  = guessCol(dataMat, ['Porcentaje','%','Alineamiento','Avance']);
+  const colNivel = guessCol(dataMat, ['Nivel','Nivel de alineamiento','Categoria']);
+  const colRec   = guessCol(dataMat, ['Recomendacion','Recomendación','Recomendaciones','Observacion']);
+
+  const baseItems = dataMat.map((r, idx) => ({
+    id: idx+1,
+    linea: r[colLinea] || `Item ${idx+1}`,
+    porcentaje: formatPct(r[colPorc]),
+    nivel: r[colNivel] || '',
+    recomendacion: r[colRec] || '',
+    estado: 'Pendiente',
+    observacion: ''
+  }));
+
+  // try to load saved state
+  let saved = JSON.parse(localStorage.getItem(VALID_KEY) || 'null');
+  if(!saved || !Array.isArray(saved) || saved.length !== baseItems.length){
+    saved = baseItems;
+  }
+
+  // render list
+  const root = document.getElementById('validation-list');
+  root.innerHTML = '';
+  saved.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'validation-item';
+    div.innerHTML = `
+      <div style="flex:1">
+        <div style="font-weight:700">${item.id}. ${escapeHTML(item.linea)}</div>
+        <div class="small" style="margin-top:6px">Nivel: ${escapeHTML(item.nivel)} — %: ${item.porcentaje}</div>
+        <div class="small" style="margin-top:8px">${escapeHTML(item.recomendacion)}</div>
+        <div style="margin-top:8px">
+          <input type="text" placeholder="Observación (opcional)" value="${escapeHTML(item.observacion||'')}" data-id="${item.id}" class="obs-input" style="width:100%;padding:8px;border-radius:6px;border:1px solid #e6eef6">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+        <button class="btn ok" data-id="${item.id}">A</button>
+        <button class="btn pend" data-id="${item.id}">P</button>
+        <button class="btn rej" data-id="${item.id}">N</button>
+      </div>
+    `;
+    root.appendChild(div);
+  });
+
+  // attach listeners
+  root.querySelectorAll('.ok').forEach(b=> b.onclick = ()=> { setState(saved, +b.dataset.id, 'Aprobado'); });
+  root.querySelectorAll('.pend').forEach(b=> b.onclick = ()=> { setState(saved, +b.dataset.id, 'Pendiente'); });
+  root.querySelectorAll('.rej').forEach(b=> b.onclick = ()=> { setState(saved, +b.dataset.id, 'No aprobado'); });
+  root.querySelectorAll('.obs-input').forEach(inp=> inp.onchange = ()=> {
+    const id = +inp.dataset.id; const val = inp.value;
+    const obj = saved.find(s=> s.id===id); if(obj) obj.observacion = val;
+    updateValSummary(saved);
+  });
+
+  document.getElementById('save-valid').onclick = ()=> {
+    localStorage.setItem(VALID_KEY, JSON.stringify(saved));
+    alert('Validaciones guardadas localmente.');
+    updateValSummary(saved);
+  };
+
+  document.getElementById('download-valid').onclick = ()=> {
+    const out = saved.map(s=> ({ id:s.id, linea:s.linea, porcentaje:s.porcentaje, nivel:s.nivel, estado:s.estado, observacion:s.observacion }));
+    const csv = toCSV(out);
+    downloadCSV(csv, 'validacion_comite.csv');
+  };
+
+  document.getElementById('clear-valid').onclick = ()=> {
+    if(confirm('Limpiar validaciones guardadas?')) {
+      localStorage.removeItem(VALID_KEY);
+      saved.forEach(s=> { s.estado='Pendiente'; s.observacion=''; });
+      setupValidation();
+      updateValSummary(saved);
+    }
+  };
+
+  function setState(arr, id, estado){
+    const obj = arr.find(x=> x.id===id);
+    if(!obj) return;
+    obj.estado = estado;
+    setupValidation(); // rerender
+    updateValSummary(arr);
+  }
+
+  updateValSummary(saved);
+}
+
+/* update summary */
+function updateValSummary(list){
+  const tot = list.length;
+  const apro = list.filter(l=> l.estado==='Aprobado').length;
+  const pen = list.filter(l=> l.estado==='Pendiente').length;
+  const noap = list.filter(l=> l.estado==='No aprobado').length;
+  const ul = document.getElementById('val-summary');
+  ul.innerHTML = `<li>Total: ${tot}</li><li>Aprobados: ${apro}</li><li>Pendientes: ${pen}</li><li>No aprobados: ${noap}</li>`;
+}
+
+/* ========== helpers and utilities ========== */
+function normalizeRow(r){
+  // strip BOM keys & trim values
+  const out = {};
+  Object.keys(r).forEach(k=>{
+    const key = k && k.toString().trim();
+    const val = r[k];
+    out[key] = (typeof val === 'string')? val.trim() : val;
+  });
+  return out;
+}
+function guessCol(arr, candidates){
+  if(!arr || arr.length===0) return candidates[0];
+  const row = arr.find(r => Object.keys(r).length>0) || arr[0];
+  const keys = Object.keys(row);
+  for(const cand of candidates){
+    const found = keys.find(k => k.toLowerCase().trim() === cand.toLowerCase().trim());
+    if(found) return found;
+  }
+  for(const cand of candidates){
+    const found = keys.find(k => k.toLowerCase().includes(cand.toLowerCase().trim().split(' ')[0]));
+    if(found) return found;
+  }
+  return keys[0] || candidates[0];
+}
+function truncate(s,n=80){ if(!s) return ''; s=String(s); return s.length>n? s.slice(0,n-1)+'…': s; }
+function getCSSVar(name, fallback){ try{ return getComputedStyle(document.documentElement).getPropertyValue(name) || fallback; }catch(e){return fallback;} }
+function escapeHTML(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ========== Boot & events ========== */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
+
+/* refresh buttons */
+document.getElementById('refresh-nal').onclick = refreshNacionales;
+document.getElementById('refresh-int').onclick = refreshInternacionales;
+document.getElementById('refresh-mat').onclick = refreshMatriz;
+
+/* initial load — load all three and then init validation */
+async function initAll(){
+  await Promise.all([ refreshNacionales(), refreshInternacionales(), refreshMatriz() ]);
+  setupValidation();
+}
+initAll();
+
+</script>
+</body>
+</html>
