@@ -83,6 +83,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
         <header class="mb-8 bg-white rounded-lg shadow-md p-6">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
@@ -96,102 +97,124 @@
             </div>
         </header>
 
+        <!-- Tabs Navigation -->
         <div class="mb-6 flex flex-wrap gap-2 border-b-2 border-gray-200">
             <button onclick="switchTab('nacional')" class="tab-button active px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-nacional">
-                📊 Nacional
+                Nacional
             </button>
             <button onclick="switchTab('internacional')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-internacional">
-                🌎 Internacional
+                Internacional
             </button>
             <button onclick="switchTab('general')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-general">
-                📈 General
+                General
             </button>
         </div>
 
+        <!-- Nacional Tab -->
         <div id="content-nacional" class="tab-content active">
             <div class="loading" id="loading-nacional">
                 <div class="spinner"></div>
             </div>
             <div id="data-nacional" style="display: none;">
+                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-nacional"></div>
+                
+                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-1"></canvas>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-nacional-2"></canvas>
                         </div>
+                        <div id="stats-nacional" class="mt-4 text-center"></div>
                     </div>
                 </div>
+
+                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
-                    <input type="text" id="search-nacional" class="search-input" placeholder="🔍 Buscar en los datos...">
-                    <div class="overflow-x-auto">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <input type="text" id="search-nacional" class="search-input" placeholder="Buscar...">
+                    <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-nacional"></table>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Internacional Tab -->
         <div id="content-internacional" class="tab-content">
             <div class="loading" id="loading-internacional">
                 <div class="spinner"></div>
             </div>
             <div id="data-internacional" style="display: none;">
+                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-internacional"></div>
+                
+                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-1"></canvas>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-internacional-2"></canvas>
                         </div>
+                        <div id="stats-internacional" class="mt-4 text-center"></div>
                     </div>
                 </div>
+
+                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
-                    <input type="text" id="search-internacional" class="search-input" placeholder="🔍 Buscar en los datos...">
-                    <div class="overflow-x-auto">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <input type="text" id="search-internacional" class="search-input" placeholder="Buscar...">
+                    <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-internacional"></table>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- General Tab -->
         <div id="content-general" class="tab-content">
             <div class="loading" id="loading-general">
                 <div class="spinner"></div>
             </div>
             <div id="data-general" style="display: none;">
+                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-general"></div>
+                
+                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-1"></canvas>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Promedio de Alineamiento</h3>
                         <div class="chart-container">
                             <canvas id="chart-general-2"></canvas>
                         </div>
+                        <div id="stats-general" class="mt-4 text-center"></div>
                     </div>
                 </div>
+
+                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
-                    <input type="text" id="search-general" class="search-input" placeholder="🔍 Buscar en los datos...">
-                    <div class="overflow-x-auto">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
+                    <input type="text" id="search-general" class="search-input" placeholder="Buscar...">
+                    <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
                         <table id="table-general"></table>
                     </div>
                 </div>
@@ -199,6 +222,7 @@
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-gray-800 text-white py-6 mt-12">
         <div class="container mx-auto px-4 text-center">
             <p class="text-sm md:text-base">
@@ -259,22 +283,73 @@
 
         function renderKPIs(source, data) {
             const kpisContainer = document.getElementById(`kpis-${source}`);
-            const columns = Object.keys(data[0] || {});
+            const analysis = analyzeAlignmentData(data);
             
             const kpis = [
-                { label: 'Total de Registros', value: data.length, icon: '📊' },
-                { label: 'Columnas de Datos', value: columns.length, icon: '📋' },
-                { label: 'Campos Completos', value: calculateCompleteness(data), icon: '✅' },
-                { label: 'Última Actualización', value: new Date().toLocaleDateString('es-ES'), icon: '📅' }
+                { label: 'Total de Líneas', value: data.length, color: '#2563eb' },
+                { label: 'Nivel Alto (≥80%)', value: analysis.alto, color: '#10b981' },
+                { label: 'Nivel Medio (40-79%)', value: analysis.medio, color: '#f59e0b' },
+                { label: 'Nivel Bajo (<40%)', value: analysis.bajo, color: '#ef4444' }
             ];
 
             kpisContainer.innerHTML = kpis.map(kpi => `
-                <div class="kpi-card">
-                    <div class="text-3xl mb-2">${kpi.icon}</div>
-                    <div class="text-3xl font-bold mb-1">${kpi.value}</div>
-                    <div class="text-sm opacity-90">${kpi.label}</div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4" style="border-color: ${kpi.color};">
+                    <div class="text-3xl font-bold mb-1" style="color: ${kpi.color};">${kpi.value}</div>
+                    <div class="text-sm text-gray-600 font-medium">${kpi.label}</div>
                 </div>
             `).join('');
+        }
+
+        function analyzeAlignmentData(data) {
+            let alto = 0, medio = 0, bajo = 0;
+            let totalPercentage = 0;
+            let countWithPercentage = 0;
+
+            const nivelColumn = findColumn(data, ['nivel de avance', 'nivel', 'avance']);
+            const percentageColumn = findColumn(data, ['% alineamiento', 'alineamiento', 'porcentaje']);
+
+            data.forEach(row => {
+                let nivel = '';
+                if (nivelColumn) {
+                    nivel = (row[nivelColumn] || '').toString().toLowerCase();
+                } else if (percentageColumn) {
+                    const percentage = parseFloat(row[percentageColumn]);
+                    if (!isNaN(percentage)) {
+                        if (percentage >= 80) nivel = 'alto';
+                        else if (percentage >= 40) nivel = 'medio';
+                        else nivel = 'bajo';
+                    }
+                }
+
+                if (nivel.includes('alto')) alto++;
+                else if (nivel.includes('medio')) medio++;
+                else if (nivel.includes('bajo')) bajo++;
+
+                if (percentageColumn) {
+                    const percentage = parseFloat(row[percentageColumn]);
+                    if (!isNaN(percentage)) {
+                        totalPercentage += percentage;
+                        countWithPercentage++;
+                    }
+                }
+            });
+
+            return {
+                alto,
+                medio,
+                bajo,
+                promedio: countWithPercentage > 0 ? Math.round(totalPercentage / countWithPercentage) : 0
+            };
+        }
+
+        function findColumn(data, possibleNames) {
+            if (data.length === 0) return null;
+            const columns = Object.keys(data[0]);
+            for (let name of possibleNames) {
+                const found = columns.find(col => col.toLowerCase().includes(name));
+                if (found) return found;
+            }
+            return null;
         }
 
         function calculateCompleteness(data) {
@@ -292,127 +367,93 @@
             }
             chartsCache[source] = [];
 
-            const columns = Object.keys(data[0] || {});
-            const numericColumns = columns.filter(col => {
-                return data.some(row => !isNaN(parseFloat(row[col])));
-            });
+            const analysis = analyzeAlignmentData(data);
 
-            const categoricalColumns = columns.filter(col => !numericColumns.includes(col));
-
-            if (categoricalColumns.length > 0) {
-                const firstCatColumn = categoricalColumns[0];
-                const distribution = {};
-                data.forEach(row => {
-                    const value = row[firstCatColumn] || 'Sin categoría';
-                    distribution[value] = (distribution[value] || 0) + 1;
-                });
-
-                const labels = Object.keys(distribution).slice(0, 10);
-                const values = labels.map(label => distribution[label]);
-
-                const ctx1 = document.getElementById(`chart-${source}-1`).getContext('2d');
-                const chart1 = new Chart(ctx1, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: firstCatColumn,
-                            data: values,
-                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true, position: 'top' }
-                        },
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-                chartsCache[source].push(chart1);
-            }
-
-            if (numericColumns.length > 0) {
-                const numCol = numericColumns[0];
-                const chartData = data.slice(0, 20).map((row, idx) => ({
-                    x: idx + 1,
-                    y: parseFloat(row[numCol]) || 0
-                }));
-
-                const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
-                const chart2 = new Chart(ctx2, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: numCol,
-                            data: chartData,
-                            borderColor: 'rgba(168, 85, 247, 1)',
-                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true, position: 'top' }
-                        },
-                        scales: {
-                            x: { type: 'linear', title: { display: true, text: 'Registro' } },
-                            y: { beginAtZero: true, title: { display: true, text: numCol } }
-                        }
-                    }
-                });
-                chartsCache[source].push(chart2);
-            } else {
-                if (categoricalColumns.length > 1) {
-                    const secondCatColumn = categoricalColumns[1];
-                    const distribution = {};
-                    data.forEach(row => {
-                        const value = row[secondCatColumn] || 'Sin categoría';
-                        distribution[value] = (distribution[value] || 0) + 1;
-                    });
-
-                    const labels = Object.keys(distribution).slice(0, 8);
-                    const values = labels.map(label => distribution[label]);
-
-                    const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
-                    const chart2 = new Chart(ctx2, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: values,
-                                backgroundColor: [
-                                    'rgba(239, 68, 68, 0.7)',
-                                    'rgba(59, 130, 246, 0.7)',
-                                    'rgba(34, 197, 94, 0.7)',
-                                    'rgba(168, 85, 247, 0.7)',
-                                    'rgba(251, 191, 36, 0.7)',
-                                    'rgba(236, 72, 153, 0.7)',
-                                    'rgba(20, 184, 166, 0.7)',
-                                    'rgba(249, 115, 22, 0.7)'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: true, position: 'right' }
+            const ctx1 = document.getElementById(`chart-${source}-1`).getContext('2d');
+            const chart1 = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Alto (≥80%)', 'Medio (40-79%)', 'Bajo (<40%)'],
+                    datasets: [{
+                        data: [analysis.alto, analysis.medio, analysis.bajo],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 14 },
+                                padding: 15
                             }
                         }
-                    });
-                    chartsCache[source].push(chart2);
+                    }
                 }
-            }
+            });
+            chartsCache[source].push(chart1);
+
+            const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
+            const chart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Promedio de Alineamiento'],
+                    datasets: [{
+                        label: 'Porcentaje',
+                        data: [analysis.promedio],
+                        backgroundColor: analysis.promedio >= 80 ? 'rgba(16, 185, 129, 0.8)' : 
+                                       analysis.promedio >= 40 ? 'rgba(245, 158, 11, 0.8)' : 
+                                       'rgba(239, 68, 68, 0.8)',
+                        borderColor: analysis.promedio >= 80 ? 'rgb(16, 185, 129)' : 
+                                    analysis.promedio >= 40 ? 'rgb(245, 158, 11)' : 
+                                    'rgb(239, 68, 68)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            chartsCache[source].push(chart2);
+
+            const statsDiv = document.getElementById(`stats-${source}`);
+            const nivelText = analysis.promedio >= 80 ? 'Alto' : analysis.promedio >= 40 ? 'Medio' : 'Bajo';
+            const nivelColor = analysis.promedio >= 80 ? '#10b981' : analysis.promedio >= 40 ? '#f59e0b' : '#ef4444';
+            statsDiv.innerHTML = `
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <div class="text-5xl font-bold mb-2" style="color: ${nivelColor};">${analysis.promedio}%</div>
+                    <div class="text-lg text-gray-700">Nivel de Alineamiento: <span class="font-semibold" style="color: ${nivelColor};">${nivelText}</span></div>
+                </div>
+            `;
         }
 
         function renderTable(source, data) {
@@ -426,7 +467,7 @@
             
             let html = '<thead><tr>';
             columns.forEach(col => {
-                html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}')">${col} ↕️</th>`;
+                html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}')">${col} <span style="font-size:10px;">↕</span></th>`;
             });
             html += '</tr></thead><tbody id="tbody-${source}">';
             
