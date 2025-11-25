@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero de Proyección Técnica - CERS</title>
+    <title>Tablero de análisis Plan de Acción Política Pública MCYEVS</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -16,7 +16,7 @@
             --accent: #00AEEF; 
             --initial: #95a5a6; 
             --final: #27ae60;   
-            --bg-light: #f8f9fa;         
+            --bg-light: #f8f9fa;          
             --white: #ffffff;
             --text-dark: #2c3e50;
         }
@@ -55,16 +55,12 @@
         .tab-btn:hover { background: #eef7ff; color: var(--primary); }
         .tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        /* PANEL DE PROYECCIÓN */
-        .simulation-panel {
-            display: flex; align-items: center; gap: 20px; width: 100%;
-            background: #f0fdf4; padding: 15px 25px; border-radius: 12px; border: 1px solid #bbf7d0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        /* PANEL DE VALIDACIÓN (NUEVO) */
+        .validation-panel {
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
+            background: #fff8e1; padding: 10px 20px; border-radius: 8px; border-left: 5px solid #f1c40f;
+            font-size: 0.85rem; color: #7f6000; font-weight: 600;
         }
-        .sim-icon { font-size: 1.8rem; color: var(--final); }
-        .legend-box { display: flex; gap: 20px; font-size: 0.8rem; font-weight: 600; margin-left: auto; }
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
 
         /* CONTAINER */
         .container { max-width: 1300px; margin: 30px auto; padding: 0 30px; }
@@ -102,7 +98,20 @@
             font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
         }
 
-        /* TOOLTIP DE SUSTENTO TÉCNICO */
+        /* SEMÁFORO DE VALIDACIÓN (ESTILOS NUEVOS) */
+        .semaforo-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: white;
+        }
+        .semaforo-btn:hover { transform: scale(1.15); }
+        
+        .s-gris { background-color: #ecf0f1; border: 2px solid #bdc3c7; color: #bdc3c7; }
+        .s-verde { background-color: #2ecc71; border: 2px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+        .s-amarillo { background-color: #f1c40f; border: 2px solid #f39c12; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
+        .s-rojo { background-color: #e74c3c; border: 2px solid #c0392b; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+
+        /* TOOLTIP */
         .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
         .tooltip-icon { color: var(--accent); font-size: 1rem; transition: transform 0.2s; }
         .tooltip-icon:hover { transform: scale(1.2); }
@@ -120,8 +129,8 @@
 
         @media (max-width: 900px) { 
             .kpi-grid { grid-template-columns: 1fr; } 
-            .simulation-panel { flex-direction: column; align-items: flex-start; }
             .header-top { flex-direction: column; text-align: center; gap: 15px; }
+            .validation-panel { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
 </head>
@@ -129,9 +138,8 @@
 
     <header class="header-top">
         <div class="header-info">
-            <h1>ANÁLISIS DE ALINEACIÓN CERS</h1>
-            <p class="subtitle">Evaluación de Conformidad y Proyección de Impacto</p>
-            <div style="font-size:0.75rem; opacity:0.8; margin-top:5px; font-weight:600;">Investigadora: Catalina Santos Gonzalez</div>
+            <h1>SESIÓN DE VALIDACIÓN TÉCNICA - CERS</h1>
+            <p class="subtitle">Herramienta de Verificación y Consenso - Fase 6.2.1.3</p>
         </div>
         
         <div class="header-right">
@@ -149,17 +157,15 @@
             <button class="tab-btn" onclick="loadTab('GENERAL')">3. Matriz General</button>
         </nav>
 
-        <div class="simulation-panel">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <i class="fas fa-chart-line sim-icon"></i>
-                <div>
-                    <strong style="color:var(--primary); font-size:1rem;">Fase 6.2.1.3: VERIFICAR Y PROYECTAR</strong>
-                    <div style="font-size:0.8rem; color:#666;">Proyección basada en la implementación de acciones de mejora priorizadas.</div>
-                </div>
+        <div class="validation-panel">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-gavel"></i>
+                <span>ESTADO DE LA SESIÓN: <span id="val-counter">0</span> de <span id="total-counter">0</span> líneas validadas</span>
             </div>
-            <div class="legend-box">
-                <div class="legend-item"><div class="dot" style="background:var(--initial);"></div> <span>Línea Base</span></div>
-                <div class="legend-item"><div class="dot" style="background:var(--final);"></div> <span>Proyección (Meta)</span></div>
+            <div style="display:flex; gap:15px; font-size:0.75rem;">
+                <span style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; border-radius:50%; background:#2ecc71;"></div> Aprobado</span>
+                <span style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; border-radius:50%; background:#f1c40f;"></div> Ajustado</span>
+                <span style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; border-radius:50%; background:#e74c3c;"></div> Rechazado</span>
             </div>
         </div>
     </div>
@@ -168,7 +174,7 @@
         
         <div id="loading" style="text-align:center; padding:80px; color:#bdc3c7;">
             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i>
-            <p style="margin-top:15px; font-weight:600;">Generando modelo de proyección técnica...</p>
+            <p style="margin-top:15px; font-weight:600;">Cargando datos del plan...</p>
         </div>
 
         <div id="dashboard-content" style="display:none;">
@@ -183,31 +189,31 @@
                     <span class="kpi-value" id="kpi-final" style="color:var(--final);">0%</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--accent);">
-                    <span class="kpi-title">Impacto Estimado (Delta)</span>
+                    <span class="kpi-title">Impacto (Delta)</span>
                     <span class="kpi-value" id="kpi-delta" style="color:var(--accent);">+0%</span>
                     <span class="kpi-trend">Mejora Potencial</span>
                 </div>
             </div>
 
             <div class="chart-card">
-                <div class="section-header">Gráfico de Brechas: Estado Actual vs Estado Deseado</div>
+                <div class="section-header">Visualización de Brechas</div>
                 <div style="height: 380px; position: relative;">
                     <canvas id="chartComparativo"></canvas>
                 </div>
             </div>
 
             <div class="table-card">
-                <div class="section-header">Matriz de Proyección y Sustento Técnico</div>
+                <div class="section-header">Matriz de Validación - Comité Técnico</div>
                 <div class="table-responsive">
                     <table id="tablaDetalle">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Línea Estratégica</th>
-                                <th style="width: 12%; text-align:center;">Base</th>
-                                <th style="width: 12%; text-align:center;">Meta</th>
-                                <th style="width: 12%; text-align:center;">Mejora</th>
-                                <th style="width: 15%; text-align:center;">Sustento Técnico</th>
-                                <th style="width: 14%; text-align:center;">Escenario</th>
+                                <th style="width: 30%;">Línea Estratégica</th>
+                                <th style="width: 10%; text-align:center;">Base</th>
+                                <th style="width: 10%; text-align:center;">Meta</th>
+                                <th style="width: 10%; text-align:center;">Ajuste</th>
+                                <th style="width: 25%; text-align:center;">Sustento Técnico</th>
+                                <th style="width: 15%; text-align:center;">Validación Comité</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -222,7 +228,7 @@
         const SHEETS_CONFIG = {
             'GENERAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
-                colIndex: { name: 0, pct: 3, rec: 5 } // rec = columna de Recomendación
+                colIndex: { name: 0, pct: 3, rec: 5 } 
             },
             'NACIONAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv',
@@ -264,13 +270,11 @@
                     if(typeof rawPct === 'string') rawPct = rawPct.replace('%', '').replace(',', '.');
                     let val = parseFloat(rawPct) || 0;
                     
-                    // LÓGICA DE PROYECCIÓN TÉCNICA (Defendible)
-                    // "A menor puntaje, mayor margen de mejora técnica"
                     let mejora = 0;
-                    if (val < 40) mejora = 20;      // Crítico: Se puede mejorar mucho
-                    else if (val < 70) mejora = 15; // Medio: Mejora sustancial
-                    else if (val < 90) mejora = 5;  // Alto: Mejora marginal
-                    else mejora = 0;                // Óptimo: Mantenimiento
+                    if (val < 40) mejora = 20;      
+                    else if (val < 70) mejora = 15; 
+                    else if (val < 90) mejora = 5;  
+                    else mejora = 0;                
 
                     let simulado = val + mejora;
                     if (simulado > 100) simulado = 100;
@@ -280,7 +284,8 @@
                         linea: row[mapping.name],
                         inicial: val,
                         final: simulado,
-                        recomendacion: row[mapping.rec] || "Revisión documental estándar."
+                        recomendacion: row[mapping.rec] || "Revisión documental estándar.",
+                        status: 0 // 0: gris, 1: verde, 2: amarillo, 3: rojo
                     });
                 }
             }
@@ -297,20 +302,26 @@
 
             currentData[index].final = val;
             
-            const row = document.getElementById(`row-${index}`);
-            const deltaSpan = row.querySelector('.improvement-tag');
-            const diff = val - currentData[index].inicial;
-            
-            if(diff > 0) {
-                deltaSpan.innerHTML = `<i class="fas fa-arrow-up"></i> +${Math.round(diff)}%`;
-                deltaSpan.style.color = '#27ae60'; deltaSpan.style.background = '#dcfce7';
-            } else {
-                deltaSpan.innerHTML = `-`;
-                deltaSpan.style.color = '#95a5a6'; deltaSpan.style.background = '#f1f1f1';
-            }
+            // Si cambian un dato manual, el semáforo cambia a Amarillo (Ajustado) automáticamente
+            currentData[index].status = 2; 
 
-            updateKPIs();
-            updateChart();
+            renderDashboard(false); // Renderizar sin recargar tabla para no perder foco
+        }
+
+        // LÓGICA DEL SEMÁFORO
+        function cycleStatus(index) {
+            // Ciclo: 0(Gris) -> 1(Verde) -> 2(Amarillo) -> 3(Rojo) -> 0...
+            currentData[index].status = (currentData[index].status + 1) % 4;
+            renderDashboard(false);
+        }
+
+        function getStatusProps(status) {
+            switch(status) {
+                case 1: return { class: 's-verde', icon: '<i class="fas fa-check"></i>', text: 'Validado' };
+                case 2: return { class: 's-amarillo', icon: '<i class="fas fa-pen"></i>', text: 'Ajustado' };
+                case 3: return { class: 's-rojo', icon: '<i class="fas fa-times"></i>', text: 'Rechazado' };
+                default: return { class: 's-gris', icon: '<i class="fas fa-minus"></i>', text: 'Pendiente' };
+            }
         }
 
         function updateKPIs() {
@@ -318,23 +329,53 @@
             const avgInit = total ? currentData.reduce((a,b)=>a+b.inicial,0)/total : 0;
             const avgFinal = total ? currentData.reduce((a,b)=>a+b.final,0)/total : 0;
             const delta = avgFinal - avgInit;
+            const validatedCount = currentData.filter(d => d.status === 1 || d.status === 2).length;
 
             document.getElementById('kpi-inicial').innerText = Math.round(avgInit) + '%';
             document.getElementById('kpi-final').innerText = Math.round(avgFinal) + '%';
             document.getElementById('kpi-delta').innerText = '+' + Math.round(delta) + '%';
+            
+            document.getElementById('val-counter').innerText = validatedCount;
+            document.getElementById('total-counter').innerText = total;
         }
 
-        function renderDashboard() {
+        function renderDashboard(fullRender = true) {
             updateKPIs();
+            updateChart(); // Siempre actualizamos el gráfico
+
+            if(!fullRender) {
+                // Actualizar solo botones de semáforo y tags para no perder foco
+                currentData.forEach((item, index) => {
+                    const props = getStatusProps(item.status);
+                    const btn = document.getElementById(`btn-status-${index}`);
+                    if(btn) {
+                        btn.className = `semaforo-btn ${props.class}`;
+                        btn.innerHTML = props.icon;
+                        btn.title = props.text;
+                    }
+                    
+                    // Actualizar Tag de Mejora
+                    const diff = item.final - item.inicial;
+                    const tag = document.getElementById(`tag-delta-${index}`);
+                    if(tag) {
+                         if(diff > 0) {
+                            tag.innerHTML = `<i class="fas fa-arrow-up"></i> +${Math.round(diff)}%`;
+                            tag.style.color = '#27ae60'; tag.style.background = '#dcfce7';
+                        } else {
+                            tag.innerHTML = `-`;
+                            tag.style.color = '#95a5a6'; tag.style.background = '#f1f1f1';
+                        }
+                    }
+                });
+                return; 
+            }
 
             const tbody = document.querySelector('#tablaDetalle tbody');
             tbody.innerHTML = '';
             
             currentData.forEach((item, index) => {
                 const diff = item.final - item.inicial;
-                let escenario = 'Mantenimiento';
-                if(diff >= 15) escenario = 'Transformación';
-                else if(diff >= 5) escenario = 'Mejora Continua';
+                const props = getStatusProps(item.status);
 
                 const tr = document.createElement('tr');
                 tr.id = `row-${index}`;
@@ -346,23 +387,29 @@
                         onchange="updateValue(${index}, this.value)" min="0" max="100">
                     </td>
                     <td style="text-align:center;">
-                        <span class="improvement-tag"><i class="fas fa-arrow-up"></i> +${Math.round(diff)}%</span>
+                        <span id="tag-delta-${index}" class="improvement-tag">
+                            ${diff > 0 ? `<i class="fas fa-arrow-up"></i> +${Math.round(diff)}%` : '-'}
+                        </span>
                     </td>
                     <td style="text-align:center;">
                         <div class="tooltip-container">
                             <i class="fas fa-file-medical-alt tooltip-icon"></i>
                             <span class="tooltip-content">
-                                <strong>Acción de Mejora (Base de la Proyección):</strong><br>
+                                <strong>Evidencia / Sustento:</strong><br>
                                 ${item.recomendacion}
                             </span>
                         </div>
                     </td>
-                    <td style="text-align:center; font-size:0.7rem; color:#666;">${escenario}</td>
+                    <td style="text-align:center;">
+                        <div style="display:flex; justify-content:center;">
+                            <button id="btn-status-${index}" class="semaforo-btn ${props.class}" onclick="cycleStatus(${index})" title="${props.text}">
+                                ${props.icon}
+                            </button>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            updateChart();
         }
 
         function updateChart() {
@@ -377,13 +424,13 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Línea Base',
+                            label: 'Línea Base (Evaluada)',
                             data: currentData.map(d => d.inicial),
                             backgroundColor: '#bdc3c7',
                             borderRadius: 4
                         },
                         {
-                            label: 'Meta Proyectada',
+                            label: 'Meta Validada',
                             data: currentData.map(d => d.final),
                             backgroundColor: '#003366',
                             borderRadius: 4
@@ -399,7 +446,6 @@
                         tooltip: {
                             callbacks: {
                                 afterBody: function(context) {
-                                    // Mostrar la recomendación en el tooltip del gráfico también
                                     const index = context[0].dataIndex;
                                     return '\nSustento: ' + currentData[index].recomendacion.substring(0, 50) + '...';
                                 }
