@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard BI - CERS 2025 Villavicencio</title>
+    <title>Dashboard análisis Plan de Acción Política Pública MCYEVS - CERS 2025 Villavicencio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -83,7 +84,6 @@
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header -->
         <header class="mb-8 bg-white rounded-lg shadow-md p-6">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
@@ -97,7 +97,6 @@
             </div>
         </header>
 
-        <!-- Tabs Navigation -->
         <div class="mb-6 flex flex-wrap gap-2 border-b-2 border-gray-200">
             <button onclick="switchTab('nacional')" class="tab-button active px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-nacional">
                 Nacional
@@ -110,16 +109,13 @@
             </button>
         </div>
 
-        <!-- Nacional Tab -->
         <div id="content-nacional" class="tab-content active">
             <div class="loading" id="loading-nacional">
                 <div class="spinner"></div>
             </div>
             <div id="data-nacional" style="display: none;">
-                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-nacional"></div>
                 
-                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
@@ -136,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
                     <input type="text" id="search-nacional" class="search-input" placeholder="Buscar...">
@@ -147,16 +142,13 @@
             </div>
         </div>
 
-        <!-- Internacional Tab -->
         <div id="content-internacional" class="tab-content">
             <div class="loading" id="loading-internacional">
                 <div class="spinner"></div>
             </div>
             <div id="data-internacional" style="display: none;">
-                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-internacional"></div>
                 
-                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
@@ -173,7 +165,6 @@
                     </div>
                 </div>
 
-                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
                     <input type="text" id="search-internacional" class="search-input" placeholder="Buscar...">
@@ -184,16 +175,13 @@
             </div>
         </div>
 
-        <!-- General Tab -->
         <div id="content-general" class="tab-content">
             <div class="loading" id="loading-general">
                 <div class="spinner"></div>
             </div>
             <div id="data-general" style="display: none;">
-                <!-- KPIs -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-general"></div>
                 
-                <!-- Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución de Niveles de Alineamiento</h3>
@@ -210,7 +198,6 @@
                     </div>
                 </div>
 
-                <!-- Data Table -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Resumen de Datos</h3>
                     <input type="text" id="search-general" class="search-input" placeholder="Buscar...">
@@ -222,7 +209,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white py-6 mt-12">
         <div class="container mx-auto px-4 text-center">
             <p class="text-sm md:text-base">
@@ -232,6 +218,7 @@
     </footer>
 
     <script>
+        // FUENTES DE DATOS: URLs PUBLICADAS COMO CSV DE GOOGLE SHEETS
         const DATA_SOURCES = {
             nacional: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv',
             internacional: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv',
@@ -240,6 +227,7 @@
 
         let dataCache = {};
         let chartsCache = {};
+        let currentSort = { column: null, direction: 'asc' }; // Estado de ordenamiento
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -250,6 +238,11 @@
 
             if (!dataCache[tabName]) {
                 loadData(tabName);
+            } else {
+                // Si la data está en caché, pero los gráficos fueron destruidos, renderizarlos
+                if (!chartsCache[tabName] || chartsCache[tabName].length === 0) {
+                    renderCharts(tabName, dataCache[tabName]);
+                }
             }
         }
 
@@ -259,6 +252,7 @@
                 header: true,
                 complete: function(results) {
                     dataCache[source] = results.data.filter(row => {
+                        // Filtra filas completamente vacías
                         return Object.values(row).some(val => val && val.toString().trim() !== '');
                     });
                     renderDashboard(source, dataCache[source]);
@@ -266,7 +260,7 @@
                 error: function(error) {
                     console.error('Error loading data:', error);
                     document.getElementById(`loading-${source}`).innerHTML = 
-                        '<div class="text-red-600 text-center"><p class="text-xl">❌ Error al cargar los datos</p><p class="mt-2">Por favor, verifica la conexión a internet</p></div>';
+                        '<div class="text-red-600 text-center"><p class="text-xl">❌ Error al cargar los datos</p><p class="mt-2">Por favor, verifica la conexión a internet y que las hojas estén publicadas como CSV.</p></div>';
                 }
             });
         }
@@ -279,6 +273,9 @@
             renderCharts(source, data);
             renderTable(source, data);
             setupSearch(source, data);
+            
+            // Inicializa el estado de ordenamiento para la nueva pestaña
+            currentSort = { column: null, direction: 'asc' };
         }
 
         function renderKPIs(source, data) {
@@ -305,31 +302,39 @@
             let totalPercentage = 0;
             let countWithPercentage = 0;
 
-            const nivelColumn = findColumn(data, ['nivel de avance', 'nivel', 'avance']);
-            const percentageColumn = findColumn(data, ['% alineamiento', 'alineamiento', 'porcentaje']);
+            // Nombres de columna posibles para el porcentaje (normalizadas a minúsculas y sin espacios)
+            const possiblePercentageNames = ['%alineamiento', 'alineamiento', 'porcentaje', '%global', 'porcentajeglobal', 'unnamed:4', 'unnamed:3'];
+
+            // Encuentra el nombre real de la columna de porcentaje en los datos
+            const columns = data.length > 0 ? Object.keys(data[0]).map(col => col.toLowerCase().replace(/[^a-z0-9%]/g, '')) : [];
+            let percentageColumn = null;
+
+            for (const rowKey in data[0]) {
+                const normalizedKey = rowKey.toLowerCase().replace(/[^a-z0-9%]/g, '');
+                if (possiblePercentageNames.includes(normalizedKey)) {
+                    percentageColumn = rowKey;
+                    break;
+                }
+            }
+            // Si no encuentra por nombre limpio, intenta encontrar la columna con el % en el nombre
+            if (!percentageColumn) {
+                percentageColumn = Object.keys(data[0]).find(col => col.toLowerCase().includes('%'));
+            }
+
 
             data.forEach(row => {
-                let nivel = '';
-                if (nivelColumn) {
-                    nivel = (row[nivelColumn] || '').toString().toLowerCase();
-                } else if (percentageColumn) {
-                    const percentage = parseFloat(row[percentageColumn]);
-                    if (!isNaN(percentage)) {
-                        if (percentage >= 80) nivel = 'alto';
-                        else if (percentage >= 40) nivel = 'medio';
-                        else nivel = 'bajo';
-                    }
-                }
+                if (percentageColumn && row[percentageColumn]) {
+                    // Limpia el valor (quita %, reemplaza coma por punto si es necesario)
+                    const rawValue = row[percentageColumn].toString().replace('%', '').replace(',', '.').trim();
+                    const percentage = parseFloat(rawValue);
 
-                if (nivel.includes('alto')) alto++;
-                else if (nivel.includes('medio')) medio++;
-                else if (nivel.includes('bajo')) bajo++;
-
-                if (percentageColumn) {
-                    const percentage = parseFloat(row[percentageColumn]);
                     if (!isNaN(percentage)) {
                         totalPercentage += percentage;
                         countWithPercentage++;
+
+                        if (percentage >= 80) alto++;
+                        else if (percentage >= 40) medio++;
+                        else bajo++;
                     }
                 }
             });
@@ -342,24 +347,6 @@
             };
         }
 
-        function findColumn(data, possibleNames) {
-            if (data.length === 0) return null;
-            const columns = Object.keys(data[0]);
-            for (let name of possibleNames) {
-                const found = columns.find(col => col.toLowerCase().includes(name));
-                if (found) return found;
-            }
-            return null;
-        }
-
-        function calculateCompleteness(data) {
-            if (data.length === 0) return '0%';
-            const totalCells = data.length * Object.keys(data[0]).length;
-            const filledCells = data.reduce((sum, row) => {
-                return sum + Object.values(row).filter(val => val && val.toString().trim() !== '').length;
-            }, 0);
-            return Math.round((filledCells / totalCells) * 100) + '%';
-        }
 
         function renderCharts(source, data) {
             if (chartsCache[source]) {
@@ -369,17 +356,18 @@
 
             const analysis = analyzeAlignmentData(data);
 
+            // Chart 1: Doughnut Chart
             const ctx1 = document.getElementById(`chart-${source}-1`).getContext('2d');
             const chart1 = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Alto (≥80%)', 'Medio (40-79%)', 'Bajo (<40%)'],
+                    labels: [`Alto (≥80% - ${analysis.alto})`, `Medio (40-79% - ${analysis.medio})`, `Bajo (<40% - ${analysis.bajo})`],
                     datasets: [{
                         data: [analysis.alto, analysis.medio, analysis.bajo],
                         backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(239, 68, 68, 0.8)'
+                            'rgba(16, 185, 129, 0.8)', // Green
+                            'rgba(245, 158, 11, 0.8)', // Yellow
+                            'rgba(239, 68, 68, 0.8)'   // Red
                         ],
                         borderColor: [
                             'rgb(16, 185, 129)',
@@ -406,6 +394,7 @@
             });
             chartsCache[source].push(chart1);
 
+            // Chart 2: Bar Chart for Average Alignment
             const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
             const chart2 = new Chart(ctx2, {
                 type: 'bar',
@@ -415,11 +404,11 @@
                         label: 'Porcentaje',
                         data: [analysis.promedio],
                         backgroundColor: analysis.promedio >= 80 ? 'rgba(16, 185, 129, 0.8)' : 
-                                       analysis.promedio >= 40 ? 'rgba(245, 158, 11, 0.8)' : 
-                                       'rgba(239, 68, 68, 0.8)',
+                                               analysis.promedio >= 40 ? 'rgba(245, 158, 11, 0.8)' : 
+                                               'rgba(239, 68, 68, 0.8)',
                         borderColor: analysis.promedio >= 80 ? 'rgb(16, 185, 129)' : 
-                                    analysis.promedio >= 40 ? 'rgb(245, 158, 11)' : 
-                                    'rgb(239, 68, 68)',
+                                             analysis.promedio >= 40 ? 'rgb(245, 158, 11)' : 
+                                             'rgb(239, 68, 68)',
                         borderWidth: 2
                     }]
                 },
@@ -445,6 +434,7 @@
             });
             chartsCache[source].push(chart2);
 
+            // Stats Div
             const statsDiv = document.getElementById(`stats-${source}`);
             const nivelText = analysis.promedio >= 80 ? 'Alto' : analysis.promedio >= 40 ? 'Medio' : 'Bajo';
             const nivelColor = analysis.promedio >= 80 ? '#10b981' : analysis.promedio >= 40 ? '#f59e0b' : '#ef4444';
@@ -467,9 +457,11 @@
             
             let html = '<thead><tr>';
             columns.forEach(col => {
-                html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}')">${col} <span style="font-size:10px;">↕</span></th>`;
+                // Usa un ID de columna limpio para el ordenamiento
+                const cleanCol = col.replace(/[^a-zA-Z0-9]/g, ''); 
+                html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}', this)">${col} <span id="sort-icon-${cleanCol}">↕</span></th>`;
             });
-            html += '</tr></thead><tbody id="tbody-${source}">';
+            html += '</tr></thead><tbody>';
             
             data.forEach(row => {
                 html += '<tr>';
@@ -485,35 +477,68 @@
 
         function setupSearch(source, data) {
             const searchInput = document.getElementById(`search-${source}`);
-            searchInput.addEventListener('input', function(e) {
+            searchInput.oninput = function(e) {
                 const searchTerm = e.target.value.toLowerCase();
-                const filteredData = data.filter(row => {
+                const filteredData = dataCache[source].filter(row => { // Usa dataCache[source] para el filtro base
                     return Object.values(row).some(val => 
                         val && val.toString().toLowerCase().includes(searchTerm)
                     );
                 });
                 renderTable(source, filteredData);
-            });
+            };
         }
 
-        function sortTable(source, column) {
+        function sortTable(source, column, headerElement) {
             const data = dataCache[source];
-            const isNumeric = !isNaN(parseFloat(data[0][column]));
+
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            // Determinar si la columna es numérica (verifica la primera fila con valor)
+            let isNumeric = false;
+            const firstNumericRow = data.find(row => row[column] && !isNaN(parseFloat(row[column].toString().replace('%', '').replace(',', '.'))));
+            if (firstNumericRow) {
+                isNumeric = true;
+            }
             
             data.sort((a, b) => {
-                const aVal = a[column];
-                const bVal = b[column];
-                
+                const aVal = a[column] || (isNumeric ? 0 : '');
+                const bVal = b[column] || (isNumeric ? 0 : '');
+
+                let comparison = 0;
+
                 if (isNumeric) {
-                    return parseFloat(aVal || 0) - parseFloat(bVal || 0);
+                    const numA = parseFloat(aVal.toString().replace('%', '').replace(',', '.') || 0);
+                    const numB = parseFloat(bVal.toString().replace('%', '').replace(',', '.') || 0);
+                    comparison = numA - numB;
                 } else {
-                    return (aVal || '').toString().localeCompare((bVal || '').toString());
+                    comparison = aVal.toString().localeCompare(bVal.toString());
                 }
+
+                return currentSort.direction === 'asc' ? comparison : -comparison;
             });
-            
+
+            // Actualiza la tabla con los datos ordenados
             renderTable(source, data);
+
+            // Actualiza los iconos de ordenamiento
+            document.querySelectorAll(`#table-${source} th span`).forEach(span => {
+                span.innerHTML = '↕';
+            });
+
+            const iconSpan = headerElement.querySelector('span');
+            if (currentSort.direction === 'asc') {
+                iconSpan.innerHTML = '▲';
+            } else {
+                iconSpan.innerHTML = '▼';
+            }
         }
 
+        // Carga la pestaña Nacional al iniciar
         loadData('nacional');
     </script>
 </body>
