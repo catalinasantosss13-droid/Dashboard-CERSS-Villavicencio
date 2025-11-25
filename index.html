@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero de Verificación de Alineación - CERS</title>
+    <title>Tablero de Gestión CERS - Villavicencio</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -14,8 +14,8 @@
         :root {
             --primary: #003366; 
             --accent: #00AEEF; 
-            --initial: #7f8c8d; /* Gris para dato documental */
-            --final: #003366;   /* Azul Corporativo para dato validado */
+            --initial: #95a5a6; 
+            --final: #27ae60;   
             --bg-light: #f8f9fa;          
             --white: #ffffff;
             --text-dark: #2c3e50;
@@ -50,18 +50,27 @@
         }
         .tab-btn:hover { background: #eef7ff; color: var(--primary); }
         .tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* Estilo especial para la pestaña de validación */
+        .tab-btn.tab-exec { border-color: var(--final); color: var(--final); }
+        .tab-btn.tab-exec.active { background: var(--final); color: white; }
 
-        /* PANEL DE FASE VERIFICAR */
-        .phase-panel {
-            display: flex; align-items: center; justify-content: space-between; width: 100%;
-            background: #eef7ff; padding: 15px 25px; border-radius: 12px; border: 1px solid #b3d7ff;
+        /* PANEL DE PROYECCIÓN (Visibilidad controlada) */
+        .simulation-panel {
+            display: flex; align-items: center; gap: 20px; width: 100%;
+            background: #f0fdf4; padding: 15px 25px; border-radius: 12px; border: 1px solid #bbf7d0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
-        .phase-title { color: var(--primary); font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .sim-icon { font-size: 1.8rem; color: var(--final); }
 
         /* CONTAINER */
         .container { max-width: 1300px; margin: 30px auto; padding: 0 30px; }
 
-        /* KPI GRID */
+        /* VISTAS */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* ESTILOS DE LA VISTA DETALLADA (Original) */
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
         .kpi-card { 
             background: var(--white); padding: 25px; border-radius: 12px; text-align: center; 
@@ -69,59 +78,62 @@
         }
         .kpi-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #95a5a6; font-weight: 700; }
         .kpi-value { font-size: 2.5rem; font-weight: 800; display: block; margin-top: 10px; color: var(--text-dark); }
-        .kpi-sub { font-size: 0.8rem; color: #7f8c8d; margin-top: 5px; display: block; }
-
-        /* CHARTS */
+        
         .chart-card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); height: 450px; margin-bottom: 30px;}
         .section-header { margin-bottom: 20px; border-left: 4px solid var(--accent); padding-left: 12px; color: var(--primary); font-size: 1.1rem; font-weight: 700; }
 
-        /* TABLE */
         .table-card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; }
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { background: #f8f9fa; color: var(--primary); padding: 15px; text-align: left; border-bottom: 2px solid #eee; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
         td { padding: 15px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; color: #4a5568; }
         
-        /* INPUT DE VALIDACIÓN */
-        .input-val {
-            width: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; 
-            text-align: center; font-weight: 700; color: var(--primary); background: #fafffb;
+        /* ESTILOS DE LA VISTA EJECUTIVA (Validación Express) */
+        .exec-card {
+            background: white; border-radius: 15px; padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 70vh;
         }
-        .input-val:focus { border-color: var(--primary); outline: none; background: #fff; }
-
-        /* SEMÁFORO DE VALIDACIÓN */
-        .semaforo-btn {
-            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: white;
+        .exec-controls { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+        .btn-capture {
+            background: var(--final); color: white; padding: 10px 20px; border: none; border-radius: 8px;
+            font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
         }
-        .semaforo-btn:hover { transform: scale(1.15); }
+        .btn-capture:hover { background: #219150; transform: translateY(-2px); }
         
-        .s-gris { background-color: #ecf0f1; border: 2px solid #bdc3c7; color: #bdc3c7; }
-        .s-verde { background-color: #2ecc71; border: 2px solid #27ae60; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
-        .s-amarillo { background-color: #f1c40f; border: 2px solid #f39c12; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
-        .s-rojo { background-color: #e74c3c; border: 2px solid #c0392b; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+        
+        .input-score { 
+            font-size: 2.5rem; width: 100px; text-align: center; border: 2px solid #eee; 
+            border-radius: 10px; margin: 20px 0; color: var(--primary); font-weight: 800; padding: 10px;
+        }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-save { background: var(--primary); color: white; }
+        .btn-cancel { background: #f1f1f1; color: #666; }
 
-        /* TOOLTIP */
-        .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
-        .tooltip-icon { color: var(--accent); font-size: 1rem; transition: transform 0.2s; }
-        .tooltip-icon:hover { transform: scale(1.2); }
-        .tooltip-content {
-            visibility: hidden; width: 300px; background-color: #333; color: #fff; text-align: left;
-            border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%;
-            margin-left: -150px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; line-height: 1.4;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .improvement-tag {
+            background: #dcfce7; color: var(--final); padding: 4px 8px; border-radius: 4px; 
+            font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
         }
-        .tooltip-content::after {
-            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
-            border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent;
+        
+        .input-proj {
+            width: 65px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; 
+            text-align: center; font-weight: 700; color: var(--final); background: #fafffb;
         }
-        .tooltip-container:hover .tooltip-content { visibility: visible; opacity: 1; }
 
         @media (max-width: 900px) { 
             .kpi-grid { grid-template-columns: 1fr; } 
             .header-top { flex-direction: column; text-align: center; gap: 15px; }
-            .phase-panel { flex-direction: column; gap: 10px; text-align: center; }
+            .simulation-panel { display: none; }
         }
     </style>
 </head>
@@ -129,8 +141,8 @@
 
     <header class="header-top">
         <div class="header-info">
-            <h1>TABLERO DE VALIDACIÓN CERS</h1>
-            <p class="subtitle">Análisis de Alineación y Brechas - Fase 6.2.1.3</p>
+            <h1>DASHBOARD DE GESTIÓN CERS</h1>
+            <p class="subtitle">Análisis de Alineación y Validación de Brechas</p>
         </div>
         
         <div class="header-right">
@@ -146,15 +158,16 @@
             <button class="tab-btn active" onclick="loadTab('NACIONAL')">1. Ref. Nacionales</button>
             <button class="tab-btn" onclick="loadTab('INTERNACIONAL')">2. Ref. Internacionales</button>
             <button class="tab-btn" onclick="loadTab('GENERAL')">3. Matriz General</button>
+            <button class="tab-btn tab-exec" onclick="loadTab('VALIDACION')"><i class="fas fa-check-circle"></i> 4. Validación Rápida</button>
         </nav>
 
-        <div class="phase-panel">
-            <div class="phase-title">
-                <i class="fas fa-check-double"></i>
-                FASE VERIFICAR: VALIDACIÓN DE HALLAZGOS
-            </div>
-            <div style="font-size:0.85rem; font-weight:600; color:#555;">
-                <span id="val-counter">0</span> de <span id="total-counter">0</span> líneas verificadas por comité.
+        <div id="panel-info" class="simulation-panel">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-chart-pie sim-icon"></i>
+                <div>
+                    <strong style="color:var(--primary); font-size:1rem;">Fase 6.2.1.3: VERIFICAR Y PROYECTAR</strong>
+                    <div style="font-size:0.8rem; color:#666;">Seleccione una pestaña para ver el detalle. Use la Pestaña 4 para validar con el comité.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -163,52 +176,78 @@
         
         <div id="loading" style="text-align:center; padding:80px; color:#bdc3c7;">
             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i>
-            <p style="margin-top:15px; font-weight:600;">Cargando matriz comparativa...</p>
+            <p style="margin-top:15px; font-weight:600;">Cargando datos...</p>
         </div>
 
-        <div id="dashboard-content" style="display:none;">
-            
+        <div id="detail-view" class="view-section active">
             <div class="kpi-grid">
                 <div class="kpi-card" style="border-top-color: var(--initial);">
-                    <span class="kpi-title">Alineación Documental (Inicial)</span>
+                    <span class="kpi-title">Cumplimiento Base</span>
                     <span class="kpi-value" id="kpi-inicial" style="color:var(--initial);">0%</span>
-                    <span class="kpi-sub">Hallazgo en Matriz</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--final);">
-                    <span class="kpi-title">Alineación Verificada (Final)</span>
+                    <span class="kpi-title">Meta Ajustada</span>
                     <span class="kpi-value" id="kpi-final" style="color:var(--final);">0%</span>
-                    <span class="kpi-sub">Validado por Comité</span>
                 </div>
-                <div class="kpi-card" style="border-top-color: #e74c3c;">
-                    <span class="kpi-title">Brecha Identificada</span>
-                    <span class="kpi-value" id="kpi-delta" style="color:#e74c3c;">-0%</span>
-                    <span class="kpi-sub">Diferencia vs Estándar</span>
+                <div class="kpi-card" style="border-top-color: var(--accent);">
+                    <span class="kpi-title">Brecha a Cubrir</span>
+                    <span class="kpi-value" id="kpi-delta" style="color:var(--accent);">0%</span>
                 </div>
             </div>
 
             <div class="chart-card">
-                <div class="section-header">Gráfico de Comparación: Datos Iniciales vs Finales</div>
+                <div class="section-header">Gráfico de Brechas (Detallado)</div>
                 <div style="height: 380px; position: relative;">
                     <canvas id="chartComparativo"></canvas>
                 </div>
             </div>
 
             <div class="table-card">
-                <div class="section-header">Lista de Verificación y Ajuste</div>
+                <div class="section-header">Matriz de Datos y Sustento</div>
                 <div class="table-responsive">
                     <table id="tablaDetalle">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Línea Estratégica / Criterio</th>
-                                <th style="width: 12%; text-align:center;">Dato Inicial</th>
-                                <th style="width: 12%; text-align:center;">Dato Final (Validado)</th>
-                                <th style="width: 25%; text-align:center;">Evidencia / Observación</th>
-                                <th style="width: 16%; text-align:center;">Estado Validación</th>
+                                <th style="width: 40%;">Línea Estratégica</th>
+                                <th style="width: 15%; text-align:center;">Base Documental</th>
+                                <th style="width: 15%; text-align:center;">Dato Validado</th>
+                                <th style="width: 30%; text-align:center;">Evidencia / Observación</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div id="executive-view" class="view-section">
+            <div class="exec-card">
+                <div class="exec-controls">
+                    <div style="margin-right:auto; align-self:center;">
+                        <h2 style="margin:0; font-size:1.2rem; color:var(--primary);">VALIDACIÓN GERENCIAL</h2>
+                        <span style="font-size:0.8rem; color:#666;">Toque las barras para ajustar valores en vivo.</span>
+                    </div>
+                    <button class="btn-capture" onclick="captureValidation()">
+                        <i class="fas fa-camera"></i> CAPTURAR PANTALLA
+                    </button>
+                </div>
+                
+                <div style="flex:1; position:relative;">
+                    <canvas id="chartExecutive"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="margin-top:0; font-size:1rem; color:#333;">Ajustar Alineación</h3>
+            <p style="font-size:0.8rem; color:#666;">Ingrese el % acordado con el comité:</p>
+            <input type="number" id="newScore" class="input-score" min="0" max="100">
+            <div class="modal-btns">
+                <button class="btn-modal btn-save" onclick="saveEdit()">Guardar</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -218,7 +257,7 @@
         const SHEETS_CONFIG = {
             'GENERAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
-                colIndex: { name: 0, pct: 3, rec: 5 } 
+                colIndex: { name: 0, pct: 3, rec: 5 }
             },
             'NACIONAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv',
@@ -227,21 +266,42 @@
             'INTERNACIONAL': {
                 url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv',
                 colIndex: { name: 0, pct: 4, rec: 6 }
+            },
+            // La pestaña de validación carga la matriz general por defecto
+            'VALIDACION': {
+                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
+                colIndex: { name: 0, pct: 3, rec: 5 }
             }
         };
 
         let currentData = [];
         let chartComparativo = null;
+        let chartExecutive = null;
+        let isExecutiveMode = false;
+        let activeIndex = -1; // Para edición
 
         window.onload = function() { loadTab('NACIONAL'); };
 
         function loadTab(tabName) {
+            // Manejo de UI de Pestañas
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.onclick.toString().includes(`'${tabName}'`));
             if(activeBtn) activeBtn.classList.add('active');
 
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('dashboard-content').style.display = 'none';
+            
+            // Alternar Vistas
+            if (tabName === 'VALIDACION') {
+                isExecutiveMode = true;
+                document.getElementById('detail-view').classList.remove('active');
+                document.getElementById('executive-view').classList.add('active');
+                document.getElementById('panel-info').style.display = 'none';
+            } else {
+                isExecutiveMode = false;
+                document.getElementById('detail-view').classList.add('active');
+                document.getElementById('executive-view').classList.remove('active');
+                document.getElementById('panel-info').style.display = 'flex';
+            }
 
             const config = SHEETS_CONFIG[tabName];
             Papa.parse(config.url, {
@@ -260,48 +320,58 @@
                     if(typeof rawPct === 'string') rawPct = rawPct.replace('%', '').replace(',', '.');
                     let val = parseFloat(rawPct) || 0;
                     
-                    // LÓGICA CORREGIDA: NO HAY SIMULACIÓN AUTOMÁTICA
-                    // El valor final inicia siendo igual al inicial. 
-                    // Solo cambia si el comité lo ajusta en la validación.
-                    let valorFinal = val; 
-
+                    // Inicialmente Final = Inicial (Hasta que se valide)
                     clean.push({
                         id: i,
                         linea: row[mapping.name],
                         inicial: val,
-                        final: valorFinal,
-                        recomendacion: row[mapping.rec] || "Sin observación registrada.",
-                        status: 0 // 0: gris, 1: verde, 2: amarillo, 3: rojo
+                        final: val,
+                        recomendacion: row[mapping.rec] || "Sin observación.",
                     });
                 }
             }
             currentData = clean;
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('dashboard-content').style.display = 'block';
-            renderDashboard();
+            
+            if(isExecutiveMode) {
+                renderExecutiveDashboard();
+            } else {
+                renderDetailDashboard();
+            }
+        }
+
+        // --- LÓGICA VISTA DETALLADA ---
+        function renderDetailDashboard() {
+            updateKPIs();
+            const tbody = document.querySelector('#tablaDetalle tbody');
+            tbody.innerHTML = '';
+            
+            currentData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.linea}</strong></td>
+                    <td style="text-align:center; color:#95a5a6;">${item.inicial}%</td>
+                    <td style="text-align:center;">
+                        <input type="number" class="input-proj" value="${item.final}" 
+                        onchange="updateValue(${index}, this.value)" min="0" max="100">
+                    </td>
+                    <td style="text-align:center; font-size:0.75rem;">${item.recomendacion.substring(0,80)}...</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateDetailChart();
         }
 
         function updateValue(index, newValue) {
             let val = parseFloat(newValue);
-            if(isNaN(val)) val = 0;
-            if(val > 100) val = 100;
-
+            if(isNaN(val)) val = 0; if(val > 100) val = 100;
             currentData[index].final = val;
-            currentData[index].status = 2; // Pasa a estado "Ajustado"
-            renderDashboard(false);
-        }
-
-        function cycleStatus(index) {
-            currentData[index].status = (currentData[index].status + 1) % 4;
-            renderDashboard(false);
-        }
-
-        function getStatusProps(status) {
-            switch(status) {
-                case 1: return { class: 's-verde', icon: '<i class="fas fa-check"></i>', text: 'Validado (Dato Final)' };
-                case 2: return { class: 's-amarillo', icon: '<i class="fas fa-pen"></i>', text: 'Ajustado' };
-                case 3: return { class: 's-rojo', icon: '<i class="fas fa-times"></i>', text: 'Rechazado' };
-                default: return { class: 's-gris', icon: '<i class="fas fa-minus"></i>', text: 'Pendiente' };
+            
+            if(!isExecutiveMode) {
+                updateKPIs();
+                updateDetailChart();
+            } else {
+                renderExecutiveDashboard();
             }
         }
 
@@ -309,118 +379,93 @@
             const total = currentData.length;
             const avgInit = total ? currentData.reduce((a,b)=>a+b.inicial,0)/total : 0;
             const avgFinal = total ? currentData.reduce((a,b)=>a+b.final,0)/total : 0;
-            
-            // BRECHA: Distancia contra el 100% (Estándar)
-            // O si prefieres, diferencia entre final e inicial. 
-            // Para "identificar brechas" del objetivo, mostramos cuánto falta para el 100.
-            const brecha = 100 - avgFinal;
-            
-            const validatedCount = currentData.filter(d => d.status === 1 || d.status === 2).length;
+            const delta = 100 - avgFinal; // Brecha vs 100%
 
             document.getElementById('kpi-inicial').innerText = Math.round(avgInit) + '%';
             document.getElementById('kpi-final').innerText = Math.round(avgFinal) + '%';
-            document.getElementById('kpi-delta').innerText = '-' + Math.round(brecha) + '%'; // Brecha restante
-            
-            document.getElementById('val-counter').innerText = validatedCount;
-            document.getElementById('total-counter').innerText = total;
+            document.getElementById('kpi-delta').innerText = '-' + Math.round(delta) + '%';
         }
 
-        function renderDashboard(fullRender = true) {
-            updateKPIs();
-            updateChart(); 
-
-            if(!fullRender) {
-                // Actualizar solo botones para interactividad rápida
-                currentData.forEach((item, index) => {
-                    const props = getStatusProps(item.status);
-                    const btn = document.getElementById(`btn-status-${index}`);
-                    if(btn) {
-                        btn.className = `semaforo-btn ${props.class}`;
-                        btn.innerHTML = props.icon;
-                        btn.title = props.text;
-                    }
-                });
-                return; 
-            }
-
-            const tbody = document.querySelector('#tablaDetalle tbody');
-            tbody.innerHTML = '';
-            
-            currentData.forEach((item, index) => {
-                const props = getStatusProps(item.status);
-
-                const tr = document.createElement('tr');
-                tr.id = `row-${index}`;
-                tr.innerHTML = `
-                    <td><strong>${item.linea}</strong></td>
-                    <td style="text-align:center; color:#7f8c8d; font-weight:600;">${item.inicial}%</td>
-                    <td style="text-align:center;">
-                        <input type="number" class="input-val" value="${item.final}" 
-                        onchange="updateValue(${index}, this.value)" min="0" max="100">
-                    </td>
-                    <td style="text-align:center;">
-                        <div class="tooltip-container">
-                            <i class="fas fa-file-alt tooltip-icon"></i>
-                            <span class="tooltip-content">
-                                <strong>Evidencia Documental:</strong><br>
-                                ${item.recomendacion}
-                            </span>
-                        </div>
-                    </td>
-                    <td style="text-align:center;">
-                        <div style="display:flex; justify-content:center;">
-                            <button id="btn-status-${index}" class="semaforo-btn ${props.class}" onclick="cycleStatus(${index})" title="${props.text}">
-                                ${props.icon}
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function updateChart() {
+        function updateDetailChart() {
             const ctx = document.getElementById('chartComparativo').getContext('2d');
             if (chartComparativo) chartComparativo.destroy();
 
-            const labels = currentData.map(d => d.linea.length > 35 ? d.linea.substring(0,35)+'...' : d.linea);
-            
             chartComparativo = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: currentData.map(d => d.linea.length > 30 ? d.linea.substring(0,30)+'...' : d.linea),
                     datasets: [
-                        {
-                            label: 'Datos Iniciales (Documental)',
-                            data: currentData.map(d => d.inicial),
-                            backgroundColor: '#bdc3c7',
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Datos Finales (Verificados)',
-                            data: currentData.map(d => d.final),
-                            backgroundColor: '#003366',
-                            borderRadius: 4
-                        }
+                        { label: 'Documental', data: currentData.map(d => d.inicial), backgroundColor: '#bdc3c7', borderRadius: 4 },
+                        { label: 'Validado', data: currentData.map(d => d.final), backgroundColor: '#003366', borderRadius: 4 }
                     ]
                 },
                 options: { 
-                    indexAxis: 'y', 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { max: 100, grid: {color:'#f0f0f0'} }, y: { grid:{display:false} } }, 
-                    plugins: { 
-                        legend: { position: 'top', align: 'end' },
-                        tooltip: {
-                            callbacks: {
-                                afterBody: function(context) {
-                                    const index = context[0].dataIndex;
-                                    return '\nObs: ' + currentData[index].recomendacion.substring(0, 50) + '...';
-                                }
-                            }
-                        }
-                    } 
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                    scales: { x: { max: 100 } }
                 }
             });
+        }
+
+        // --- LÓGICA VISTA EJECUTIVA (VALIDACIÓN RÁPIDA) ---
+        function renderExecutiveDashboard() {
+            const ctx = document.getElementById('chartExecutive').getContext('2d');
+            if (chartExecutive) chartExecutive.destroy();
+
+            // Colores Semáforo
+            const colors = currentData.map(d => {
+                if(d.final < 40) return '#e74c3c'; // Rojo
+                if(d.final < 80) return '#f1c40f'; // Amarillo
+                return '#27ae60'; // Verde
+            });
+
+            chartExecutive = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: currentData.map(d => d.linea.length > 40 ? d.linea.substring(0,40)+'...' : d.linea),
+                    datasets: [{
+                        label: '% Alineación Validada',
+                        data: currentData.map(d => d.final),
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (e, elements) => {
+                        if(elements.length > 0) {
+                            activeIndex = elements[0].index;
+                            openModal(currentData[activeIndex].linea, currentData[activeIndex].final);
+                        }
+                    },
+                    scales: { x: { max: 100, beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Funciones del Modal
+        function openModal(title, val) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('newScore').value = val;
+            document.getElementById('editModal').style.display = 'flex';
+            document.getElementById('newScore').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function saveEdit() {
+            const val = document.getElementById('newScore').value;
+            updateValue(activeIndex, val);
+            closeModal();
+        }
+
+        function captureValidation() {
+            alert("¡Vista congelada para captura!\n\nInstrucción: Usa la herramienta 'Recortes' de Windows o Cmd+Shift+4 en Mac para tomar la foto del gráfico ahora.");
         }
     </script>
 </body>
