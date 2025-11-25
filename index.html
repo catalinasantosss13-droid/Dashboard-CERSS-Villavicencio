@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Dashboard CERS – Villavicencio (auto-CSV)</title>
 
-<!-- Fuentes y librerías -->
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -94,7 +93,6 @@ tbody tr:nth-child(even){background:#fbfdff}
 
 <div class="container">
 
-  <!-- NACIONALES -->
   <section id="panel-nal" class="panel active" role="region" aria-label="Referentes Nacionales">
     <div class="title">Referentes Nacionales</div>
     <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES NACIONALES</strong></div>
@@ -126,7 +124,6 @@ tbody tr:nth-child(even){background:#fbfdff}
     </div>
   </section>
 
-  <!-- INTERNACIONALES -->
   <section id="panel-int" class="panel" role="region" aria-label="Referentes Internacionales">
     <div class="title">Referentes Internacionales</div>
     <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES INTERNACIONAL</strong></div>
@@ -152,7 +149,6 @@ tbody tr:nth-child(even){background:#fbfdff}
     </div>
   </section>
 
-  <!-- MATRIZ GENERAL -->
   <section id="panel-mat" class="panel" role="region" aria-label="Matriz General">
     <div class="title">Matriz General Consolidada</div>
     <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ GENERAL</strong></div>
@@ -183,7 +179,6 @@ tbody tr:nth-child(even){background:#fbfdff}
     </div>
   </section>
 
-  <!-- VALIDACION -->
   <section id="panel-val" class="panel" role="region" aria-label="Validación técnica">
     <div class="title">Validación Técnica — Comité</div>
     <div class="muted">Marca cada ítem como <strong>Aprobado</strong>, <strong>Pendiente</strong> o <strong>No aprobado</strong>. Guarda en local y descarga CSV.</div>
@@ -207,9 +202,7 @@ tbody tr:nth-child(even){background:#fbfdff}
     </div>
   </section>
 
-</div> <!-- /container -->
-
-<script>
+</div> <script>
 /*
   Nota: si quieres usar la copia local .xlsx que subiste al entorno, su ruta es:
   '/mnt/data/MATRIZ COMPARATIVA CERS 2025 VILLAVICENCIO (5).xlsx'
@@ -278,9 +271,18 @@ function loadCSV(url){
       skipEmptyLines: true,
       complete: (res) => {
         if(res && res.data) resolve(res.data);
-        else reject(new Error('No se obtuvo data'));
+        else reject(new Error('No se obtuvo data desde PapaParse (revisar la consola para errores de parseo).')); // Más específico
       },
-      error: (err) => reject(err)
+      error: (err) => {
+        // Corrección: Rechazar con un mensaje de error legible
+        let errMsg = 'Error de red o al descargar el archivo CSV.';
+        if (err && err.message) {
+            errMsg = err.message;
+        } else if (err && err.type === 'error') {
+             errMsg = 'Error de conexión o archivo no encontrado. Verifica la URL y permisos.';
+        }
+        reject(new Error(errMsg)); 
+      }
     });
   });
 }
@@ -349,7 +351,8 @@ async function refreshNacionales(){
     return true;
   } catch (err) {
     console.error('Error NACIONALES:', err);
-    alert('Error al cargar datos nacionales: ' + (err.message || err));
+    // Corrección: Usar err.message o convertir el objeto a string
+    alert('Error al cargar datos nacionales: ' + (err.message || String(err)));
     return false;
   }
 }
@@ -401,7 +404,8 @@ async function refreshInternacionales(){
     return true;
   } catch (err) {
     console.error('Error INTERNACIONALES:', err);
-    alert('Error al cargar datos internacionales: ' + (err.message || err));
+    // Corrección: Usar err.message o convertir el objeto a string
+    alert('Error al cargar datos internacionales: ' + (err.message || String(err)));
     return false;
   }
 }
@@ -463,7 +467,8 @@ async function refreshMatriz(){
     return true;
   } catch (err) {
     console.error('Error MATRIZ:', err);
-    alert('Error al cargar matriz general: ' + (err.message || err));
+    // Corrección: Usar err.message o convertir el objeto a string
+    alert('Error al cargar matriz general: ' + (err.message || String(err)));
     return false;
   }
 }
@@ -619,7 +624,8 @@ async function initAll(){
     setupValidationFromData();
   } catch(e){
     console.error('Error en initAll:', e);
-    alert('Error iniciando el dashboard: ' + (e.message || e));
+    // Corrección: Usar e.message o convertir el objeto a string
+    alert('Error iniciando el dashboard: ' + (e.message || String(e)));
   }
 }
 
@@ -629,4 +635,3 @@ initAll();
 </script>
 </body>
 </html>
-
