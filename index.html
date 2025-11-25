@@ -204,17 +204,16 @@ tbody tr:nth-child(even){background:#fbfdff}
 
 </div> <script>
 /*
-  Nota: si quieres usar la copia local .xlsx que subiste al entorno, su ruta es:
-  '/mnt/data/MATRIZ COMPARATIVA CERS 2025 VILLAVICENCIO (5).xlsx'
-  (la mantengo solo como referencia; el dashboard ahora usa los CSV públicos que me diste)
+  Nota: Se han implementado las URLs de CSV limpio usando QUERY para asegurar
+  que los datos carguen correctamente en GitHub Pages.
 */
 
 /* =========================
-   URLs CSV (públicas en Google Sheets)
+   URLs CSV (públicas en Google Sheets) - ACTUALIZADAS
    ========================= */
-const URL_MATRIZ = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv';
-const URL_NAL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv';
-const URL_INT    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv';
+const URL_NAL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv';
+const URL_INT    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv';
+const URL_MATRIZ = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv';
 
 /* Global caches */
 let dataNal = [], dataInt = [], dataMat = [];
@@ -271,11 +270,11 @@ function loadCSV(url){
       skipEmptyLines: true,
       complete: (res) => {
         if(res && res.data) resolve(res.data);
-        else reject(new Error('No se obtuvo data desde PapaParse (revisar la consola para errores de parseo).')); // Más específico
+        else reject(new Error('No se obtuvo data desde PapaParse (revisar la consola para errores de parseo).'));
       },
       error: (err) => {
-        // Corrección: Rechazar con un mensaje de error legible
-        let errMsg = 'Error de red o al descargar el archivo CSV.';
+        // CORRECCIÓN: Rechazar con un mensaje de error legible
+        let errMsg = 'Error de red o al descargar el archivo CSV. Verifica la URL de publicación.';
         if (err && err.message) {
             errMsg = err.message;
         } else if (err && err.type === 'error') {
@@ -298,9 +297,10 @@ async function refreshNacionales(){
       return out;
     });
 
-    const colLinea = guessCol(dataNal, ['Línea','Linea','Ítem','Item','Eje','Linea estratégica','Línea Estratégica']);
-    const colPorc  = guessCol(dataNal, ['Porcentaje','%','Avance','Alineamiento']);
-    const colNivel = guessCol(dataNal, ['Nivel','Nivel de alineamiento','Categoria']);
+    // Ajustado para buscar las columnas limpias del QUERY (Línea, Ítem, %, Nivel, Rec)
+    const colLinea = guessCol(dataNal, ['Línea','Linea','Ítem','Item','Eje','Línea Estratégica','Línea estratégica / Eje']);
+    const colPorc  = guessCol(dataNal, ['Alineamiento (%)','%','Porcentaje','Avance']);
+    const colNivel = guessCol(dataNal, ['Nivel','Nivel de Alineamiento','Categoria']);
     const colRec   = guessCol(dataNal, ['Recomendación','Recomendacion','Observación','Observacion','Recomendaciones']);
 
     // KPIs
@@ -351,7 +351,7 @@ async function refreshNacionales(){
     return true;
   } catch (err) {
     console.error('Error NACIONALES:', err);
-    // Corrección: Usar err.message o convertir el objeto a string
+    // CORRECCIÓN: Asegurar mensaje legible
     alert('Error al cargar datos nacionales: ' + (err.message || String(err)));
     return false;
   }
@@ -368,10 +368,11 @@ async function refreshInternacionales(){
       return out;
     });
 
-    const colItem = guessCol(dataInt, ['Ítem','Item','Linea','Eje']);
-    const colPorc = guessCol(dataInt, ['Porcentaje','%','Avance','Alineamiento']);
+    // Ajustado para buscar las columnas limpias del QUERY
+    const colItem = guessCol(dataInt, ['Ítem','Item','Línea estratégica / Eje','Eje']);
+    const colPorc = guessCol(dataInt, ['Alineamiento (%)','Porcentaje','%','Avance']);
     const colNivel = guessCol(dataInt, ['Nivel','Categoria']);
-    const colRec = guessCol(dataInt, ['Recomendación','Observación','Recomendacion','Observacion']);
+    const colRec = guessCol(dataInt, ['Recomendación','Observación','Recomendacion']);
 
     document.getElementById('int-total').innerText = dataInt.length;
     document.getElementById('int-alto').innerText = dataInt.filter(r=> toNumber(r[colPorc])>=80 || String((r[colNivel]||'')).toLowerCase().includes('alto')).length;
@@ -404,7 +405,7 @@ async function refreshInternacionales(){
     return true;
   } catch (err) {
     console.error('Error INTERNACIONALES:', err);
-    // Corrección: Usar err.message o convertir el objeto a string
+    // CORRECCIÓN: Asegurar mensaje legible
     alert('Error al cargar datos internacionales: ' + (err.message || String(err)));
     return false;
   }
@@ -421,8 +422,9 @@ async function refreshMatriz(){
       return out;
     });
 
-    const colLinea = guessCol(dataMat, ['Línea','Linea','Eje','Descripción','Line']);
-    const colPorc  = guessCol(dataMat, ['Porcentaje','%','Alineamiento','Avance']);
+    // Ajustado para buscar las columnas limpias del QUERY
+    const colLinea = guessCol(dataMat, ['Línea estratégica / Eje','Línea','Linea','Eje','Descripción','Item']);
+    const colPorc  = guessCol(dataMat, ['Alineamiento (%)','Porcentaje','%','Avance']);
     const colNivel = guessCol(dataMat, ['Nivel','Categoria']);
     const colRec   = guessCol(dataMat, ['Recomendación','Recomendacion','Observación','Observacion']);
 
@@ -467,7 +469,7 @@ async function refreshMatriz(){
     return true;
   } catch (err) {
     console.error('Error MATRIZ:', err);
-    // Corrección: Usar err.message o convertir el objeto a string
+    // CORRECCIÓN: Asegurar mensaje legible
     alert('Error al cargar matriz general: ' + (err.message || String(err)));
     return false;
   }
@@ -483,12 +485,12 @@ function setupValidationFromData(){
     document.getElementById('validation-list').innerHTML = '<div class="small">Primero carga la Matriz General.</div>';
     return;
   }
-  const colLinea = guessCol(dataMat, ['Línea','Linea','Eje','Descripción']);
+  const colLinea = guessCol(dataMat, ['Línea estratégica / Eje','Línea','Eje','Descripción']);
   // base items
   const base = dataMat.map((r, idx) => ({
     id: idx + 1,
     linea: r[colLinea] || `Item ${idx+1}`,
-    porcentaje: formatPct(r[guessCol(dataMat, ['Porcentaje','%','Alineamiento'])]),
+    porcentaje: formatPct(r[guessCol(dataMat, ['Alineamiento (%)','Porcentaje','%'])]),
     nivel: r[guessCol(dataMat, ['Nivel','Categoria'])] || '',
     recomendacion: r[guessCol(dataMat, ['Recomendación','Observacion','Recomendacion'])] || '',
     estado: 'Pendiente',
@@ -624,7 +626,7 @@ async function initAll(){
     setupValidationFromData();
   } catch(e){
     console.error('Error en initAll:', e);
-    // Corrección: Usar e.message o convertir el objeto a string
+    // CORRECCIÓN: Asegurar mensaje legible
     alert('Error iniciando el dashboard: ' + (e.message || String(e)));
   }
 }
