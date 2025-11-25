@@ -1,1029 +1,630 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de evaluación CERS - Secretaría de Salud Villavicencio</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* ---------------------------------------------------- */
-        /* ESTILOS BASE Y VARIABLES */
-        /* ---------------------------------------------------- */
-        :root {
-            --color-primario: #1a4369; /* Azul oscuro elegante (Institucional) */
-            --color-secundario: #00bcd4; /* Cian/Turquesa para acentos */
-            --color-alto: #28a745;       /* Verde para Alto */
-            --color-medio: #ffc107;      /* Amarillo para Medio */
-            --color-bajo: #dc3545;       /* Rojo para Bajo */
-            --color-fondo: #f8f9fa; 
-            --color-texto: #333;
-            --color-blanco: #ffffff;
-            --color-gris-claro: #e0e0e0; /* Para elementos neutrales */
-        }
-        body {
-            font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
-            background-color: var(--color-fondo);
-            color: var(--color-texto);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard CERS – Matriz y Validación</title>
 
-        /* --- HEADER Y TÍTULO (Logos y Título Principal) --- */
-        .main-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--color-blanco);
-            border-bottom: 5px solid var(--color-primario);
-            padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
+<!-- Fuentes y librerías -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-        .title-block {
-            flex-grow: 1;
-            text-align: center;
-            padding: 0 20px;
-        }
-        .main-header h1 { 
-            margin: 0; 
-            font-size: 1.4em;
-            color: var(--color-primario);
-            font-weight: 700;
-        }
-        .main-header p { 
-            margin: 5px 0 0; 
-            font-size: 0.9em;
-            color: #6c757d;
-        }
-        .logo-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .logo-group img {
-            height: 50px;
-            max-width: 100px;
-            object-fit: contain;
-        }
-        .logo-group.left-logos img:not(:first-child) { display: none; } 
-        .logo-group.right-logos img:not(:first-child) { display: none; }
+<style>
+  :root{
+    --primario:#1a4369;
+    --sec:#00bcd4;
+    --alto:#28a745;
+    --medio:#ffc107;
+    --bajo:#dc3545;
+    --fondo:#eef1f5;
+    --card:#ffffff;
+    --muted:#6c757d;
+  }
+  *{box-sizing:border-box}
+  body{font-family:'Montserrat',sans-serif;margin:0;background:var(--fondo);color:#222}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--card);border-bottom:5px solid var(--primario)}
+  header .center{flex:1;text-align:center}
+  header img{height:54px}
+  h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
+  .subtitle{margin:3px 0 0;color:var(--muted);font-size:.9rem}
 
+  /* Tabs */
+  .tabs{display:flex;gap:10px;justify-content:center;padding:14px;background:var(--primario);flex-wrap:wrap}
+  .tabs button{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
+  .tabs button.active{background:var(--sec);color:#003242}
+  .container{max-width:1300px;margin:26px auto;padding:0 16px}
 
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* --- NAVEGACIÓN POR PESTAÑAS (TABS) --- */
-        .tabs-nav {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0 0;
-            background-color: var(--color-blanco);
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 0 10px;
-            border-bottom: 1px solid var(--color-gris-claro);
-        }
+  .tab-panel{display:none;background:var(--card);padding:22px;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+  .tab-panel.active{display:block}
+  .title{color:var(--primario);font-size:1.25rem;font-weight:700;margin-bottom:6px}
+  .muted{color:var(--muted);margin-bottom:16px}
 
-        .tab-button {
-            background-color: transparent;
-            border: none;
-            padding: 15px 25px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            color: #777;
-            transition: color 0.3s, border-bottom 0.3s, background-color 0.3s;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -1px; /* Para ocultar la línea divisoria si está activa */
-        }
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{background:#fff;padding:14px;border-radius:10px;border:1px solid #e7eef6}
+  .card h3{margin:0 0 8px;color:#163653;font-size:1rem}
+  .placeholder{min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--muted);border:2px dashed #d8e6ef;border-radius:8px;background:#fbfeff}
 
-        .tab-button:hover {
-            color: var(--color-primario);
-        }
+  table{width:100%;border-collapse:collapse;background:#fff}
+  th,td{padding:10px;border-bottom:1px solid #eef4fa;text-align:left;font-size:.95rem}
+  thead th{background:var(--primario);color:white;font-weight:700}
+  tbody tr:nth-child(even){background:#fbfdff}
 
-        .tab-button.active {
-            color: var(--color-primario);
-            border-bottom: 3px solid var(--color-secundario);
-            background-color: var(--color-fondo);
-        }
+  .kpi-row{display:flex;gap:14px;flex-wrap:wrap}
+  .kpi{flex:1;min-width:150px;background:#fff;padding:14px;border-radius:10px;border-left:6px solid var(--primario);box-shadow:0 3px 10px rgba(8,16,28,0.04)}
+  .kpi .value{font-size:1.6rem;font-weight:800}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
-        .tab-content {
-            display: none;
-            padding: 30px 0;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* --- ESTADO DE SINCRONIZACIÓN --- */
-        .sync-status-section {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            padding: 15px 30px; 
-            margin-bottom: 30px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--color-secundario);
-            text-align: center;
-        }
-        .sync-status-section p:first-child {
-            font-size: 0.9em;
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
-        .sync-status { 
-            font-size: 1em;
-            font-weight: 600;
-        }
-        .status-success { color: var(--color-alto); }
-        .status-error { color: var(--color-bajo); }
-        .status-loading { color: #888; }
-        
-        /* --- KPIS Y GRÁFICOS --- */
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .kpi {
-            background-color: var(--color-blanco);
-            border-radius: 8px; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
-            padding: 25px;
-            text-align: center;
-            border: 1px solid #eee;
-        }
-        
-        /* Recuadros de KPI con color */
-        .kpi-alto-box { border: 2px solid var(--color-alto); background-color: #e6f7e9; } 
-        .kpi-medio-box { border: 2px solid var(--color-medio); background-color: #fff8e1; } 
-        .kpi-bajo-box { border: 2px solid var(--color-bajo); background-color: #fcebeb; } 
-        
-        .kpi-title { 
-            font-size: 0.85em; 
-            font-weight: 600; 
-            color: #555; 
-            margin-bottom: 10px;
-        }
-        .kpi-value {
-            font-size: 2em;
-            font-weight: 700;
-            color: var(--color-texto);
-        }
-        .kpi-value.alto { color: var(--color-alto); }
-        .kpi-value.medio { color: var(--color-medio); }
-        .kpi-value.bajo { color: var(--color-bajo); }
+  /* Validation list */
+  .validation-list{max-height:360px;overflow:auto;border-radius:8px;border:1px solid #e6eef6;padding:8px;background:#fff}
+  .validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f1f6fb}
+  .validation-item:last-child{border-bottom:0}
+  .validation-item button{padding:6px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
+  .ok{background:var(--alto);color:white}
+  .pend{background:var(--medio);color:#003242}
+  .rej{background:var(--bajo);color:white}
 
-        .kpi-promedio { 
-            grid-column: span 4; 
-            padding: 30px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .progress-bar-container {
-            width: 100%;
-            background-color: var(--color-gris-claro);
-            border-radius: 25px;
-            height: 30px;
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden; 
-        }
-        .progress-bar { 
-            background-color: var(--color-gris-claro);
-            height: 100%; 
-            border-radius: 25px; 
-            width: 0%; 
-            transition: width 1.5s ease-out, background-color 0.5s ease; 
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        .progress-bar-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            line-height: 30px;
-            color: var(--color-texto);
-            font-weight: 600;
-            z-index: 1;
-        }
+  .small{font-size:.85rem;color:var(--muted)}
+  .export-btn{background:var(--primario);color:white;padding:10px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
 
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .chart-box {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-        }
-        .chart-box h2, .data-table-section h2, .conclusions h2, .validation-section h2 { 
-            color: var(--color-primario);
-            font-size: 1.2em;
-            font-weight: 600;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .data-table-section h2 { border-left: 5px solid var(--color-secundario); padding-left: 10px;}
-        
-        /* --- Tabla --- */
-        .data-table-section {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-            margin-bottom: 40px;
-            overflow-x: auto;
-        }
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .results-table th, .results-table td {
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 0.9em;
-        }
-        .results-table th {
-            background-color: #f2f2f2;
-            font-weight: 600;
-            color: var(--color-primario);
-        }
-        .results-table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .levelAlto { color: var(--color-alto); font-weight: 600; }
-        .levelMedio { color: var(--color-medio); font-weight: 600; }
-        .levelBajo { color: var(--color-bajo); font-weight: 600; }
-        
-        /* --- Conclusiones --- */
-        .conclusions {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-            margin-bottom: 40px;
-        }
-        .conclusions ol {
-            padding-left: 20px;
-            margin-top: 15px;
-        }
-        .conclusions li {
-            margin-bottom: 10px;
-        }
-
-        /* --- VALIDACIÓN TÉCNICA (Pestaña nueva) --- */
-        .validation-section {
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            padding: 25px;
-            border: 1px solid #eee;
-            margin-bottom: 40px;
-        }
-        .validation-box-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .validation-box {
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid var(--color-secundario);
-            background-color: var(--color-fondo);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-        .validation-box h3 {
-            font-size: 1.1em;
-            font-weight: 700;
-            color: var(--color-primario);
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .validation-box p {
-            margin: 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .validation-box .result-text {
-            font-size: 1.5em;
-            font-weight: 700;
-            margin-top: 10px;
-        }
-        .validation-box .result-text.pass { color: var(--color-alto); }
-        .validation-box .result-text.warning { color: var(--color-medio); }
-        .validation-box .result-text.fail { color: var(--color-bajo); }
-
-        /* --- FOOTER FORMAL (Créditos) --- */
-        .formal-footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            border-top: 2px solid var(--color-secundario); 
-            background-color: #eef1f5; 
-            margin-top: 30px;
-            font-size: 0.85em;
-        }
-        .formal-footer .credits p {
-            font-size: 0.9em;
-            color: #555;
-            text-align: center;
-            margin: 5px 0;
-            line-height: 1.4;
-        }
-        
-        /* Media Queries (Responsividad) */
-        @media (max-width: 1000px) {
-            .main-header { flex-direction: column; padding: 15px 20px; text-align: center; }
-            .title-block { margin-bottom: 15px; padding: 0;}
-            .main-header h1 { font-size: 1.2em; }
-            .charts-container { grid-template-columns: 1fr; }
-            .kpi-container { grid-template-columns: 1fr 1fr; }
-            .kpi-promedio { grid-column: span 2; }
-            .logo-group { flex-direction: column; gap: 5px; }
-            .tab-button { padding: 10px 15px; font-size: 0.9em; }
-        }
-        @media (max-width: 600px) {
-            .kpi-container { grid-template-columns: 1fr; }
-            .kpi-promedio { grid-column: span 1; }
-            .logo-group img { height: 40px; max-width: 80px; }
-            .main-header h1 { font-size: 1em; }
-            .main-header p { font-size: 0.8em; }
-            .kpi-value { font-size: 1.5em; }
-            .tabs-nav { flex-wrap: wrap; }
-            .tab-button { width: 48%; margin: 2px 1%; }
-        }
-    </style>
+  @media (max-width:900px){
+    .grid-2{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+    header{flex-direction:column;gap:8px}
+    .tabs{padding:8px}
+  }
+</style>
 </head>
 <body>
 
-    <header class="main-header">
-        <div class="logo-group left-logos">
-            <!-- Asumiendo que 'logos/alcaldia.png' existe en el entorno del usuario -->
-            <img src="https://placehold.co/100x50/1a4369/ffffff?text=Alcaldia" alt="Logo Alcaldía de Villavicencio">
-        </div>
-        
-        <div class="title-block">
-            <h1>Dashboard de evaluación de la alineación del Plan de Acción MCEVS con Lineamientos CERS/OPS</h1>
-            <p>Secretaría de Salud de Villavicencio - Programa ECNT</p>
-        </div>
+<header>
+  <img src="logos/alcaldia.png" alt="Alcaldía">
+  <div class="center">
+    <h1>Dashboard Integral de Alineación CERS / OPS</h1>
+    <div class="subtitle">Secretaría de Salud de Villavicencio — Análisis de matriz y validación técnica</div>
+  </div>
+  <img src="logos/unillanos.png" alt="Unillanos">
+</header>
 
-        <div class="logo-group right-logos">
-            <!-- Asumiendo que 'logos/unillanos.png' existe en el entorno del usuario -->
-            <img src="https://placehold.co/100x50/00bcd4/ffffff?text=Unillanos" alt="Logo Universidad de los Llanos">
+<!-- TABS -->
+<div class="tabs" role="tablist" aria-label="Secciones del dashboard">
+  <button class="tab-btn active" data-tab="tab-nal">Referentes Nacionales</button>
+  <button class="tab-btn" data-tab="tab-int">Referentes Internacionales</button>
+  <button class="tab-btn" data-tab="tab-matriz">Matriz General</button>
+  <button class="tab-btn" data-tab="tab-val">Validación Técnica</button>
+</div>
+
+<div class="container">
+
+  <!-- TAB: Nacionales -->
+  <section id="tab-nal" class="tab-panel active">
+    <div class="title">Referentes Nacionales</div>
+    <div class="muted">Análisis y visualizaciones extraídas de la hoja <strong>MATRIZ REFERENTES NACIONALES</strong></div>
+
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="card">
+        <h3>KPIs nacionales</h3>
+        <div id="kpis-nal" class="kpi-row">
+          <div class="kpi"><div class="small">Total Ítems</div><div id="nal-total" class="value">—</div></div>
+          <div class="kpi"><div class="small">Alineamiento ≥ 80%</div><div id="nal-alto" class="value">—</div></div>
+          <div class="kpi"><div class="small">Alineamiento < 40%</div><div id="nal-bajo" class="value">—</div></div>
         </div>
-    </header>
+      </div>
 
-    <div class="container">
-        
-        <!-- Contenedor de navegación por pestañas -->
-        <nav class="tabs-nav" id="tabs-nav">
-            <button class="tab-button active" data-tab-target="tab-general">Matriz General</button>
-            <button class="tab-button" data-tab-target="tab-nacional">Referentes Nacionales</button>
-            <button class="tab-button" data-tab-target="tab-internacional">Referentes Internacionales</button>
-            <button class="tab-button" data-tab-target="tab-validacion">Validación Técnica (Comité)</button>
-        </nav>
+      <div class="card">
+        <h3>Distribución por nivel</h3>
+        <canvas id="chartNalLevels" height="160"></canvas>
+      </div>
 
-        <!-- Contenido de las pestañas -->
-        <div id="tab-general" class="tab-content active">
-            <div class="sync-status-section">
-                <p>Estado de la sincronización:</p>
-                <div class="sync-status status-loading" id="sync-status-general">Cargando Matriz General...</div>
-            </div>
-            <!-- Contenedores de KPI y gráficos (ID único para cada pestaña) -->
-            <div class="kpi-container" id="kpi-container-general">
-                <div class="kpi kpi-promedio">
-                    <div class="kpi-title">Promedio general de alineamiento (Avance %)</div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-text" id="kpi-promedio-text-general">0%</div>
-                        <div class="progress-bar" id="kpi-promedio-bar-general" style="width: 0%;"></div>
-                    </div>
-                </div>
-                <div class="kpi kpi-alto-box"><div class="kpi-title">Líneas en nivel alto</div><div class="kpi-value alto" id="kpi-alto-general">0</div></div>
-                <div class="kpi kpi-medio-box"><div class="kpi-title">Líneas en nivel medio</div><div class="kpi-value medio" id="kpi-medio-general">0</div></div>
-                <div class="kpi kpi-bajo-box"><div class="kpi-title">Líneas en nivel bajo (Crítico)</div><div class="kpi-value bajo" id="kpi-bajo-general">0</div></div>
-            </div>
-
-            <div class="charts-container">
-                <div class="chart-box">
-                    <h2>Distribución de niveles de articulación</h2>
-                    <canvas id="graficoNiveles-general"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h2>Alineamiento % por línea estratégica</h2>
-                    <canvas id="graficoLineas-general"></canvas>
-                </div>
-            </div>
-            
-            <div class="data-table-section">
-                <h2>Resultados detallados y recomendaciones (General)</h2>
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Dimensión/Eje CERS</th>
-                            <th style="width: 10%;">Alineamiento (%)</th>
-                            <th style="width: 15%;">Nivel de alineamiento</th>
-                            <th style="width: 50%;">Oportunidad de mejora priorizada</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-body-general">
-                        <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="conclusions">
-                <h2>Conclusiones Clave (Matriz General)</h2>
-                <p>La evaluación general identifica los puntos críticos y las oportunidades de institucionalización. Enfocarse en:</p>
-                <ol id="conclusions-list-general">
-                    <li>La transición de indicadores de gestión a indicadores de impacto en resultados de salud.</li>
-                    <li>Fortalecer la autoridad sanitaria para la vigilancia del entorno.</li>
-                </ol>
-            </div>
-        </div>
-
-        <div id="tab-nacional" class="tab-content">
-            <div class="sync-status-section">
-                <p>Estado de la sincronización:</p>
-                <div class="sync-status status-loading" id="sync-status-nacional">Cargando Referentes Nacionales...</div>
-            </div>
-             <!-- Duplicar KPIs y Gráficos para Nacional -->
-            <div class="kpi-container" id="kpi-container-nacional">
-                 <div class="kpi kpi-promedio">
-                    <div class="kpi-title">Promedio general de alineamiento Nacional (Avance %)</div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-text" id="kpi-promedio-text-nacional">0%</div>
-                        <div class="progress-bar" id="kpi-promedio-bar-nacional" style="width: 0%;"></div>
-                    </div>
-                </div>
-                <div class="kpi kpi-alto-box"><div class="kpi-title">Líneas en nivel alto</div><div class="kpi-value alto" id="kpi-alto-nacional">0</div></div>
-                <div class="kpi kpi-medio-box"><div class="kpi-title">Líneas en nivel medio</div><div class="kpi-value medio" id="kpi-medio-nacional">0</div></div>
-                <div class="kpi kpi-bajo-box"><div class="kpi-title">Líneas en nivel bajo (Crítico)</div><div class="kpi-value bajo" id="kpi-bajo-nacional">0</div></div>
-            </div>
-            <div class="charts-container">
-                <div class="chart-box">
-                    <h2>Distribución de niveles de articulación Nacional</h2>
-                    <canvas id="graficoNiveles-nacional"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h2>Alineamiento % por línea estratégica Nacional</h2>
-                    <canvas id="graficoLineas-nacional"></canvas>
-                </div>
-            </div>
-            <div class="data-table-section">
-                <h2>Resultados detallados y Oportunidades de Mejora (Nacional)</h2>
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Línea Estratégica / Eje</th>
-                            <th style="width: 10%;">Alineamiento (%)</th>
-                            <th style="width: 15%;">Nivel de alineamiento</th>
-                            <th style="width: 50%;">Oportunidades de mejora</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-body-nacional">
-                        <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tab-internacional" class="tab-content">
-            <div class="sync-status-section">
-                <p>Estado de la sincronización:</p>
-                <div class="sync-status status-loading" id="sync-status-internacional">Cargando Referentes Internacionales...</div>
-            </div>
-            <!-- Duplicar KPIs y Gráficos para Internacional -->
-            <div class="kpi-container" id="kpi-container-internacional">
-                 <div class="kpi kpi-promedio">
-                    <div class="kpi-title">Promedio general de alineamiento Internacional (Avance %)</div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-text" id="kpi-promedio-text-internacional">0%</div>
-                        <div class="progress-bar" id="kpi-promedio-bar-internacional" style="width: 0%;"></div>
-                    </div>
-                </div>
-                <div class="kpi kpi-alto-box"><div class="kpi-title">Líneas en nivel alto</div><div class="kpi-value alto" id="kpi-alto-internacional">0</div></div>
-                <div class="kpi kpi-medio-box"><div class="kpi-title">Líneas en nivel medio</div><div class="kpi-value medio" id="kpi-medio-internacional">0</div></div>
-                <div class="kpi kpi-bajo-box"><div class="kpi-title">Líneas en nivel bajo (Crítico)</div><div class="kpi-value bajo" id="kpi-bajo-internacional">0</div></div>
-            </div>
-            <div class="charts-container">
-                <div class="chart-box">
-                    <h2>Distribución de niveles de articulación Internacional</h2>
-                    <canvas id="graficoNiveles-internacional"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h2>Alineamiento % por línea estratégica Internacional</h2>
-                    <canvas id="graficoLineas-internacional"></canvas>
-                </div>
-            </div>
-            <div class="data-table-section">
-                <h2>Resultados detallados y Oportunidades de Mejora (Internacional)</h2>
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Línea Estratégica / Eje</th>
-                            <th style="width: 10%;">Alineamiento (%)</th>
-                            <th style="width: 15%;">Nivel de alineamiento</th>
-                            <th style="width: 50%;">Oportunidades de mejora</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-body-internacional">
-                        <tr><td colspan="4" style="text-align: center;">Cargando datos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tab-validacion" class="tab-content">
-            <!-- Esta pestaña es estática/derivada y no necesita sync-status-section -->
-            <div class="validation-section">
-                <h2>Validación Técnica y Consolidación (Para el Comité)</h2>
-                <p class="mb-4 text-gray-600">Esta sección presenta los hallazgos clave de la Verificación y Consolidación, enfocados en la pertinencia de las acciones y la alineación estratégica con los estándares de la OMS/OPS y el PDSP. Los resultados provienen de la Matriz General.</p>
-                <div class="validation-box-container">
-                    <div class="validation-box">
-                        <h3>Verificación: Indicadores de Impacto</h3>
-                        <p>Evaluación de la transición de indicadores de gestión a resultados clínicos/poblacionales.</p>
-                        <div class="result-text warning" id="val-indicadores">PENDIENTE</div>
-                    </div>
-                    <div class="validation-box">
-                        <h3>Verificación: Gobernanza Operativa</h3>
-                        <p>Existencia de un mecanismo formal que unifique metas de impacto intersectoriales.</p>
-                        <div class="result-text pass" id="val-gobernanza">PENDIENTE</div>
-                    </div>
-                    <div class="validation-box">
-                        <h3>Consolidación: Autoridad Sanitaria</h3>
-                        <p>Fortalecimiento de la Vigilancia (IVC) para garantizar entornos saludables (ej. espacios libres de humo).</p>
-                        <div class="result-text fail" id="val-autoridad">PENDIENTE</div>
-                    </div>
-                    <div class="validation-box">
-                        <h3>Consolidación: Fortalezas Normativas</h3>
-                        <p>Soporte legal de la política pública (Acuerdo Municipal 462 de 2021).</p>
-                        <div class="result-text pass" id="val-normativa">PENDIENTE</div>
-                    </div>
-                </div>
-                 <div class="mt-8">
-                    <h3 class="text-xl font-semibold text-red-600 border-b pb-2 mb-4">Recomendación Estratégica Clave (Consolidación)</h3>
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p class="font-bold text-red-800">Prioridad ALTA:</p>
-                        <p class="text-red-700">Reorientar la batería de indicadores hacia la medición de **resultados de impacto en salud** (ej. prevalencia de factores de riesgo), fundamentales para validar la pertinencia técnica de la intervención ante la OPS/OMS.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+      <div class="card">
+        <h3>Alineamiento % — Líneas</h3>
+        <canvas id="chartNalLines" height="160"></canvas>
+      </div>
     </div>
 
-    <footer class="formal-footer">
-        <div class="credits">
-            <p>Este dashboard es un producto del proyecto de mejora de la práctica profesional en el Programa ECNT.</p>
-            <p>Elaborado por Catalina Santos González, Estudiante IX Semestre Enfermería, Universidad de los Llanos.</p>
+    <div class="card">
+      <h3>Tabla: Referentes Nacionales</h3>
+      <div style="margin:10px 0" class="controls">
+        <label class="small">Filtrar nivel:</label>
+        <select id="filter-nal-level"><option value="all">Todos</option><option value="Alto">Alto</option><option value="Medio">Medio</option><option value="Bajo">Bajo</option></select>
+        <button id="refresh-nal" class="export-btn">Actualizar</button>
+      </div>
+      <div class="table-container">
+        <table id="table-nal"><thead><tr><th>Línea / Ítem</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: Internacionales -->
+  <section id="tab-int" class="tab-panel">
+    <div class="title">Referentes Internacionales</div>
+    <div class="muted">Análisis extraído de la hoja <strong>MATRIZ REFERENTES INTERNACIONAL</strong></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>KPIs internacionales</h3>
+        <div id="kpis-int" class="kpi-row">
+          <div class="kpi"><div class="small">Total Ítems</div><div id="int-total" class="value">—</div></div>
+          <div class="kpi"><div class="small">Alineamiento ≥ 80%</div><div id="int-alto" class="value">—</div></div>
         </div>
-    </footer>
+      </div>
+      <div class="card">
+        <h3>Comparativo por eje</h3>
+        <canvas id="chartIntCompare" height="180"></canvas>
+      </div>
+    </div>
 
-    <script>
-        // Variables globales para los gráficos
-        const chartInstances = {};
+    <div class="card" style="margin-top:18px">
+      <h3>Tabla: Referentes Internacionales</h3>
+      <div class="table-container">
+        <table id="table-int"><thead><tr><th>Ítem</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
 
-        const PALETA = {
-            primario: '#1a4369', 
-            secundario: '#00bcd4',
-            alto: '#28a745',
-            medio: '#ffc107',
-            bajo: '#dc3545',
-            neutral: '#6c757d'
-        };
+  <!-- TAB: Matriz General -->
+  <section id="tab-matriz" class="tab-panel">
+    <div class="title">Matriz General Consolidada</div>
+    <div class="muted">Datos extraídos de la hoja <strong>MATRIZ GENERAL</strong>. (Últimas 2 pestañas del archivo están <em>ignoradas</em>.)</div>
 
-        // URLs de las matrices (CRÍTICO: Usar las URLs proporcionadas por el usuario)
-        // Definición de las configuraciones de datos como un objeto literal
-        const DATA_CONFIG_DEFINITION = {
-            'tab-general': {
-                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv',
-                headerSkipRows: 1, // La matriz general parece empezar en la fila 2 de datos (saltar 1 fila de cabecera)
-                colLinea: 0,
-                colPorcentaje: 3, // Columna D (índice 3)
-                colNivel: 4,      // Columna E (índice 4)
-                colRecomendacion: 5 // Columna F (índice 5)
-            },
-            'tab-nacional': {
-                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv',
-                headerSkipRows: 1,
-                colLinea: 0,
-                colPorcentaje: 4, // Columna E (índice 4)
-                colNivel: 5,      // Columna F (índice 5)
-                colRecomendacion: 6 // Columna G (índice 6)
-            },
-            'tab-internacional': {
-                url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv',
-                headerSkipRows: 1,
-                colLinea: 0,
-                colPorcentaje: 4, // Columna E (índice 4)
-                colNivel: 5,      // Columna F (índice 5)
-                colRecomendacion: 6 // Columna G (índice 6)
-            }
-        };
-        
-        // Crear DATA_CONFIG a partir de la definición, permitiendo el uso de objetos ya definidos
-        const DATA_CONFIG = {
-            ...DATA_CONFIG_DEFINITION,
-            'tab-validacion': {
-                // Ahora accede a DATA_CONFIG_DEFINITION['tab-general'] que está definido
-                url: DATA_CONFIG_DEFINITION['tab-general'].url, 
-                headerSkipRows: DATA_CONFIG_DEFINITION['tab-general'].headerSkipRows,
-                colLinea: DATA_CONFIG_DEFINITION['tab-general'].colLinea,
-                colPorcentaje: DATA_CONFIG_DEFINITION['tab-general'].colPorcentaje,
-                colNivel: DATA_CONFIG_DEFINITION['tab-general'].colNivel,
-                colRecomendacion: DATA_CONFIG_DEFINITION['tab-general'].colRecomendacion
-            }
-        };
+    <div class="card" style="margin-bottom:18px">
+      <h3>Resumen y KPIs</h3>
+      <div class="grid-2">
+        <div>
+          <div class="small">Promedio de alineamiento (%)</div>
+          <div id="mat-prom" class="value">—</div>
+          <div style="height:10px"></div>
+          <div class="small">Conteo por nivel</div>
+          <ul id="mat-counts" class="small"></ul>
+        </div>
+        <div>
+          <canvas id="chartMatBars" height="160"></canvas>
+        </div>
+      </div>
+    </div>
 
-        let activeTabId = 'tab-general'; // Pestaña activa por defecto
-        let dataCache = {}; // Cache para evitar recargar datos si ya se obtuvieron
+    <div class="card">
+      <h3>Tabla: Matriz General</h3>
+      <div style="margin:10px 0" class="controls">
+        <label class="small">Buscar:</label>
+        <input type="search" id="search-matriz" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #daeaf3">
+        <button id="export-matriz" class="export-btn">Exportar CSV</button>
+      </div>
+      <div class="table-container" style="margin-top:10px">
+        <table id="table-matriz"><thead><tr><th>Línea Estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
 
-        // === LÓGICA DE NAVEGACIÓN DE PESTAÑAS ===
-        function switchTab(targetTabId) {
-            // Desactivar la pestaña y contenido actuales
-            document.querySelector(`.tab-button[data-tab-target="${activeTabId}"]`)?.classList.remove('active');
-            document.getElementById(activeTabId)?.classList.remove('active');
+  <!-- TAB: Validación técnica -->
+  <section id="tab-val" class="tab-panel">
+    <div class="title">Validación Técnica — Comité</div>
+    <div class="muted">Marca cada ítem como <strong>Aprobado</strong>, <strong>Pendiente</strong> o <strong>No aprobado</strong>. Descarga el resultado para consolidar en acta.</div>
 
-            // Activar la nueva pestaña y contenido
-            document.querySelector(`.tab-button[data-tab-target="${targetTabId}"]`)?.classList.add('active');
-            document.getElementById(targetTabId)?.classList.add('active');
-            activeTabId = targetTabId;
+    <div class="grid-2" style="margin-bottom:18px">
+      <div class="card">
+        <h3>Lista de ítems (matriz general)</h3>
+        <div id="validation-list" class="validation-list">
+          <div class="small">Cargando ítems para validación...</div>
+        </div>
+      </div>
 
-            // Cargar datos para la nueva pestaña
-            if (targetTabId !== 'tab-validacion') {
-                loadData(targetTabId);
-            } else {
-                // Para la pestaña de validación, renderizar el panel usando los datos generales cacheados
-                renderValidationPanel();
-            }
-        }
+      <div class="card">
+        <h3>Acciones</h3>
+        <p class="small">Guarda en el navegador (localStorage) para continuar revisando en la sesión; descarga CSV para compartir con el comité.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button id="save-valid" class="export-btn">Guardar (local)</button>
+          <button id="download-valid" class="export-btn">Descargar CSV</button>
+          <button id="clear-valid" class="export-btn" style="background:#444">Limpiar</button>
+        </div>
+        <hr style="margin:12px 0">
+        <div class="small">Resumen rápido</div>
+        <ul id="val-summary" class="small"></ul>
+      </div>
+    </div>
 
-        // Listener para los botones de las pestañas
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const targetTabId = event.target.getAttribute('data-tab-target');
-                    switchTab(targetTabId);
-                });
-            });
-            // Inicializar la primera pestaña después de que el DOM esté cargado
-            switchTab(activeTabId); 
-        });
+  </section>
 
+</div> <!-- /container -->
 
-        // --- FUNCIÓN PRINCIPAL DE CARGA CSV ---
-        function loadData(tabId) {
-            const config = DATA_CONFIG[tabId];
-            const statusElement = document.getElementById(`sync-status-${tabId}`);
-            
-            // FIX: La verificación de existencia del elemento es CRÍTICA.
-            // Si el elemento es null, se debe salir sin intentar manipularlo.
-            if (!statusElement) {
-                // No logueamos el error, ya que es esperado para 'tab-validacion'. 
-                // Pero si estamos aquí para 'tab-general' significa que el DOM no estaba listo.
-                // Como esta función se llama desde DOMContentLoaded, debería ser seguro. 
-                // Simplemente retornamos si no se encuentra el elemento.
-                return;
-            }
+<script>
+/*
+  Ruta del archivo Excel (local en entorno de ejecución).
+  Según tu instrucción, usamos la ruta del archivo que subiste:
+*/
+const FILE_PATH = '/mnt/data/MATRIZ COMPARATIVA CERS 2025 VILLAVICENCIO (5).xlsx';
 
-            if (dataCache[tabId]) {
-                 // Si los datos están en caché, usar caché y renderizar
-                const { kpiData, lineasData, tablaData } = dataCache[tabId];
-                actualizarVisuals(tabId, kpiData, lineasData);
-                renderTable(tabId, tablaData);
-                statusElement.innerText = `✅ Sincronizado (Desde caché).`;
-                statusElement.className = "sync-status status-success";
-                if (tabId === 'tab-general') renderValidationPanel(kpiData); // Renderizar validación si es la matriz general
-                return;
-            }
+/* ---------- UTIL: leer workbook como ArrayBuffer y parsear con SheetJS ---------- */
+async function loadWorkbook(path){
+  try {
+    // fetch con ruta local: el entorno donde ejecutes esto debe servir el archivo.
+    const res = await fetch(path);
+    if(!res.ok) throw new Error('No se pudo acceder al archivo. Revisa la ruta: ' + path);
+    const ab = await res.arrayBuffer();
+    const wb = XLSX.read(ab, {type: 'array'});
+    return wb;
+  } catch (e) {
+    console.error('Error lectura workbook:', e);
+    throw e;
+  }
+}
 
-            statusElement.innerText = `Cargando datos desde ${tabId}...`;
-            statusElement.className = "sync-status status-loading";
+/* ---------- Leer una hoja como JSON ---------- */
+function sheetToJson(wb, sheetName){
+  const ws = wb.Sheets[sheetName];
+  if(!ws) return [];
+  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+  return json;
+}
 
-            Papa.parse(config.url, {
-                download: true,
-                header: false,
-                complete: function(results) {
-                    try {
-                        const { kpiData, lineasData, tablaData } = processData(tabId, results.data);
-                        
-                        dataCache[tabId] = { kpiData, lineasData, tablaData }; // Guardar en caché
+/* ---------- Helpers para crear tablas y gráficos ---------- */
+function renderTableFromJson(tableId, data, cols){
+  const tbody = document.querySelector(tableId + ' tbody');
+  if(!data || data.length===0){
+    tbody.innerHTML = '<tr><td colspan="'+cols.length+'" class="small">No hay datos</td></tr>';
+    return;
+  }
+  const html = data.map(row => {
+    return `<tr>${cols.map(c=>`<td>${(row[c]!==undefined?row[c]:'')}</td>`).join('')}</tr>`;
+  }).join('');
+  tbody.innerHTML = html;
+}
 
-                        actualizarVisuals(tabId, kpiData, lineasData);
-                        renderTable(tabId, tablaData);
-                        
-                        const now = new Date();
-                        const timeString = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-                        const dateString = now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-                        
-                        statusElement.innerText = `✅ Sincronizado exitosamente. Última actualización: ${dateString}, ${timeString}`;
-                        statusElement.className = "sync-status status-success";
-                        if (tabId === 'tab-general') renderValidationPanel(kpiData); // Renderizar validación si es la matriz general
-                    } catch (e) {
-                        console.error(`Error al procesar datos para ${tabId}:`, e);
-                        statusElement.innerText = `❌ Error: No se encontraron datos válidos en la URL.`;
-                        statusElement.className = "sync-status status-error";
-                    }
-                },
-                error: function(error) {
-                    console.error(`Error al cargar datos del CSV para ${tabId}:`, error);
-                    statusElement.innerText = `❌ Error de conexión. Por favor, verifica la URL publicada.`;
-                    statusElement.className = "sync-status status-error";
-                }
-            });
-        }
-        
-        // --- FUNCIÓN DE PROCESAMIENTO (Acepta tabId para obtener la configuración) ---
-        function processData(tabId, data) {
-            const config = DATA_CONFIG[tabId];
-            let totalLineas = 0;
-            let sumaPorcentajes = 0;
-            let bajoCount = 0;
-            let medioCount = 0;
-            let altoCount = 0;
-            
-            const lineasData = { labels: [], avances: [] };
-            const tablaData = [];
+function toNumber(v){
+  if(v===null||v==='') return 0;
+  const n = parseFloat(String(v).replace('%','').replace(',','.')) || 0;
+  return n;
+}
 
-            // Empezar a leer datos después de saltar las filas de encabezado
-            for (let i = config.headerSkipRows; i < data.length; i++) {
-                const row = data[i];
-                // Validar que la línea no esté vacía y no sea la fila de promedio
-                if (!row[config.colLinea] || row[config.colLinea].trim() === "" || row[config.colLinea].toUpperCase().includes('PROMEDIO')) { 
-                    continue;
-                }
-                
-                // Asegurarse de que la fila tenga suficientes columnas
-                if (row.length > config.colRecomendacion) { 
-                    totalLineas++;
-                    // PapaParse puede devolver el número como string, se limpia antes de convertir
-                    let rawPorcentaje = String(row[config.colPorcentaje]).replace('%', '').replace(',', '.');
-                    const porcentaje = parseFloat(rawPorcentaje) || 0; 
-                    const nivel = row[config.colNivel] ? row[config.colNivel].trim() : "Sin Datos";
-                    
-                    sumaPorcentajes += porcentaje;
+/* ---------- Variables globales UI ---------- */
+let workbook = null;
+let sheetNames = [];
+let sheetsToUse = []; // todas menos las últimas 2
 
-                    if (nivel.toLowerCase().includes('bajo')) bajoCount++;
-                    else if (nivel.toLowerCase().includes('medio')) medioCount++;
-                    else if (nivel.toLowerCase().includes('alto')) altoCount++;
+/* ---------- CARGA PRINCIPAL ---------- */
+async function initDashboard(){
+  try {
+    workbook = await loadWorkbook(FILE_PATH);
+    sheetNames = workbook.SheetNames.slice(); // copia
+    // ignorar las últimas 2 pestañas
+    sheetsToUse = sheetNames.slice(0, Math.max(0, sheetNames.length - 2));
+    console.info('SheetNames:', sheetNames);
+    console.info('Sheets usadas (se ignoran últimas 2):', sheetsToUse);
 
-                    lineasData.labels.push(row[config.colLinea]);
-                    lineasData.avances.push(porcentaje);
-                    
-                    tablaData.push({
-                        linea: row[config.colLinea],
-                        porcentaje: porcentaje,
-                        nivel: nivel,
-                        recomendacion: row[config.colRecomendacion]
-                    });
-                }
-            }
-            if (totalLineas === 0) { throw new Error(`No se encontraron datos válidos.`); }
+    // intentamos cargar las hojas clave por nombre (seguras) si están disponibles
+    const hojaMatriz = sheetNames.find(s => s.toUpperCase().includes('MATRIZ GENERAL'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('MATRIZ GENERAL'));
+    const hojaNal = sheetNames.find(s => s.toUpperCase().includes('MATRIZ REFERENTES NACIONALES'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('NACIONALES'));
+    const hojaInt = sheetNames.find(s => s.toUpperCase().includes('MATRIZ REFERENTES INTERNACIONAL'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('INTERNACIONAL'));
 
-            return {
-                kpiData: {
-                    alto: altoCount,
-                    medio: medioCount,
-                    bajo: bajoCount,
-                    promedio: totalLineas > 0 ? (sumaPorcentajes / totalLineas) : 0
-                },
-                lineasData: lineasData,
-                tablaData: tablaData
-            };
-        }
-        
-        // --- FUNCIONES RENDER Y ANIMATE (Adaptadas para usar IDs dinámicos) ---
-        function renderTable(tabId, tablaData) {
-            const tableBody = document.getElementById(`data-table-body-${tabId}`);
-            let html = '';
-            
-            if (!tableBody) return;
+    // fallback: si no existen, busca entre sheetsToUse por palabras clave
+    const matName = hojaMatriz || sheetsToUse.find(s=>s.toUpperCase().includes('MATRIZ GENERAL')) || sheetsToUse[0];
+    const nalName = hojaNal || sheetsToUse.find(s=>s.toUpperCase().includes('NACIONALES')) || sheetsToUse[1] || sheetsToUse[0];
+    const intName = hojaInt || sheetsToUse.find(s=>s.toUpperCase().includes('INTERNACIONAL')) || sheetsToUse[2] || sheetsToUse[0];
 
-            if (tablaData.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay datos para mostrar en la tabla.</td></tr>';
-                 return;
-            }
-            tablaData.forEach(item => {
-                // Limpia el nivel para usarlo como clase CSS (ej. "Bajo (Crítico)" -> "Bajo")
-                const nivelSimple = item.nivel.split(' ')[0]; 
-                const levelClass = `level${nivelSimple.replace(' ', '')}`; 
-                html += `
-                    <tr>
-                        <td>${item.linea}</td>
-                        <td>${item.porcentaje.toFixed(1)}%</td>
-                        <td><span class="${levelClass}">${item.nivel}</span></td>
-                        <td>${item.recomendacion}</td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
-        }
+    // extraer JSON
+    const dataMatriz = sheetToJson(workbook, matName);
+    const dataNal = sheetToJson(workbook, nalName);
+    const dataInt = sheetToJson(workbook, intName);
 
-        function animateValue(element, start, end, duration, isDecimal = false) {
-            let startTimestamp = null;
-            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easedProgress = easeOutCubic(progress);
-                const currentValue = start + (end - start) * easedProgress;
+    // render en UI
+    setupNacionales(dataNal);
+    setupInternacionales(dataInt);
+    setupMatriz(dataMatriz);
+    setupValidacion(dataMatriz);
 
-                if (isDecimal) {
-                    element.innerText = currentValue.toFixed(1) + '%';
-                } else {
-                    element.innerText = Math.floor(currentValue);
-                }
+  } catch (err) {
+    alert('Error cargando workbook: '+err.message + ' — revisa consola.');
+    console.error(err);
+  }
+}
 
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    element.innerText = isDecimal ? end.toFixed(1) + '%' : end;
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
+/* ---------------- NACIONALES ---------------- */
+let chartNalLevels = null;
+let chartNalLines = null;
+function setupNacionales(data){
+  // suponemos que en la hoja hay columnas con: 'Línea' (o similar), 'Porcentaje' o 'Avance', 'Nivel', 'Recomendación'
+  const colLinea = guessColumn(data, ['Línea','Linea','Item','Ítem','Eje','Linea Estratégica','Linea estrategica']);
+  const colPorc = guessColumn(data, ['Porcentaje','%','Porc','Avance','Alineamiento (%)','Alineamiento']);
+  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Categoria']);
+  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Observación','Observacion']);
+  // limpieza
+  const cleaned = data.filter(r=> (r[colLinea] || r[colPorc] || r[colNivel]));
+  // KPIs
+  const total = cleaned.length;
+  const altos = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('alto')) || toNumber(r[colPorc])>=80).length;
+  const bajos = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('bajo')) || toNumber(r[colPorc])<40).length;
+  document.getElementById('nal-total').innerText = total;
+  document.getElementById('nal-alto').innerText = altos;
+  document.getElementById('nal-bajo').innerText = bajos;
 
-        // --- FUNCIÓN PRINCIPAL DE VISUALIZACIÓN (CORRECCIÓN BARRA Y KPIs) ---
-        function actualizarVisuals(tabId, kpiData, lineasData) {
-            const duracionAnimacion = 1500; 
+  // tabla
+  renderTableFromJson('#table-nal', cleaned.map(r=>({
+    [colLinea]: r[colLinea], [colPorc]: formatPct(r[colPorc]), [colNivel]: r[colNivel], [colRec]: r[colRec]
+  })), [colLinea, colPorc, colNivel, colRec]);
 
-            // 1. Actualizar KPIs con la animación
-            const prefix = tabId.split('-').pop(); // 'general', 'nacional', 'internacional'
-            
-            const kpiAltoEl = document.getElementById(`kpi-alto-${prefix}`);
-            const kpiMedioEl = document.getElementById(`kpi-medio-${prefix}`);
-            const kpiBajoEl = document.getElementById(`kpi-bajo-${prefix}`);
-            const kpiPromedioTextEl = document.getElementById(`kpi-promedio-text-${prefix}`);
-            const kpiPromedioBarEl = document.getElementById(`kpi-promedio-bar-${prefix}`);
+  // gráfico niveles (doughnut)
+  const counts = [
+    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('bajo') || toNumber(r[colPorc])<40).length,
+    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('medio') || (toNumber(r[colPorc])>=40 && toNumber(r[colPorc])<80)).length,
+    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length
+  ];
+  const ctx = document.getElementById('chartNalLevels').getContext('2d');
+  if(chartNalLevels) chartNalLevels.destroy();
+  chartNalLevels = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:['Bajo','Medio','Alto'], datasets:[{data:counts, backgroundColor:[getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545', getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107', getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745']}]},
+    options:{plugins:{legend:{position:'top'}}}
+  });
 
-            if (!kpiAltoEl) return; // Salir si el elemento no existe (seguro)
+  // gráfico líneas (barras horizontales)
+  const labels = cleaned.map(r=>String(r[colLinea]).slice(0,60));
+  const datos = cleaned.map(r=> toNumber(r[colPorc]) );
+  const ctx2 = document.getElementById('chartNalLines').getContext('2d');
+  if(chartNalLines) chartNalLines.destroy();
+  chartNalLines = new Chart(ctx2, {
+    type:'bar',
+    data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor:datos.map(v=> v>=80? getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745': v>=40? getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107' : getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545' )}]},
+    options:{indexAxis:'y', scales:{x:{beginAtZero:true, max:100, ticks:{callback: v=> v+'%'}}}, plugins:{legend:{display:false}}}
+  });
 
-            animateValue(kpiAltoEl, 0, kpiData.alto ?? 0, duracionAnimacion);
-            animateValue(kpiMedioEl, 0, kpiData.medio ?? 0, duracionAnimacion);
-            animateValue(kpiBajoEl, 0, kpiData.bajo ?? 0, duracionAnimacion);
-            
-            const promedio = parseFloat(kpiData.promedio ?? 0);
-            animateValue(kpiPromedioTextEl, 0, promedio, duracionAnimacion, true);
-            
-            setTimeout(() => {
-                kpiPromedioBarEl.style.width = promedio + '%';
-                
-                let barColor = PALETA.neutral;
-                if (promedio >= 80) barColor = PALETA.alto;
-                else if (promedio >= 40) barColor = PALETA.medio;
-                else barColor = PALETA.bajo; 
+  // filtro
+  document.getElementById('refresh-nal').onclick = ()=>{
+    const sel = document.getElementById('filter-nal-level').value;
+    let fil = cleaned;
+    if(sel!=='all') fil = cleaned.filter(r => String(r[colNivel]||'').toLowerCase() === sel.toLowerCase());
+    renderTableFromJson('#table-nal', fil.map(r=>({ [colLinea]: r[colLinea], [colPorc]: formatPct(r[colPorc]), [colNivel]: r[colNivel], [colRec]: r[colRec]})), [colLinea, colPorc, colNivel, colRec]);
+  };
+}
 
-                kpiPromedioBarEl.style.backgroundColor = barColor;
-            }, 100);
+/* ---------------- INTERNACIONALES ---------------- */
+let chartIntCompare = null;
+function setupInternacionales(data){
+  const colLinea = guessColumn(data, ['Línea','Linea','Item','Ítem','Eje']);
+  const colPorc = guessColumn(data, ['Porcentaje','%','Porc','Avance','Alineamiento']);
+  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Categoria']);
+  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Observación','Observacion']);
+  const cleaned = data.filter(r=> (r[colLinea] || r[colPorc] || r[colNivel]));
+  document.getElementById('int-total').innerText = cleaned.length;
+  document.getElementById('int-alto').innerText = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80)).length;
 
-            // 2. Gráfico de Niveles (Dona)
-            const chartNivelesId = `graficoNiveles-${prefix}`;
-            if (chartInstances[chartNivelesId]) { chartInstances[chartNivelesId].destroy(); }
-            const ctxNiveles = document.getElementById(chartNivelesId)?.getContext('2d');
-            if (ctxNiveles) {
-                chartInstances[chartNivelesId] = new Chart(ctxNiveles, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Bajo (Crítico)', 'Medio', 'Alto'],
-                        datasets: [{
-                            data: [kpiData.bajo, kpiData.medio, kpiData.alto],
-                            backgroundColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                            borderColor: [PALETA.bajo, PALETA.medio, PALETA.alto],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 1,
-                        animation: { duration: 1000, easing: 'easeOutCubic' },
-                        plugins: { legend: { position: 'top' } }
-                    }
-                });
-            }
+  renderTableFromJson('#table-int', cleaned.map(r=>({[colLinea]:r[colLinea],[colPorc]:formatPct(r[colPorc]),[colNivel]:r[colNivel],[colRec]:r[colRec]})), [colLinea,colPorc,colNivel,colRec]);
 
-            // 3. Gráfico de Líneas (Barras Horizontales)
-            const chartLineasId = `graficoLineas-${prefix}`;
-            if (chartInstances[chartLineasId]) { chartInstances[chartLineasId].destroy(); }
-            const ctxLineas = document.getElementById(chartLineasId)?.getContext('2d');
-            if (ctxLineas) {
-                chartInstances[chartLineasId] = new Chart(ctxLineas, {
-                    type: 'bar',
-                    data: {
-                        labels: lineasData.labels,
-                        datasets: [{
-                            label: '% Alineamiento',
-                            data: lineasData.avances,
-                            backgroundColor: lineasData.avances.map(val => {
-                                if (val >= 80) return PALETA.alto;
-                                if (val >= 40) return PALETA.medio;
-                                return PALETA.bajo;
-                            }),
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        aspectRatio: 1.8,
-                        animation: { duration: 1000, easing: 'easeOutCubic' },
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                max: 100,
-                                ticks: { callback: value => value + '%' }
-                            },
-                            y: {
-                                ticks: { font: { size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        
-        // --- FUNCIÓN PARA LA PESTAÑA DE VALIDACIÓN TÉCNICA ---
-        function renderValidationPanel(generalKpiData) {
-            // Se usa el Kpi general para una validación "rápida"
-            const kpi = generalKpiData || (dataCache['tab-general'] ? dataCache['tab-general'].kpiData : null);
+  // gráfico comparativo simple: bucket por nivel
+  const dataBuckets = {
+    Alto: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length,
+    Medio: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('medio') || (toNumber(r[colPorc])>=40 && toNumber(r[colPorc])<80)).length,
+    Bajo: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('bajo') || toNumber(r[colPorc])<40).length
+  };
+  const ctx = document.getElementById('chartIntCompare').getContext('2d');
+  if(chartIntCompare) chartIntCompare.destroy();
+  chartIntCompare = new Chart(ctx, {
+    type:'pie',
+    data:{ labels:Object.keys(dataBuckets), datasets:[{data:Object.values(dataBuckets), backgroundColor:[getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745', getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107', getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545']}]},
+    options:{plugins:{legend:{position:'top'}}}
+  });
+}
 
-            // Validaciones basadas en la Matriz General
-            const valIndicadores = document.getElementById('val-indicadores');
-            const valGobernanza = document.getElementById('val-gobernanza');
-            const valAutoridad = document.getElementById('val-autoridad');
-            const valNormativa = document.getElementById('val-normativa');
+/* ---------------- MATRIZ GENERAL ---------------- */
+let chartMatBars = null;
+let matrizCached = [];
+function setupMatriz(data){
+  // columnas esperadas: 'Línea Estratégica / Eje', 'Alineamiento (%)', 'Nivel de alineamiento', 'Recomendaciones'
+  // vamos a intentar detectar nombres
+  const colLinea = guessColumn(data, ['Línea','Linea','Línea Estratégica / Eje','Eje','Linea estrategica']);
+  const colPorc = guessColumn(data, ['Porcentaje','%','Alineamiento','Alineamiento (%)','Avance']);
+  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Nivel de alineamiento']);
+  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Recomendación de mejora']);
 
-            if (!kpi) {
-                // Si no hay datos, intentamos cargar los datos de la matriz general
-                if (!dataCache['tab-general']) {
-                    // Usamos setTimeout para evitar bloquear la ejecución y darle un ciclo más al DOM
-                    setTimeout(() => loadData('tab-general'), 50); 
-                }
-                
-                [valIndicadores, valGobernanza, valAutoridad, valNormativa].forEach(el => {
-                    if(el) {
-                        el.innerText = 'Cargando Matriz General...';
-                        el.className = 'result-text loading';
-                    }
-                });
-                return;
-            }
+  const cleaned = data.filter(r=> r[colLinea] !== undefined && String(r[colLinea]).trim()!=='');
+  matrizCached = cleaned.map(r=>({
+    linea: r[colLinea] || '',
+    porcentaje: formatPct(r[colPorc]),
+    porcentajeNum: toNumber(r[colPorc]),
+    nivel: r[colNivel] || '',
+    recomendacion: r[colRec] || ''
+  }));
 
-            // 1. Indicadores de Impacto (Basado en la conclusión ALTA de la Matriz General)
-            // Se asume que el riesgo más alto es la falta de indicadores de impacto.
-            if (kpi.bajo > 0 && kpi.promedio < 70) {
-                 valIndicadores.innerText = 'ALERTA (Requiere transición)';
-                 valIndicadores.className = 'result-text warning';
-            } else {
-                 valIndicadores.innerText = 'AVANCE (Puntos bajos en mejora)';
-                 valIndicadores.className = 'result-text pass';
-            }
+  // KPIs y resumen
+  const prom = matrizCached.reduce((s,it)=> s + (it.porcentajeNum || 0), 0) / Math.max(1, matrizCached.length);
+  document.getElementById('mat-prom').innerText = (isNaN(prom)?'0': prom.toFixed(1)) + '%';
+  const counts = {
+    Alto: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('alto') || i.porcentajeNum>=80 ).length,
+    Medio: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('medio') || (i.porcentajeNum>=40 && i.porcentajeNum<80)).length,
+    Bajo: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('bajo') || i.porcentajeNum<40).length
+  };
+  const countsNode = document.getElementById('mat-counts');
+  countsNode.innerHTML = `<li>Alto: ${counts.Alto}</li><li>Medio: ${counts.Medio}</li><li>Bajo: ${counts.Bajo}</li>`;
 
-            // 2. Gobernanza Operativa (Basado en la conclusión BAJA de la Matriz General)
-             // Se asume que la gobernanza tiene solidez normativa pero falta unificación de metas (riesgo medio-bajo)
-            if (kpi.promedio >= 80) {
-                 valGobernanza.innerText = 'CONSOLIDADO (Soporte normativo)';
-                 valGobernanza.className = 'result-text pass';
-            } else {
-                 valGobernanza.innerText = 'FORTALEZA (Trabajo sectorial)';
-                 valGobernanza.className = 'result-text pass'; // Es una fortaleza, pero con brechas
-            }
+  // gráfico barras
+  const labels = matrizCached.slice(0,20).map(i=> i.linea.slice(0,50));
+  const datos = matrizCached.slice(0,20).map(i=> i.porcentajeNum);
+  const ctx = document.getElementById('chartMatBars').getContext('2d');
+  if(chartMatBars) chartMatBars.destroy();
+  chartMatBars = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor:datos.map(v=> v>=80? getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745': v>=40? getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107' : getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545')}]},
+    options:{scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}}}
+  });
 
-            // 3. Autoridad Sanitaria (Brecha crítica identificada en Entornos Saludables)
-            // Esto es un hallazgo clave que el comité necesita ver. Se simula un riesgo alto.
-            valAutoridad.innerText = 'CRÍTICO (Brecha en IVC Sanitaria)';
-            valAutoridad.className = 'result-text fail';
-            
-            // 4. Fortalezas Normativas
-            valNormativa.innerText = 'SOLIDEZ (Acuerdo 462)';
-            valNormativa.className = 'result-text pass';
-        }
-        
-    </script>
+  // render tabla completa
+  renderTableFromJson('#table-matriz', matrizCached.map(r=>({ 'Línea Estratégica / Eje': r.linea, 'Alineamiento (%)': r.porcentaje, 'Nivel': r.nivel, 'Recomendación': r.recomendacion })), ['Línea Estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+
+  // search
+  document.getElementById('search-matriz').addEventListener('input', e=>{
+    const q = e.target.value.trim().toLowerCase();
+    const fil = matrizCached.filter(it => (it.linea + ' ' + it.recomendacion + ' ' + it.nivel).toLowerCase().includes(q));
+    renderTableFromJson('#table-matriz', fil.map(r=>({ 'Línea Estratégica / Eje': r.linea, 'Alineamiento (%)': r.porcentaje, 'Nivel': r.nivel, 'Recomendación': r.recomendacion })), ['Línea Estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+  });
+
+  // export matriz CSV
+  document.getElementById('export-matriz').onclick = ()=>{
+    const csv = toCSV(matrizCached.map(r=> ({linea:r.linea, porcentaje:r.porcentaje, nivel:r.nivel, recomendacion:r.recomendacion})));
+    downloadFile(csv, 'matriz_general_export.csv');
+  };
+}
+
+/* ---------------- VALIDACION ---------------- */
+const VALID_KEY = 'cers_validations_v1';
+function setupValidacion(data){
+  // reusar matrizCached si ya existe (asignado en setupMatriz). Si no, usamos data argumento.
+  const items = (matrizCached && matrizCached.length>0) ? matrizCached : (data.map((r,idx)=>({linea:r[Object.keys(r)[0]]||('Item '+(idx+1)), porcentaje:toNumber(r[Object.keys(r)[1]]||0), nivel: r[Object.keys(r)[2]]||'', recomendacion: r[Object.keys(r)[3]]||''})));
+  // map to validation objects
+  const validations = items.map((it, idx) => ({
+    id: idx+1,
+    linea: it.linea,
+    porcentaje: (it.porcentaje || it.porcentajeNum) || 0,
+    nivel: it.nivel || '',
+    recomendacion: it.recomendacion || '',
+    estado: 'Pendiente',
+    observacion: ''
+  }));
+  // load saved state if exists
+  const saved = JSON.parse(localStorage.getItem(VALID_KEY) || 'null');
+  const state = saved && Array.isArray(saved) && saved.length === validations.length ? saved : validations;
+  renderValidationList(state);
+  updateValSummary(state);
+
+  // buttons
+  document.getElementById('save-valid').onclick = ()=> {
+    localStorage.setItem(VALID_KEY, JSON.stringify(state));
+    alert('Guardado localmente. Puedes continuar más tarde en este navegador.');
+    updateValSummary(state);
+  };
+  document.getElementById('download-valid').onclick = ()=> {
+    const csv = toCSV(state.map(s=> ({id:s.id,linea:s.linea,porcentaje:s.porcentaje,nivel:s.nivel,estado:s.estado,observacion:s.observacion})));
+    downloadFile(csv, 'validacion_comite.csv');
+  };
+  document.getElementById('clear-valid').onclick = ()=> {
+    if(confirm('Limpiar validaciones guardadas y reiniciar?')){
+      localStorage.removeItem(VALID_KEY);
+      state.forEach(s=>{ s.estado='Pendiente'; s.observacion=''; });
+      renderValidationList(state);
+      updateValSummary(state);
+    }
+  };
+
+  // internal helpers to update state and UI
+  function renderValidationList(list){
+    const root = document.getElementById('validation-list');
+    root.innerHTML = '';
+    list.forEach(item=>{
+      const el = document.createElement('div');
+      el.className = 'validation-item';
+      el.innerHTML = `
+        <div style="flex:1">
+          <div style="font-weight:700">${item.id}. ${safeText(item.linea)}</div>
+          <div class="small" style="margin-top:6px">Nivel: ${safeText(item.nivel)} — %: ${item.porcentaje}</div>
+          <div class="small" style="margin-top:6px;color:#2b2b2b">${safeText(item.recomendacion)}</div>
+          <div style="margin-top:8px">
+            <input type="text" placeholder="Observación (opcional)" value="${escapeHTML(item.observacion||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid #e3eef8" data-id="${item.id}" class="obs-input" />
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <button class="ok" data-id="${item.id}" title="Aprobado">A</button>
+          <button class="pend" data-id="${item.id}" title="Pendiente">P</button>
+          <button class="rej" data-id="${item.id}" title="No aprobado">N</button>
+        </div>
+      `;
+      root.appendChild(el);
+    });
+
+    // attach listeners
+    root.querySelectorAll('.ok').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'Aprobado'); });
+    root.querySelectorAll('.pend').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'Pendiente'); });
+    root.querySelectorAll('.rej').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'No aprobado'); });
+    root.querySelectorAll('.obs-input').forEach(inp=> inp.onchange = ()=> {
+      const id = +inp.dataset.id; const val = inp.value;
+      const obj = state.find(s=> s.id===id); if(obj) obj.observacion = val;
+      updateValSummary(state);
+    });
+  }
+
+  function setState(id, newState){
+    const obj = state.find(s=> s.id===id);
+    if(!obj) return;
+    obj.estado = newState;
+    // visual feedback: small flash by re-rendering
+    renderValidationList(state);
+    updateValSummary(state);
+  }
+
+  function updateValSummary(list){
+    const ul = document.getElementById('val-summary');
+    const tot = list.length;
+    const apro = list.filter(l=> l.estado==='Aprobado').length;
+    const pen = list.filter(l=> l.estado==='Pendiente').length;
+    const noap = list.filter(l=> l.estado==='No aprobado').length;
+    ul.innerHTML = `<li>Total ítems: ${tot}</li><li>Aprobados: ${apro}</li><li>Pendientes: ${pen}</li><li>No aprobados: ${noap}</li>`;
+  }
+}
+
+/* ---------- UTIL: guess column name ---------- */
+function guessColumn(data, candidates){
+  if(!data || data.length===0) return candidates[0];
+  const row = data.find(r=> Object.keys(r).length>0);
+  if(!row) return candidates[0];
+  const keys = Object.keys(row);
+  for(const cand of candidates){
+    const found = keys.find(k => k.toLowerCase().trim() === cand.toLowerCase().trim());
+    if(found) return found;
+  }
+  // fuzzy: contains
+  for(const cand of candidates){
+    const found = keys.find(k => k.toLowerCase().includes(cand.toLowerCase().trim().split(' ')[0]));
+    if(found) return found;
+  }
+  // fallback first 4 cols
+  return keys[0] || candidates[0];
+}
+
+function formatPct(v){
+  if(v===undefined || v===null || v==='') return '';
+  const n = toNumber(v);
+  return (isNaN(n)? String(v): (n.toFixed(1)+'%'));
+}
+
+/* ---------- small utils ---------- */
+function safeText(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeHTML(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function toCSV(arr){
+  if(!arr || arr.length===0) return '';
+  const keys = Object.keys(arr[0]);
+  const lines = [keys.join(',')];
+  for(const r of arr){
+    const row = keys.map(k=>{
+      let v = r[k]===null||r[k]===undefined?'':String(r[k]);
+      v = v.replace(/"/g,'""');
+      if(v.includes(',')||v.includes('"')||v.includes('\n')) v = `"${v}"`;
+      return v;
+    }).join(',');
+    lines.push(row);
+  }
+  return lines.join('\n');
+}
+function downloadFile(content, filename){
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+}
+
+/* ---------- startup ---------- */
+/* Tab behavior */
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  b.addEventListener('click', ()=> {
+    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    const id = b.dataset.tab;
+    document.getElementById(id).classList.add('active');
+  });
+});
+
+/* Inicializamos: carga el excel y talla las hojas (ignorando últimas 2) */
+initDashboard();
+</script>
+
 </body>
 </html>
