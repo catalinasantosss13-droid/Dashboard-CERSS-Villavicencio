@@ -28,8 +28,8 @@ header img{height:54px}
 h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
 .subtitle{color:var(--muted);font-size:.9rem;margin-top:4px}
 
-/* Tabs - Reducidos al mínimo */
-.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap; display: none !important;} /* Ocultamos si solo hay una pestaña */
+/* Tabs */
+.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap; display: none !important;} 
 .tab-btn{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
 .tab-btn.active{background:var(--sec);color:#003242}
 .container{max-width:1300px;margin:20px auto;padding:0 16px}
@@ -55,6 +55,16 @@ th,td{padding:10px;border-bottom:1px solid #eef6fb;text-align:left}
 thead th{background:var(--primario);color:#fff}
 tbody tr:nth-child(even){background:#fbfdff}
 
+/* validation */
+.validation-list{max-height:420px;overflow:auto;border-radius:8px;padding:8px;background:#fff;border:1px solid #e6eef6}
+.validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f3f8fb}
+.validation-item:last-child{border-bottom:0}
+.btn{padding:8px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
+.ok{background:var(--alto);color:#fff}
+.pend{background:var(--medio);color:#003242}
+.rej{background:var(--bajo);color:#fff}
+.small{font-size:.85rem;color:var(--muted)}
+
 /* Indicador de Sincronización */
 .sync-status {
     padding: 6px 10px;
@@ -65,6 +75,38 @@ tbody tr:nth-child(even){background:#fbfdff}
     color: #fff;
     white-space: nowrap; 
 }
+
+/* Layout de Validación */
+.validation-item {
+    flex-direction: column; 
+    gap: 12px; 
+    padding: 10px;
+}
+.validation-item-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+.validation-buttons {
+    display: flex;
+    gap: 8px;
+}
+.validation-item-meta {
+    font-size: 0.95rem;
+    flex: 1;
+}
+.validation-item-meta > div {
+    margin-top: 4px;
+}
+.obs-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #e6eef6;
+    margin-top: 6px; 
+}
+
 /* responsive */
 @media (max-width:900px){
   .grid-2,.grid-3{grid-template-columns:1fr}
@@ -120,7 +162,7 @@ tbody tr:nth-child(even){background:#fbfdff}
     </div>
   </section>
   
-  </div> <script>
+</div> <script>
 /*
   URLs CSV (públicas en Google Sheets) - Usamos solo la Matriz General
 */
@@ -130,9 +172,16 @@ const URL_GENERAL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV
 let dataGeneral = [];
 let chartGeneralLevels=null;
 
+// Nombres de columna exactos, sin espacios, generados por PapaParse
+const COL_LINEA = 'Dimensión de análisis (agrupación por determinantes)Referentes técnicos y/o normativosEstado actual (síntesis de hallazgos)';
+const COL_NIVEL = 'Nivel de alineamiento (estimado)';
+const COL_OPORTUNIDAD = 'Oportunidad de mejora priorizada';
+
+
 /* ---------- Utilidades ---------- */
 function toNumber(v){ 
   if(v===undefined||v===null||v==='') return 0; 
+  // Reforzamos la limpieza de valores numéricos
   const s=String(v).replace('%','').replace(',','.').trim(); 
   const n=Number(s); 
   return isNaN(n)?0:n; 
@@ -182,30 +231,6 @@ function loadCSV(url){
   });
 }
 
-/* ========== Helpers (Mejorado) ========== */
-function escapeHTML(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function guessCol(rows, candidates){
-  if(!rows || rows.length===0) return candidates[0];
-  const keys = Object.keys(rows[0]||{});
-  
-  // 1. Búsqueda de coincidencia exacta (limpiando espacios)
-  for(const cand of candidates){
-    const cleanCand = cand.toLowerCase().trim();
-    const found = keys.find(k => k.toLowerCase().trim() === cleanCand);
-    if(found) return found;
-  }
-
-  // 2. Búsqueda de palabra clave corta
-  for(const cand of candidates){
-    const keyword = cand.toLowerCase().trim().split(' ')[0];
-    const found = keys.find(k => k.toLowerCase().includes(keyword));
-    if(found) return found;
-  }
-  
-  // 3. Devolver la primera clave
-  return keys[0] || candidates[0];
-}
-
 /* ========== SÍNTESIS GENERAL ========== */
 async function refreshGeneral(){
   try{
@@ -217,19 +242,29 @@ async function refreshGeneral(){
       return out;
     });
 
-    // Búsqueda de columnas con nombres universales y cortos
-    const colLinea = guessCol(dataGeneral, ['Línea', 'Eje', 'Descripción', 'Item', 'Col1', 'Línea estratégica / Eje']);
-    const colPorc  = guessCol(dataGeneral, ['Porcentaje', 'Alineamiento', '%', 'Avance', 'Col2']);
-    const colNivel = guessCol(dataGeneral, ['Nivel', 'Categoria', 'Col3']);
-    const colRec   = guessCol(dataGeneral, ['Recomendación', 'Observación', 'Col4']);
+    // Usamos las constantes de encabezado exactas:
+    const colLinea = COL_LINEA;
+    const colNivel = COL_NIVEL;
+    const colRec   = COL_OPORTUNIDAD;
+    
+    // Convertimos los datos para uso interno (asumiendo que Nivel es texto: Alto/Medio/Bajo)
+    const mapped = dataGeneral.map(r => {
+      const nivelTexto = String(r[colNivel] || '').toLowerCase().trim();
+      let porcentajeNum = 0;
+      
+      // Asignamos un valor numérico para gráficos/promedio basado en el texto del nivel
+      if (nivelTexto.includes('alto')) porcentajeNum = 90; 
+      else if (nivelTexto.includes('medio')) porcentajeNum = 60;
+      else if (nivelTexto.includes('bajo')) porcentajeNum = 30;
 
-    const mapped = dataGeneral.map(r => ({
-      linea: r[colLinea] || '',
-      porcentajeNum: toNumber(r[colPorc]),
-      porcentaje: formatPct(r[colPorc]),
-      nivel: r[colNivel] || '',
-      recomendacion: r[colRec] || ''
-    }));
+      return {
+        linea: r[colLinea] || 'Ítem sin descripción',
+        porcentajeNum: porcentajeNum,
+        porcentaje: porcentajeNum > 0 ? (porcentajeNum.toFixed(1) + '%') : '—', // Mostramos texto si no hay %
+        nivel: r[colNivel] || '—',
+        recomendacion: r[colRec] || '—'
+      };
+    });
 
     const total = mapped.length;
     const prom = mapped.reduce((s,i)=> s + (i.porcentajeNum||0), 0) / Math.max(1, total);
@@ -238,22 +273,11 @@ async function refreshGeneral(){
     
     // Charts (Distribución por nivel)
     const counts = [
-      dataGeneral.filter(r => toNumber(r[colPorc]) < 40).length,
-      dataGeneral.filter(r => toNumber(r[colPorc]) >= 40 && toNumber(r[colPorc]) < 80).length,
-      dataGeneral.filter(r => toNumber(r[colPorc]) >= 80).length
+      mapped.filter(r => r.porcentajeNum < 40).length,
+      mapped.filter(r => r.porcentajeNum >= 40 && r.porcentajeNum < 80).length,
+      mapped.filter(r => r.porcentajeNum >= 80).length
     ];
     
-    // Fallback si la columna de porcentaje no fue numérica
-    if (counts.every(c => c === 0) && dataGeneral.length > 0 && colNivel) {
-       dataGeneral.forEach(r=>{
-          const nivel = String((r[colNivel]||'')).toLowerCase();
-          if (nivel.includes('alto')) counts[2]++;
-          else if (nivel.includes('medio')) counts[1]++;
-          else counts[0]++;
-      });
-    }
-
-
     if(chartGeneralLevels) chartGeneralLevels.destroy();
     chartGeneralLevels = new Chart(document.getElementById('chartGeneralLevels'), {
       type: 'doughnut',
@@ -262,7 +286,12 @@ async function refreshGeneral(){
     });
 
     // Table
-    renderTable('#tablewrap-general', mapped.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
+    renderTable('#tablewrap-general', mapped.map(x=> ({ 
+      'Línea estratégica / Eje': x.linea, 
+      'Alineamiento (%)': x.porcentaje, 
+      'Nivel': x.nivel, 
+      'Recomendación': x.recomendacion 
+    })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
 
     // Search
     document.getElementById('search-general').oninput = (e) => {
