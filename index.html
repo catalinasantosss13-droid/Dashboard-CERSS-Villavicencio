@@ -1,255 +1,185 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard CERS – % Alineamiento</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard CERS — Alineamiento</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  body{font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;background:#f5f7fb;color:#222}
-  header{background:#0f172a;color:#fff;padding:18px 20px;font-weight:700;font-size:20px}
-  .tabs{display:flex;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid #e6eef8}
-  .tab{padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;color:#334155}
-  .tab.active{background:#0f172a;color:#fff}
-  .container{padding:18px}
-  .kpis{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-  .kpi{background:#fff;padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06);flex:1 1 180px}
-  .kpi h4{margin:0;font-size:13px;color:#64748b}
-  .kpi p{margin:6px 0 0;font-size:22px;font-weight:700;color:#0f172a}
-  .charts{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
-  .card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.04)}
-  table{width:100%;border-collapse:collapse;margin-top:12px}
-  th,td{padding:8px;border-bottom:1px solid #f1f5f9;font-size:13px;text-align:left}
-  th{background:#f8fafc;font-weight:700;color:#334155;position:sticky;top:0}
-  .small{font-size:12px;color:#64748b}
-  @media(max-width:900px){.charts{grid-template-columns:1fr}}
+    body {
+        font-family: 'Montserrat', sans-serif;
+        margin: 0;
+        background: #f4f6f9;
+    }
+    header {
+        background: #0a1128;
+        padding: 25px 20px;
+        color: white;
+        font-size: 26px;
+        font-weight: 700;
+    }
+    .tabs {
+        display: flex;
+        background: #fff;
+        border-bottom: 2px solid #ddd;
+    }
+    .tab {
+        padding: 15px 20px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .tab.active {
+        border-bottom: 3px solid #0a1128;
+        color: #0a1128;
+    }
+    .content {
+        padding: 20px;
+        display: none;
+    }
+    .content.active {
+        display: block;
+    }
+    .kpi-container {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+    .kpi {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        flex: 1 1 200px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .kpi h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+    }
+    .kpi p {
+        margin: 5px 0 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
 </style>
 </head>
-<body>
-<header>Dashboard CERS — % de alineamiento (Nacional · Internacional · General)</header>
 
-<div class="tabs" role="tablist">
-  <div class="tab active" data-tab="nacional">NACIONAL</div>
-  <div class="tab" data-tab="internacional">INTERNACIONAL</div>
-  <div class="tab" data-tab="general">GENERAL</div>
+<body>
+
+<header>Dashboard CERS — % de alineamiento</header>
+
+<div class="tabs">
+    <div class="tab active" onclick="openTab('nacional')">NACIONAL</div>
+    <div class="tab" onclick="openTab('internacional')">INTERNACIONAL</div>
+    <div class="tab" onclick="openTab('general')">GENERAL</div>
 </div>
 
-<div class="container">
-  <div id="status" class="small">Cargando datos…</div>
-
-  <div class="kpis" id="kpi-row">
-    <!-- KPIs dinámicos -->
-  </div>
-
-  <div class="charts">
-    <div class="card">
-      <h3 style="margin:0 0 8px">Alineamiento — detalle</h3>
-      <canvas id="barChart" style="width:100%;height:360px"></canvas>
+<div id="nacional" class="content active">
+    <h2>Nacional</h2>
+    <div class="kpi-container">
+        <div class="kpi"><h3>Total registros</h3><p id="nat_total">0</p></div>
+        <div class="kpi"><h3>Promedio alineamiento</h3><p id="nat_avg">0%</p></div>
+        <div class="kpi"><h3>Mediana</h3><p id="nat_med">0%</p></div>
+        <div class="kpi"><h3>% ≥ 80%</h3><p id="nat_80">0%</p></div>
     </div>
+    <canvas id="nat_chart"></canvas>
+</div>
 
-    <div class="card">
-      <h3 style="margin:0 0 8px">Resumen rápido</h3>
-      <div id="summary-list" class="small"></div>
-
-      <h4 style="margin:12px 0 6px">Tabla (Top 20)</h4>
-      <div style="max-height:320px;overflow:auto">
-        <table id="mini-table"><thead></thead><tbody></tbody></table>
-      </div>
+<div id="internacional" class="content">
+    <h2>Internacional</h2>
+    <div class="kpi-container">
+        <div class="kpi"><h3>Total registros</h3><p id="int_total">0</p></div>
+        <div class="kpi"><h3>Promedio alineamiento</h3><p id="int_avg">0%</p></div>
+        <div class="kpi"><h3>Mediana</h3><p id="int_med">0%</p></div>
+        <div class="kpi"><h3>% ≥ 80%</h3><p id="int_80">0%</p></div>
     </div>
-  </div>
+    <canvas id="int_chart"></canvas>
+</div>
+
+<div id="general" class="content">
+    <h2>General</h2>
+    <div class="kpi-container">
+        <div class="kpi"><h3>Total registros</h3><p id="gen_total">0</p></div>
+        <div class="kpi"><h3>Promedio alineamiento</h3><p id="gen_avg">0%</p></div>
+        <div class="kpi"><h3>Mediana</h3><p id="gen_med">0%</p></div>
+        <div class="kpi"><h3>% ≥ 80%</h3><p id="gen_80">0%</p></div>
+    </div>
+    <canvas id="gen_chart"></canvas>
 </div>
 
 <script>
-/* ---------- CONFIG: Tus CSV publicados ---------- */
-const sources = {
-  nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
-  internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
-  general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv"
+// URLs de las tres pestañas (tu archivo en Google Sheets)
+const urls = {
+    nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
+    internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
+    general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv"
 };
-/* ------------------------------------------------ */
 
-let currentTab = 'nacional';
-let cache = {};
-let chartInstance = null;
+// columnas distintas según pestaña
+const columns = {
+    nacional: "% alineamiento (estimado)",
+    internacional: "% alineamiento (estimado)",
+    general: "% global"
+};
 
-// Helpers
-function findAlineamientoField(fields){
-  // busca columna que contenga 'alineam' o 'alineamiento' o '%'
-  const lower = fields.map(f => (f||'').toString().toLowerCase());
-  let idx = lower.findIndex(f=> f.includes('alineam'));
-  if(idx>=0) return fields[idx];
-  idx = lower.findIndex(f=> f.includes('%') && f.includes('aline'));
-  if(idx>=0) return fields[idx];
-  idx = lower.findIndex(f=> f.includes('porcentaje') || f.includes('porc'));
-  if(idx>=0) return fields[idx];
-  // fallback: cualquier columna con % literal en cabecera
-  idx = lower.findIndex(f=> f.includes('%'));
-  if(idx>=0) return fields[idx];
-  return null;
-}
-function toNumber(v){
-  if(v===null||v===undefined) return NaN;
-  let s = String(v).trim().replace(/\s+/g,'');
-  s = s.replace('%','').replace(',','.').replace(/[^0-9\.\-]/g,'');
-  if(s==='') return NaN;
-  const n = parseFloat(s);
-  return isNaN(n)? NaN : n;
-}
-function median(arr){
-  if(!arr.length) return 0;
-  const a = [...arr].sort((x,y)=>x-y);
-  const m = Math.floor(a.length/2);
-  return a.length%2 ? a[m] : ((a[m-1]+a[m])/2);
-}
-function formatPct(n){ return (isFinite(n) ? Number(n).toFixed(1) + '%' : '—'); }
+// utilidades
+const median = arr => arr.sort((a,b)=>a-b)[Math.floor(arr.length/2)] || 0;
 
-// Render UI
-function renderKPIs(stats){
-  const kpiRow = document.getElementById('kpi-row');
-  kpiRow.innerHTML = `
-    <div class="kpi"><h4>Total registros</h4><p>${stats.count}</p></div>
-    <div class="kpi"><h4>Promedio alineamiento</h4><p>${formatPct(stats.avg)}</p></div>
-    <div class="kpi"><h4>Mediana</h4><p>${formatPct(stats.median)}</p></div>
-    <div class="kpi"><h4>% ≥ 80%</h4><p>${formatPct(stats.pct_ge_80)}</p></div>
-  `;
-}
+function loadCSV(type) {
+    fetch(urls[type])
+    .then(r => r.text())
+    .then(text => {
+        const rows = text.split("\n").map(r => r.split(","));
+        const headers = rows[0];
 
-function renderSummaryList(stats){
-  const s = document.getElementById('summary-list');
-  s.innerHTML = `
-    <div class="small">Mínimo: <strong>${formatPct(stats.min)}</strong></div>
-    <div class="small">Máximo: <strong>${formatPct(stats.max)}</strong></div>
-    <div class="small">Registros sin valor: <strong>${stats.missing}</strong></div>
-    <div class="small" style="margin-top:8px">Fuente: <small class="small">${sources[currentTab]}</small></div>
-  `;
-}
+        const colName = columns[type];
+        const idx = headers.indexOf(colName);
 
-function renderTablePreview(rows, alineField, labelField){
-  const thead = document.querySelector('#mini-table thead');
-  const tbody = document.querySelector('#mini-table tbody');
-  thead.innerHTML = `<tr><th>Línea estratégica</th><th>${alineField}</th></tr>`;
-  tbody.innerHTML = rows.slice(0,20).map(r=>{
-    return `<tr><td>${escapeHtml(r[labelField]||r[Object.keys(r)[0]] || '')}</td><td>${escapeHtml(r[alineField]??'')}</td></tr>`;
-  }).join('');
-}
+        if (idx === -1) {
+            console.error("No se encontró la columna:", colName);
+            return;
+        }
 
-function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+        const values = rows.slice(1)
+            .map(r => parseFloat(r[idx].replace("%","").replace(",","").trim()))
+            .filter(v => !isNaN(v));
 
-function buildChart(dataPairs){
-  const ctx = document.getElementById('barChart').getContext('2d');
-  if(chartInstance) chartInstance.destroy();
+        document.getElementById(`${type}_total`).textContent = values.length;
+        document.getElementById(`${type}_avg`).textContent = (values.reduce((a,b)=>a+b,0)/values.length || 0).toFixed(1)+"%";
+        document.getElementById(`${type}_med`).textContent = median(values).toFixed(1)+"%";
+        document.getElementById(`${type}_80`).textContent = (100 * values.filter(v=>v>=80).length / (values.length||1)).toFixed(1)+"%";
 
-  const labels = dataPairs.map(p=>p.label);
-  const values = dataPairs.map(p=>p.value);
-
-  chartInstance = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label: '% Alineamiento',
-        data: values,
-        backgroundColor: values.map(v => v>=80 ? 'rgba(16,185,129,0.85)' : v<50 ? 'rgba(239,68,68,0.85)' : 'rgba(59,130,246,0.85)'),
-        borderRadius:6
-      }]
-    },
-    options:{
-      indexAxis: 'y',
-      responsive:true,
-      scales:{
-        x:{beginAtZero:true, max:100, ticks:{callback: v=> v + '%'}}
-      },
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=> `${ctx.dataset.label}: ${ctx.parsed.x}%`}}}
-    }
-  });
-}
-
-// Carga y cálculo
-async function loadAndRender(tab){
-  currentTab = tab;
-  document.getElementById('status').textContent = `Cargando ${tab}...`;
-  const url = sources[tab];
-  try{
-    const res = await fetch(url);
-    const text = await res.text();
-    // usar PapaParse para cabecera robusta
-    const parsed = Papa.parse(text, { header:true, skipEmptyLines:true });
-    const rows = parsed.data;
-    const fields = parsed.meta.fields || Object.keys(rows[0]||{});
-    // encontrar columna alineamiento
-    const alineField = findAlineamientoField(fields);
-    // encontrar label para mostrar (preferir "Línea estratégica" o "Línea" o "linea")
-    const labelCandidates = fields.filter(f=> /line/i.test(f) || /estrat/i.test(f) || /línea/i.test(f) );
-    const labelField = labelCandidates.length ? labelCandidates[0] : fields[0];
-
-    // extraer números
-    const values = [];
-    let missing = 0;
-    rows.forEach(r=>{
-      const v = toNumber(r[alineField]);
-      if(!isFinite(v)) missing++;
-      else values.push({value:v, label: r[labelField] ?? ''});
+        new Chart(document.getElementById(`${type}_chart`), {
+            type: "bar",
+            data: {
+                labels: values.map((v,i)=>"Fila "+(i+1)),
+                datasets: [{
+                    label: colName,
+                    data: values
+                }]
+            },
+            options: { responsive: true }
+        });
     });
-
-    const nums = values.map(x=>x.value);
-    const count = nums.length;
-    const avg = count? (nums.reduce((a,b)=>a+b,0)/count) : 0;
-    const med = median(nums);
-    const min = count? Math.min(...nums) : 0;
-    const max = count? Math.max(...nums) : 0;
-    const pct_ge_80 = count? (nums.filter(n=> n>=80).length / count)*100 : 0;
-    const pct_lt_50 = count? (nums.filter(n=> n<50).length / count)*100 : 0;
-
-    const stats = { count, avg, median:med, min, max, pct_ge_80, pct_lt_50, missing };
-
-    // preparar pares para gráfico: ordenar de mayor a menor y limitar (top 50)
-    const pairs = values
-      .sort((a,b)=> b.value - a.value)
-      .slice(0,50)
-      .map(v=> ({ label: (v.label||'—').slice(0,60), value: Number(v.value) }) );
-
-    // render
-    renderKPIs(stats);
-    renderSummaryList(stats);
-    renderTablePreview(values, alineField, labelField);
-    buildChart(pairs);
-
-    document.getElementById('status').textContent = `Datos cargados: ${rows.length} filas (valores numéricos: ${count}, sin valor: ${missing})`;
-    cache[tab] = { parsed, stats, pairs, alineField, labelField };
-
-  }catch(err){
-    document.getElementById('status').textContent = `Error cargando ${tab}: ${err.message}`;
-    console.error(err);
-  }
 }
 
-// event tabs
-document.querySelectorAll('.tab').forEach(el=>{
-  el.addEventListener('click', (e)=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-    const t = el.dataset.tab;
-    // si está en cache, render rápido desde cache
-    if(cache[t]) {
-      const c = cache[t];
-      renderKPIs(c.stats);
-      renderSummaryList(c.stats);
-      renderTablePreview(c.parsed.data.map(r=>({value:toNumber(r[c.alineField]), label:r[c.labelField]})), c.alineField, c.labelField);
-      buildChart(c.pairs);
-      document.getElementById('status').textContent = `Datos (cached): ${c.parsed.data.length} filas`;
-      currentTab = t;
-    } else {
-      loadAndRender(t);
-    }
-  });
-});
+// cargar todo
+loadCSV("nacional");
+loadCSV("internacional");
+loadCSV("general");
 
-// carga inicial
-loadAndRender(currentTab);
+// cambio de pestañas
+function openTab(id) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+    document.querySelector(`.tab[onclick="openTab('${id}')"]`).classList.add("active");
+    document.getElementById(id).classList.add("active");
+}
 </script>
+
 </body>
 </html>
