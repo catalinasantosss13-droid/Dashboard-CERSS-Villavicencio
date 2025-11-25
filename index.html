@@ -1,312 +1,314 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard CERS – Villavicencio (Síntesis General)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard CERS – Villavicencio</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <!-- Bootstrap (estilos rápidos) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<style>
-:root{
-  --primario:#1a4369;
-  --sec:#00bcd4;
-  --alto:#28a745;
-  --medio:#ffc107;
-  --bajo:#dc3545;
-  --fondo:#eef1f5;
-  --card:#ffffff;
-  --muted:#6c757d;
-}
-*{box-sizing:border-box}
-body{font-family:'Montserrat',sans-serif;margin:0;background:var(--fondo);color:#222}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--card);border-bottom:5px solid var(--primario)}
-header img{height:54px}
-.header-center{text-align:center;flex:1}
-h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
-.subtitle{color:var(--muted);font-size:.9rem;margin-top:4px}
+  <!-- PapaParse para CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-/* Tabs */
-.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap; display: none !important;} 
-.tab-btn{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
-.tab-btn.active{background:var(--sec);color:#003242}
-.container{max-width:1300px;margin:20px auto;padding:0 16px}
-
-/* Panels */
-.panel{display:none;background:var(--card);padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06);margin-bottom:20px}
-.panel.active{display:block}
-.title{color:var(--primario);font-weight:700;font-size:1.15rem;margin-bottom:6px}
-.muted{color:var(--muted);margin-bottom:12px}
-
-/* GRÁFICAS: Corrección del tamaño */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:12px}
-.card{background:#fff;padding:12px;border-radius:8px;border:1px solid #e9f0f6}
-.card canvas {
-    /* Limita el tamaño de la gráfica dentro del contenedor */
-    max-height: 220px; 
-    max-width: 500px; 
-    margin: 0 auto;
-}
-
-.kpi{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:#fafcff;border-left:6px solid var(--primario)}
-.kpi .label{font-size:.9rem;color:var(--muted)}
-.kpi .value{font-size:1.6rem;font-weight:800}
-
-/* table */
-.table-wrap{overflow:auto;border-radius:8px;border:1px solid #e6eef6;background:#fff}
-table{width:100%;border-collapse:collapse;font-size:.95rem}
-th,td{padding:10px;border-bottom:1px solid #eef6fb;text-align:left}
-thead th{background:var(--primario);color:#fff}
-tbody tr:nth-child(even){background:#fbfdff}
-
-/* validation styles (mantener por si se reintroducen) */
-.validation-list{max-height:420px;overflow:auto;border-radius:8px;padding:8px;background:#fff;border:1px solid #e6eef6}
-.validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f3f8fb}
-.validation-item:last-child{border-bottom:0}
-.btn{padding:8px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
-.ok{background:var(--alto);color:#fff}
-.pend{background:var(--medio);color:#003242}
-.rej{background:var(--bajo);color:#fff}
-.small{font-size:.85rem;color:var(--muted)}
-
-/* Indicador de Sincronización */
-.sync-status {
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    background: var(--alto);
-    color: #fff;
-    white-space: nowrap; 
-}
-
-/* responsive */
-@media (max-width:900px){
-  .grid-2,.grid-3{grid-template-columns:1fr}
-  header{flex-direction:column;gap:10px}
-  .tabs{padding:8px}
-}
-</style>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 1.25rem; background: #f7f9fc; }
+    .card { box-shadow: 0 6px 18px rgba(26, 43, 64, 0.06); border: none; }
+    .small-muted { font-size: .85rem; color: #6b7280; }
+    .table-wrap { max-height: 420px; overflow:auto; }
+    nav .nav-link { cursor:pointer; }
+    .control-row > * { margin-right: .5rem; }
+    footer { margin-top: 1.5rem; color: #6b7280; font-size: .85rem; }
+  </style>
 </head>
 <body>
-
-<header>
-  <img src="logos/alcaldia.png" alt="alcaldia">
-  <div class="header-center">
-    <h1>Dashboard de Alineación CERS / OPS — Síntesis General</h1>
-    <div class="subtitle">Carga automática desde la Matriz Consolidada (CSV)</div>
-  </div>
-  <img src="logos/unillanos.png" alt="unillanos">
-</header>
-
-<div class="tabs" role="tablist" aria-label="Secciones">
-  <button class="tab-btn active" data-target="panel-general">Síntesis General</button> 
-</div>
-
-<div class="container">
-
-  <section id="panel-general" class="panel active" role="region" aria-label="Síntesis General">
-    <div class="title">Síntesis General Consolidada</div>
-    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ GENERAL</strong></div>
-
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-      <div class="small">Fuente:</div>
-      <a id="link-general" href="#" target="_blank" class="small">CSV Matriz general</a>
-      <button id="refresh-general" class="btn" style="background:#163653;color:#fff">Recargar</button>
-      <span class="sync-status">Sincronizado</span>
-    </div>
-
-    <div class="grid-2" style="margin-bottom:12px">
-      <div class="card kpi"><div class="label">Promedio de alineamiento</div><div id="general-prom" class="value">—</div></div>
-      <div class="card kpi"><div class="label">Ítems totales</div><div id="general-total" class="value">—</div></div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <h4 style="margin:0 0 8px">Distribución por nivel</h4>
-      <canvas id="chartGeneralLevels" height="220"></canvas>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <label class="small">Buscar:</label>
-        <input id="search-general" type="search" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #e6eef6;flex:1">
+  <div class="container-fluid">
+    <header class="d-flex align-items-center mb-3">
+      <div>
+        <h2 class="mb-0">Dashboard: CERS – Villavicencio</h2>
+        <div class="small-muted">Datos enlazados en vivo desde Google Sheets (CSV)</div>
       </div>
-      <div class="table-wrap" id="tablewrap-general"><table id="table-general"><thead><tr><th>Línea estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
+      <div class="ms-auto small-muted">Actualizado en vivo · Sin backend</div>
+    </header>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs mb-3" id="tabs">
+      <li class="nav-item"><a class="nav-link active" data-target="nacional">NACIONAL</a></li>
+      <li class="nav-item"><a class="nav-link" data-target="internacional">INTERNACIONAL</a></li>
+      <li class="nav-item"><a class="nav-link" data-target="general">GENERAL</a></li>
+    </ul>
+
+    <!-- Content area -->
+    <div id="content-area">
+      <!-- Template for each tab -->
+      <template id="tab-template">
+        <div class="tab-pane">
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card p-3">
+                <h6 class="mb-2">Resumen</h6>
+                <div id="summary" class="small-muted">Cargando...</div>
+                <div class="mt-3">
+                  <div class="control-row d-flex align-items-center">
+                    <label class="me-2 small-muted">Columna numérica:</label>
+                    <select id="numeric-select" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="control-row d-flex align-items-center mt-2">
+                    <label class="me-2 small-muted">Columna de categoría:</label>
+                    <select id="category-select" class="form-select form-select-sm"></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-8">
+              <div class="card p-3 mb-2">
+                <h6 class="mb-2">Gráfica 1 — Series</h6>
+                <canvas id="chart-line" height="110"></canvas>
+              </div>
+              <div class="card p-3">
+                <h6 class="mb-2">Gráfica 2 — Top categorías</h6>
+                <canvas id="chart-bar" height="110"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-3">
+            <div class="d-flex mb-2">
+              <div class="me-auto">
+                <input id="table-search" class="form-control form-control-sm" placeholder="Buscar en tabla..." />
+              </div>
+              <div class="ms-2">
+                <button id="download-csv" class="btn btn-outline-secondary btn-sm">Descargar CSV</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="data-table" class="table table-sm table-striped">
+                <thead id="table-head"></thead>
+                <tbody id="table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
-  </section>
-  
-</div> <script>
-/*
-  URLs CSV (públicas en Google Sheets) - Usamos solo la Matriz General
-*/
-const URL_GENERAL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv';
 
-/* Global caches */
-let dataGeneral = [];
-let chartGeneralLevels=null;
+    <footer class="text-center">
+      Hecho con ❤️ · Copia este archivo en GitHub Pages para que corra en vivo.
+    </footer>
+  </div>
 
-// Nombres de columna exactos, forzados para la Matriz General:
-const COL_LINEA = 'Dimensión de análisis (agrupación por determinantes)Referentes técnicos y/o normativosEstado actual (síntesis de hallazgos)';
-const COL_NIVEL = 'Nivel de alineamiento (estimado)';
-const COL_OPORTUNIDAD = 'Oportunidad de mejora priorizada';
+<script>
+/* ---------- CONFIG: pega aquí tus CSV publicados ---------- */
+const sources = {
+  nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
+  internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
+  general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv"
+};
+/* --------------------------------------------------------- */
 
+const tabsContainer = document.getElementById('tabs');
+const contentArea = document.getElementById('content-area');
+const template = document.getElementById('tab-template').content;
+let current = 'nacional';
+const state = {}; // guarda datos por pestaña
+let charts = {}; // guardará instancias Chart.js
 
-/* ---------- Utilidades ---------- */
-function toNumber(v){ 
-  if(v===undefined||v===null||v==='') return 0; 
-  // Reforzamos la limpieza de valores numéricos
-  const s=String(v).replace('%','').replace(',','.').trim(); 
-  const n=Number(s); 
-  return isNaN(n)?0:n; 
+// Inicializar pestañas
+function initTabs(){
+  document.querySelectorAll('#tabs .nav-link').forEach(a=>{
+    a.addEventListener('click', ()=> {
+      document.querySelectorAll('#tabs .nav-link').forEach(x=>x.classList.remove('active'));
+      a.classList.add('active');
+      const target = a.getAttribute('data-target');
+      showTab(target);
+    });
+  });
+  showTab(current);
 }
-function formatPct(v){ 
-  const n=toNumber(v); 
-  if ((v===0 || v==='0' || v==='') && n===0) return '0.0%';
-  return isNaN(n)?'':n.toFixed(1)+'%'; 
-}
-function truncate(s,n=80){ if(s===undefined||s===null) return ''; s=String(s); return s.length>n? s.slice(0,n-1)+'…': s; }
-function getCSSVar(name, fallback){ try{ const v = getComputedStyle(document.documentElement).getPropertyValue(name); return (v||fallback).trim(); }catch(e){ return fallback; } }
 
+function showTab(name){
+  current = name;
+  // limpiar content
+  contentArea.innerHTML = '';
+  const clone = template.cloneNode(true);
+  contentArea.appendChild(clone);
+  const pane = contentArea.querySelector('.tab-pane');
 
-/* ------------------ Render tabla simple ------------------ */
-function renderTable(wrapperSelector, data, cols){
-  const wrap = document.querySelector(wrapperSelector);
-  if(!wrap) return;
-  if(!data || data.length === 0){
-    const head = `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
-    wrap.innerHTML = `<table>${head}<tbody><tr><td colspan="${cols.length}" class="small">No hay datos</td></tr></tbody></table>`;
+  // asignar elementos locales
+  const summaryEl = pane.querySelector('#summary');
+  const numSelect = pane.querySelector('#numeric-select');
+  const catSelect = pane.querySelector('#category-select');
+  const chartLineCtx = pane.querySelector('#chart-line').getContext('2d');
+  const chartBarCtx = pane.querySelector('#chart-bar').getContext('2d');
+  const tableHead = pane.querySelector('#table-head');
+  const tableBody = pane.querySelector('#table-body');
+  const searchInput = pane.querySelector('#table-search');
+  const downloadBtn = pane.querySelector('#download-csv');
+
+  // si ya cargamos antes esta pestaña, usamos cache
+  if(state[name] && state[name].loaded){
+    renderFromState(name, {summaryEl, numSelect, catSelect, chartLineCtx, chartBarCtx, tableHead, tableBody, searchInput, downloadBtn});
     return;
   }
-  const head = `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;
-  const body = data.map(r=>`<tr>${cols.map(c=>`<td>${r[c]!==undefined?r[c]:''}</td>`).join('')}</tr>`).join('');
-  wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
-}
 
-/* ------------------ Carga CSV con PapaParse (promisified) ------------------ */
-function loadCSV(url){
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: (res) => {
-        if(res && res.data) resolve(res.data);
-        else reject(new Error('No se obtuvo data (revise el formato del archivo CSV).'));
-      },
-      error: (err) => {
-        let errMsg = 'Error de red o al descargar el archivo CSV. Verifique la URL de publicación.';
-        if (err && err.message) {
-            errMsg = err.message;
-        }
-        reject(new Error(errMsg)); 
-      }
-    });
+  summaryEl.textContent = 'Cargando datos...';
+
+  Papa.parse(sources[name], {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results){
+      const data = results.data;
+      const fields = results.meta.fields || [];
+      state[name] = { data, fields, loaded: true, sourceUrl: sources[name] };
+      renderFromState(name, {summaryEl, numSelect, catSelect, chartLineCtx, chartBarCtx, tableHead, tableBody, searchInput, downloadBtn});
+    },
+    error: function(err){
+      summaryEl.textContent = 'Error cargando CSV: ' + err.message;
+    }
   });
 }
 
-/* ========== SÍNTESIS GENERAL ========== */
-async function refreshGeneral(){
-  try{
-    document.getElementById('link-general').href = URL_GENERAL;
-    const rows = await loadCSV(URL_GENERAL);
-    dataGeneral = rows.map(r=>{
-      const out = {};
-      Object.keys(r).forEach(k=> out[k.trim()] = (typeof r[k] === 'string') ? r[k].trim() : r[k]);
-      return out;
+// renderiza usando state[name]
+function renderFromState(name, els){
+  const { data, fields } = state[name];
+  const { summaryEl, numSelect, catSelect, chartLineCtx, chartBarCtx, tableHead, tableBody, searchInput, downloadBtn } = els;
+
+  // Resumen
+  summaryEl.innerHTML = `
+    Filas: <strong>${data.length.toLocaleString()}</strong><br>
+    Columnas: <strong>${fields.length}</strong><br>
+    Fuente: <small class="text-break">${state[name].sourceUrl}</small>
+  `;
+
+  // Detectar columnas numéricas (simple)
+  const numericCols = detectNumericColumns(data, fields);
+  const textualCols = fields.filter(f => !numericCols.includes(f));
+
+  // llenar selects
+  numSelect.innerHTML = numericCols.length ? numericCols.map(c=>`<option value="${c}">${c}</option>`).join('') : '<option disabled>Sin columnas numéricas</option>';
+  catSelect.innerHTML = textualCols.length ? textualCols.map(c=>`<option value="${c}">${c}</option>`).join('') : '<option disabled>Sin columnas de categoría</option>';
+
+  // crear gráficos iniciales
+  const chosenNum = numericCols[0] || null;
+  const chosenCat = textualCols[0] || null;
+
+  // listeners para cambiar columna graficada
+  numSelect.addEventListener('change', ()=> updateCharts());
+  catSelect.addEventListener('change', ()=> updateCharts());
+
+  // poblar tabla (simple)
+  buildTable(fields, data, tableHead, tableBody);
+
+  // busqueda en tabla
+  searchInput.addEventListener('input', (e)=> filterTable(e.target.value, fields, data, tableHead, tableBody));
+
+  // descarga CSV (reutiliza origen)
+  downloadBtn.addEventListener('click', ()=>{
+    const blob = new Blob([Papa.unparse(data)], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${name}_export.csv`;
+    link.click();
+  });
+
+  // crear charts Chart.js
+  if(charts[name]) { charts[name].line.destroy(); charts[name].bar.destroy(); }
+  charts[name] = { line: null, bar: null };
+
+  function updateCharts(){
+    const numCol = numSelect.value || chosenNum;
+    const catCol = catSelect.value || chosenCat;
+    // Line: si existe columna "Fecha" o index, tratar de usarla para labels; si no, usar indices
+    let labels = data.map((r,i)=> r['Fecha'] || r['fecha'] || r['Date'] || (i+1));
+    let values = data.map(r => parseFloat(cleanNumber(r[numCol])) ).map(v=> isFinite(v)? v : 0);
+
+    // Top categories (sum numeric by category)
+    let groups = {};
+    data.forEach(r=>{
+      const key = r[catCol] || '—';
+      const val = parseFloat(cleanNumber(r[numCol])) || 0;
+      groups[key] = (groups[key] || 0) + val;
+    });
+    // take top 8 categories
+    const pairs = Object.entries(groups).sort((a,b)=> b[1]-a[1]).slice(0,8);
+    const gLabels = pairs.map(p=>p[0]);
+    const gValues = pairs.map(p=>p[1]);
+
+    // Line chart
+    if(charts[name].line) charts[name].line.destroy();
+    charts[name].line = new Chart(chartLineCtx, {
+      type: 'line',
+      data: { labels, datasets: [{ label: numCol || 'Valor', data: values, tension: .3, fill: true }] },
+      options: { responsive:true, plugins:{legend:{display:false}} }
     });
 
-    // Usamos las constantes de encabezado exactas:
-    const colLinea = COL_LINEA;
-    const colNivel = COL_NIVEL;
-    const colRec   = COL_OPORTUNIDAD;
-    
-    // Mapeamos los datos para usarlos en la interfaz
-    const mapped = dataGeneral.map(r => {
-      const nivelTexto = String(r[colNivel] || '').toLowerCase().trim();
-      let porcentajeNum = 0;
-      
-      // Asignamos un valor numérico para gráficos/promedio basado en el texto del nivel
-      if (nivelTexto.includes('alto')) porcentajeNum = 90; 
-      else if (nivelTexto.includes('medio')) porcentajeNum = 60;
-      else if (nivelTexto.includes('bajo')) porcentajeNum = 30;
-
-      return {
-        linea: r[colLinea] || 'Ítem sin descripción',
-        porcentajeNum: porcentajeNum,
-        // Si el valor viene del texto, mostramos una aproximación en %
-        porcentaje: porcentajeNum > 0 ? (porcentajeNum.toFixed(1) + '%') : '—', 
-        nivel: r[colNivel] || '—',
-        recomendacion: r[colRec] || '—'
-      };
+    // Bar chart
+    if(charts[name].bar) charts[name].bar.destroy();
+    charts[name].bar = new Chart(chartBarCtx, {
+      type: 'bar',
+      data: { labels: gLabels, datasets: [{ label: 'Suma por categoría', data: gValues }] },
+      options: { responsive:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{autoSkip:true}}} }
     });
-
-    const total = mapped.length;
-    const prom = mapped.reduce((s,i)=> s + (i.porcentajeNum||0), 0) / Math.max(1, total);
-    document.getElementById('general-total').innerText = total;
-    document.getElementById('general-prom').innerText = prom.toFixed(1) + '%';
-    
-    // Charts (Distribución por nivel)
-    const counts = [
-      mapped.filter(r => r.porcentajeNum < 40).length,
-      mapped.filter(r => r.porcentajeNum >= 40 && r.porcentajeNum < 80).length,
-      mapped.filter(r => r.porcentajeNum >= 80).length
-    ];
-    
-    // CORRECCIÓN GRÁFICA: Destruir y crear nueva para asegurar el renderizado
-    if(chartGeneralLevels) chartGeneralLevels.destroy();
-    chartGeneralLevels = new Chart(document.getElementById('chartGeneralLevels'), {
-      type: 'doughnut',
-      data: { labels: ['Bajo','Medio','Alto'], datasets: [{ data: counts, backgroundColor: [getCSSVar('--bajo','#dc3545'), getCSSVar('--medio','#ffc107'), getCSSVar('--alto','#28a745')] }] },
-      options: { 
-        plugins: { 
-          legend: { position: 'top' } 
-        },
-        responsive: true,
-        maintainAspectRatio: false // Importante para que el CSS controle el tamaño
-      }
-    });
-
-    // Table
-    renderTable('#tablewrap-general', mapped.map(x=> ({ 
-      'Línea estratégica / Eje': truncate(x.linea, 120), 
-      'Alineamiento (%)': x.porcentaje, 
-      'Nivel': x.nivel, 
-      'Recomendación': x.recomendacion 
-    })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
-
-    // Search
-    document.getElementById('search-general').oninput = (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      const fil = mapped.filter(it => (it.linea + ' ' + it.recomendacion + ' ' + it.nivel).toLowerCase().includes(q));
-      renderTable('#tablewrap-general', fil.map(x=> ({ 'Línea estratégica / Eje': x.linea, 'Alineamiento (%)': x.porcentaje, 'Nivel': x.nivel, 'Recomendación': x.recomendacion })), ['Línea estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
-    };
-
-    return true;
-  } catch (err) {
-    console.error('Error GENERAL:', err);
-    alert('Error al cargar la síntesis general: ' + (err.message || String(err)));
-    return false;
   }
+
+  // primera renderización
+  updateCharts();
 }
 
-/* ========== UI wiring: tabs & refresh buttons ========== */
-document.getElementById('refresh-general').onclick = refreshGeneral;
-
-/* ========== STARTUP: run sequentially to avoid race conditions ========== */
-async function initAll(){
-  try{
-    await refreshGeneral();
-  } catch(e){
-    console.error('Error en initAll:', e);
-    alert('Error iniciando el dashboard: ' + (e.message || String(e)));
-  }
+// util: detectar columnas numéricas
+function detectNumericColumns(data, fields){
+  const numeric = [];
+  fields.forEach(f=>{
+    let countNumeric = 0, checked = 0;
+    for(let i=0;i<Math.min(50,data.length);i++){
+      const v = data[i][f];
+      if(v===undefined || v===null || String(v).trim()==='') { checked++; continue; }
+      checked++;
+      const n = parseFloat(cleanNumber(v));
+      if(!isNaN(n)) countNumeric++;
+    }
+    // si más de la mitad de los valores comprobados son numéricos -> lo consideramos numérico
+    if(checked>0 && (countNumeric / checked) >= 0.6) numeric.push(f);
+  });
+  return numeric;
 }
 
-/* Run */
-initAll();
+// limpia formatos comunes de números (coma, signo, etc.)
+function cleanNumber(v){
+  if(v===null || v===undefined) return '';
+  return String(v).replace(/\$/g,'').replace(/,/g,'').replace(/\s+/g,'').replace(/%/g,'').replace(/—/g,'').trim();
+}
+
+// construir tabla HTML
+function buildTable(fields, data, theadEl, tbodyEl){
+  theadEl.innerHTML = '<tr>' + fields.map(f=>`<th>${f}</th>`).join('') + '</tr>';
+  tbodyEl.innerHTML = data.map(row => {
+    return '<tr>' + fields.map(f => `<td>${escapeHtml(row[f] ?? '')}</td>`).join('') + '</tr>';
+  }).join('');
+}
+
+// Buscar y filtrar tabla
+function filterTable(q, fields, data, theadEl, tbodyEl){
+  const ql = q.toLowerCase();
+  const filtered = data.filter(r=>{
+    return fields.some(f=>{
+      return String(r[f] ?? '').toLowerCase().includes(ql);
+    });
+  });
+  tbodyEl.innerHTML = filtered.map(row => {
+    return '<tr>' + fields.map(f => `<td>${escapeHtml(row[f] ?? '')}</td>`).join('') + '</tr>';
+  }).join('');
+}
+
+// escape
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// init
+initTabs();
 
 </script>
 </body>
