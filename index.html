@@ -1,104 +1,560 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Matrices CSV</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard — Matrices CERS (Villavicencio)</title>
+
+<!-- Librerías -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+<!-- Tipografía y estilos (simplificados, pero estéticos) -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  body { 
-    font-family: Arial, sans-serif; 
-    padding: 20px; 
-    background: #f7f7f7;
+  :root{
+    --prim:#1a4369; --sec:#00bcd4; --alto:#28a745; --medio:#ffc107; --bajo:#dc3545;
+    --fondo:#f8f9fa; --blanco:#fff; --gris:#e6e6e6; --texto:#333;
   }
-  h2 { margin-top: 40px; }
-  table { 
-    border-collapse: collapse; 
-    width: 100%; 
-    margin-top: 10px; 
-    background: white;
+  *{box-sizing:border-box}
+  body{font-family:'Montserrat',system-ui,Arial; margin:0; background:var(--fondo); color:var(--texto); line-height:1.4}
+  .container{max-width:1200px;margin:18px auto;padding:16px}
+  header.main-header{display:flex;align-items:center;justify-content:space-between;background:var(--blanco);padding:12px 16px;border-bottom:6px solid var(--prim);border-radius:8px;gap:12px}
+  .logo-group img{height:44px;object-fit:contain}
+  .title-block{text-align:center;flex:1}
+  .title-block h1{margin:0;font-size:1.1rem;color:var(--prim)}
+  .tabs-nav{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+  .tab-button{background:transparent;border:1px solid transparent;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;color:#666}
+  .tab-button.active{border-color:var(--sec);color:var(--prim);background:#fff}
+  .tab-content{display:none;padding:16px 0}
+  .tab-content.active{display:block}
+  .sync-status-section{background:var(--blanco);padding:12px;border-radius:8px;border-left:4px solid var(--sec);box-shadow:0 1px 6px rgba(0,0,0,0.04);margin-bottom:12px}
+  .kpi-container{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .kpi{background:var(--blanco);padding:16px;border-radius:8px;text-align:center;border:1px solid #eee}
+  .kpi-title{font-weight:700;color:#555;font-size:.85rem;margin-bottom:10px}
+  .kpi-value{font-size:1.6rem;font-weight:800}
+  .kpi-promedio{grid-column:span 4;display:flex;flex-direction:column;align-items:center;padding:18px}
+  .progress-bar-container{width:100%;background:#f0f0f0;border-radius:999px;height:28px;position:relative}
+  .progress-bar{position:absolute;left:0;top:0;height:100%;width:0;border-radius:999px;transition:width 1s ease}
+  .progress-bar-text{position:absolute;width:100%;text-align:center;line-height:28px;font-weight:700;z-index:2}
+  .charts-container{display:grid;grid-template-columns:1fr 1.2fr;gap:16px}
+  .chart-box{background:var(--blanco);padding:12px;border-radius:8px;border:1px solid #eee}
+  .data-table-section{background:var(--blanco);padding:12px;border-radius:8px;border:1px solid #eee;margin-top:12px;overflow:auto}
+  table.results-table{width:100%;border-collapse:collapse}
+  table.results-table th, table.results-table td{padding:8px;border:1px solid #eee;text-align:left;font-size:.9rem}
+  table.results-table th{background:#fafafa;color:var(--prim);font-weight:700}
+  .conclusions, .validation-section{background:var(--blanco);padding:12px;border-radius:8px;border:1px solid #eee;margin-top:12px}
+  footer.formal-footer{margin-top:18px;padding:12px;text-align:center;background:#eef4f6;border-top:3px solid var(--sec)}
+  @media(max-width:900px){
+    .charts-container{grid-template-columns:1fr}
+    .kpi-container{grid-template-columns:repeat(2,1fr)}
+    .kpi-promedio{grid-column:span 2}
   }
-  th, td { 
-    border: 1px solid #ccc; 
-    padding: 8px; 
-    font-size: 14px;
+  @media(max-width:600px){
+    .kpi-container{grid-template-columns:1fr}
+    .kpi-promedio{grid-column:span 1}
+    header.main-header{flex-direction:column;gap:8px}
   }
-  th { background: #eaeaea; }
+  /* pequeñas utilidades */
+  .status-success{color:var(--alto);font-weight:700}
+  .status-error{color:var(--bajo);font-weight:700}
+  .status-loading{color:#666}
+  .levelAlto{color:var(--alto);font-weight:700}
+  .levelMedio{color:var(--medio);font-weight:700}
+  .levelBajo{color:var(--bajo);font-weight:700}
 </style>
 </head>
-
 <body>
+  <header class="main-header container">
+    <div class="logo-group left-logos">
+      <img src="https://placehold.co/100x44/1a4369/ffffff?text=Alcaldía" alt="Alcaldía">
+    </div>
+    <div class="title-block">
+      <h1>Dashboard: Alineación Plan de Acción — CERS/OPS</h1>
+      <p style="margin:4px 0;color:#666;font-size:.9rem">Secretaría de Salud de Villavicencio — Programa ECNT</p>
+    </div>
+    <div class="logo-group right-logos">
+      <img src="https://placehold.co/100x44/00bcd4/ffffff?text=Unillanos" alt="Unillanos">
+    </div>
+  </header>
 
-<h1>Matrices cargadas desde Google Sheets CSV</h1>
+  <main class="container">
+    <nav class="tabs-nav" id="tabs-nav">
+      <button class="tab-button active" data-tab-target="tab-general">Matriz General</button>
+      <button class="tab-button" data-tab-target="tab-nacional">Referentes Nacionales</button>
+      <button class="tab-button" data-tab-target="tab-internacional">Referentes Internacionales</button>
+      <button class="tab-button" data-tab-target="tab-validacion">Validación Técnica</button>
+    </nav>
 
-<h2>Matriz General</h2>
-<div id="tabla-general"></div>
+    <!-- ---------------- TAB: GENERAL ---------------- -->
+    <section id="tab-general" class="tab-content active">
+      <div class="sync-status-section">
+        <p>Estado de la sincronización:</p>
+        <div id="sync-status-tab-general" class="sync-status status-loading">Inicializando...</div>
+      </div>
 
-<h2>Matriz Nacional</h2>
-<div id="tabla-nacional"></div>
+      <div class="kpi-container" id="kpi-container-general">
+        <div class="kpi kpi-promedio">
+          <div class="kpi-title">Promedio general de alineamiento (Avance %)</div>
+          <div class="progress-bar-container" style="width:100%;">
+            <div class="progress-bar-text" id="kpi-promedio-text-general">0%</div>
+            <div class="progress-bar" id="kpi-promedio-bar-general" style="width:0%;background:var(--sec)"></div>
+          </div>
+        </div>
+        <div class="kpi kpi-alto-box">
+          <div class="kpi-title">Líneas en nivel alto</div>
+          <div class="kpi-value" id="kpi-alto-general">0</div>
+        </div>
+        <div class="kpi kpi-medio-box">
+          <div class="kpi-title">Líneas en nivel medio</div>
+          <div class="kpi-value" id="kpi-medio-general">0</div>
+        </div>
+        <div class="kpi kpi-bajo-box">
+          <div class="kpi-title">Líneas en nivel bajo (Crítico)</div>
+          <div class="kpi-value" id="kpi-bajo-general">0</div>
+        </div>
+      </div>
 
-<h2>Matriz Internacional</h2>
-<div id="tabla-internacional"></div>
+      <div class="charts-container">
+        <div class="chart-box">
+          <h2>Distribución de niveles</h2>
+          <canvas id="graficoNiveles-general"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Alineamiento % por línea estratégica</h2>
+          <canvas id="graficoLineas-general"></canvas>
+        </div>
+      </div>
+
+      <div class="data-table-section">
+        <h2>Resultados detallados (General)</h2>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Dimensión / Línea</th>
+              <th>Alineamiento (%)</th>
+              <th>Nivel</th>
+              <th>Recomendación</th>
+            </tr>
+          </thead>
+          <tbody id="data-table-body-tab-general">
+            <tr><td colspan="4" style="text-align:center">Cargando datos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="conclusions">
+        <h2>Conclusiones Clave</h2>
+        <ol id="conclusions-list-general">
+          <li>La evaluación general identifica puntos críticos y oportunidades de institucionalización.</li>
+          <li>Fortalecer autoridad sanitaria y transición a indicadores de impacto.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ---------------- TAB: NACIONAL ---------------- -->
+    <section id="tab-nacional" class="tab-content">
+      <div class="sync-status-section">
+        <p>Estado de la sincronización:</p>
+        <div id="sync-status-tab-nacional" class="sync-status status-loading">Inactivo</div>
+      </div>
+
+      <div class="kpi-container" id="kpi-container-nacional">
+        <div class="kpi kpi-promedio">
+          <div class="kpi-title">Promedio (Nacional)</div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-text" id="kpi-promedio-text-nacional">0%</div>
+            <div class="progress-bar" id="kpi-promedio-bar-nacional" style="width:0%;background:var(--sec)"></div>
+          </div>
+        </div>
+        <div class="kpi"><div class="kpi-title">Alto</div><div class="kpi-value" id="kpi-alto-nacional">0</div></div>
+        <div class="kpi"><div class="kpi-title">Medio</div><div class="kpi-value" id="kpi-medio-nacional">0</div></div>
+        <div class="kpi"><div class="kpi-title">Bajo</div><div class="kpi-value" id="kpi-bajo-nacional">0</div></div>
+      </div>
+
+      <div class="charts-container">
+        <div class="chart-box">
+          <h2>Distribución (Nacional)</h2>
+          <canvas id="graficoNiveles-nacional"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Alineamiento por línea (Nacional)</h2>
+          <canvas id="graficoLineas-nacional"></canvas>
+        </div>
+      </div>
+
+      <div class="data-table-section">
+        <h2>Resultados (Nacional)</h2>
+        <table class="results-table">
+          <thead>
+            <tr><th>Línea</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr>
+          </thead>
+          <tbody id="data-table-body-tab-nacional"><tr><td colspan="4" style="text-align:center">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------------- TAB: INTERNACIONAL ---------------- -->
+    <section id="tab-internacional" class="tab-content">
+      <div class="sync-status-section">
+        <p>Estado de la sincronización:</p>
+        <div id="sync-status-tab-internacional" class="sync-status status-loading">Inactivo</div>
+      </div>
+
+      <div class="kpi-container" id="kpi-container-internacional">
+        <div class="kpi kpi-promedio">
+          <div class="kpi-title">Promedio (Internacional)</div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-text" id="kpi-promedio-text-internacional">0%</div>
+            <div class="progress-bar" id="kpi-promedio-bar-internacional" style="width:0%;background:var(--sec)"></div>
+          </div>
+        </div>
+        <div class="kpi"><div class="kpi-title">Alto</div><div class="kpi-value" id="kpi-alto-internacional">0</div></div>
+        <div class="kpi"><div class="kpi-title">Medio</div><div class="kpi-value" id="kpi-medio-internacional">0</div></div>
+        <div class="kpi"><div class="kpi-title">Bajo</div><div class="kpi-value" id="kpi-bajo-internacional">0</div></div>
+      </div>
+
+      <div class="charts-container">
+        <div class="chart-box">
+          <h2>Distribución (Internacional)</h2>
+          <canvas id="graficoNiveles-internacional"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Alineamiento por línea (Internacional)</h2>
+          <canvas id="graficoLineas-internacional"></canvas>
+        </div>
+      </div>
+
+      <div class="data-table-section">
+        <h2>Resultados (Internacional)</h2>
+        <table class="results-table">
+          <thead><tr><th>Línea</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr></thead>
+          <tbody id="data-table-body-tab-internacional"><tr><td colspan="4" style="text-align:center">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------------- TAB: VALIDACIÓN ---------------- -->
+    <section id="tab-validacion" class="tab-content">
+      <div class="validation-section">
+        <h2>Validación Técnica y Consolidación (Comité)</h2>
+        <div class="validation-box-container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">
+            <h3>Indicadores de Impacto</h3>
+            <div id="val-indicadores" class="result-text warning">PENDIENTE</div>
+          </div>
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">
+            <h3>Gobernanza Operativa</h3>
+            <div id="val-gobernanza" class="result-text pass">PENDIENTE</div>
+          </div>
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">
+            <h3>Autoridad Sanitaria</h3>
+            <div id="val-autoridad" class="result-text fail">PENDIENTE</div>
+          </div>
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eee">
+            <h3>Fortalezas Normativas</h3>
+            <div id="val-normativa" class="result-text pass">PENDIENTE</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="formal-footer">
+    <div>Dashboard - Secretaría de Salud Villavicencio | Elaborado por Catalina Santos</div>
+  </footer>
 
 <script>
-const urls = {
-  general: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv",
-  nacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv",
-  internacional: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv",
+/* ---------------- CONFIGURACIÓN CSV ---------------- */
+const DATA_CONFIG = {
+  'tab-general': {
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=1428307109&single=true&output=csv"
+  },
+  'tab-nacional': {
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=607322215&single=true&output=csv"
+  },
+  'tab-internacional': {
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=113039783&single=true&output=csv"
+  }
 };
 
-// Cargar CSV
-function loadCSV(url, destino) {
-  Papa.parse(url, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function (results) {
-      renderTable(results.data, destino);
-    },
-    error: function (err) {
-      document.getElementById(destino).innerHTML = 
-        "<p style='color:red'>Error cargando CSV.</p>";
-      console.error(err);
-    }
+const chartInstances = {}; // para destruir antes de crear nuevo
+let dataCache = {}; // cache simple
+
+// Paleta
+const PALETA = { primario:'#1a4369', secundario:'#00bcd4', alto:'#28a745', medio:'#ffc107', bajo:'#dc3545', neutral:'#6c757d' };
+
+/* --------------- UTILIDADES ---------------- */
+function setStatus(tabId, text, cls){
+  const el = document.getElementById(`sync-status-${tabId}`);
+  if(el){ el.innerText = text; el.className = `sync-status ${cls||''}`; }
+}
+function idFor(tabId){ return tabId.replace('tab-',''); }
+
+/* --------------- CARGA Y PROCESADO ---------------- */
+function parseCSV(url){
+  return new Promise((resolve,reject)=>{
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => resolve(results.data),
+      error: (err) => reject(err)
+    });
   });
 }
 
-// Renderizar tabla HTML
-function renderTable(data, destino) {
-  if (!data.length) {
-    document.getElementById(destino).innerHTML = "<p>No hay datos.</p>";
+function detectColumns(sampleRow){
+  // Intenta detectar nombre de columna para porcentaje, nivel y recomendación
+  const keys = Object.keys(sampleRow || {});
+  const found = { porcentaje:null, nivel:null, recomendacion:null, linea:null };
+  keys.forEach(k=>{
+    const lower = k.toLowerCase();
+    if(!found.porcentaje && (lower.includes('%') || lower.includes('porcent') || lower.includes('alineam'))) found.porcentaje = k;
+    if(!found.nivel && (lower.includes('nivel') || lower.includes('nivel de aline'))) found.nivel = k;
+    if(!found.recomendacion && (lower.includes('recomend') || lower.includes('oportunidad') || lower.includes('mejora'))) found.recomendacion = k;
+    if(!found.linea && (lower.includes('line') || lower.includes('dimensión') || lower.includes('eje') || lower.includes('lín'))) found.linea = k;
+  });
+  // fallback: primera/segunda columnas si no detectó
+  if(!found.linea) found.linea = keys[0] || null;
+  if(!found.porcentaje) found.porcentaje = keys[1] || null;
+  if(!found.nivel) found.nivel = keys[2] || null;
+  if(!found.recomendacion) found.recomendacion = keys[3] || null;
+  return found;
+}
+
+function cleanPercentage(value){
+  if(value == null) return 0;
+  let s = String(value).trim().replace('%','').replace(',','.');
+  const num = parseFloat(s);
+  return isNaN(num) ? 0 : num;
+}
+
+/* --------------- RENDER: TABLAS Y GRAFICOS ---------------- */
+function renderTableHTML(tabId, rows, cols){
+  const destId = `data-table-body-${tabId}`;
+  const tbody = document.getElementById(destId);
+  if(!tbody) return;
+  if(!rows || rows.length===0){
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No hay datos.</td></tr>'; return;
+  }
+
+  // crear filas
+  const html = rows.map(r=>{
+    const linea = r._linea || '';
+    const porcentaje = (r._porcentaje!=null) ? Number(r._porcentaje).toFixed(1)+'%' : '';
+    const nivel = r._nivel || '';
+    const rec = r._recomendacion || '';
+    // clase de nivel
+    let cls = '';
+    if(String(nivel).toLowerCase().includes('alto')) cls = 'levelAlto';
+    else if(String(nivel).toLowerCase().includes('medio')) cls = 'levelMedio';
+    else if(String(nivel).toLowerCase().includes('bajo')) cls = 'levelBajo';
+
+    return `<tr>
+      <td>${linea}</td>
+      <td>${porcentaje}</td>
+      <td><span class="${cls}">${nivel}</span></td>
+      <td>${rec}</td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = html;
+}
+
+function actualizarKPIs(tabId, stats){
+  const prefix = idFor(tabId);
+  const elAlto = document.getElementById(`kpi-alto-${prefix}`);
+  const elMedio = document.getElementById(`kpi-medio-${prefix}`);
+  const elBajo = document.getElementById(`kpi-bajo-${prefix}`);
+  const elPromText = document.getElementById(`kpi-promedio-text-${prefix}`);
+  const elPromBar = document.getElementById(`kpi-promedio-bar-${prefix}`);
+
+  if(elAlto) elAlto.innerText = stats.alto;
+  if(elMedio) elMedio.innerText = stats.medio;
+  if(elBajo) elBajo.innerText = stats.bajo;
+  if(elPromText) elPromText.innerText = (stats.promedio||0).toFixed(1)+'%';
+  if(elPromBar){
+    elPromBar.style.width = (stats.promedio||0) + '%';
+    let color = PALETA.neutral;
+    if(stats.promedio >= 80) color = PALETA.alto;
+    else if(stats.promedio >= 40) color = PALETA.medio;
+    else color = PALETA.bajo;
+    elPromBar.style.background = color;
+  }
+}
+
+function drawDonut(id, dataCounts){
+  if(chartInstances[id]) chartInstances[id].destroy();
+  const ctx = document.getElementById(id)?.getContext('2d');
+  if(!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Bajo (Crítico)','Medio','Alto'],
+      datasets:[{ data:[dataCounts.bajo, dataCounts.medio, dataCounts.alto], backgroundColor:[PALETA.bajo, PALETA.medio, PALETA.alto] }]
+    },
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}}}
+  });
+}
+
+function drawBars(id, labels, values){
+  if(chartInstances[id]) chartInstances[id].destroy();
+  const ctx = document.getElementById(id)?.getContext('2d');
+  if(!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    type:'bar',
+    data:{ labels: labels, datasets:[{ label:'% Alineamiento', data: values, backgroundColor: values.map(v=> v>=80?PALETA.alto:(v>=40?PALETA.medio:PALETA.bajo)) }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:true, scales:{x:{beginAtZero:true,max:100,ticks:{callback: v => v + '%'}}}}
+  });
+}
+
+/* --------------- PROCESAR UNA TAB (GENERIC) ---------------- */
+async function loadAndRenderTab(tabId){
+  const config = DATA_CONFIG[tabId];
+  const syncId = `tab-${tabId}`.startsWith('tab-') ? `sync-status-${tabId}` : `sync-status-${tabId}`;
+  setStatus(tabId, 'Cargando datos...', 'status-loading');
+
+  try{
+    // cache
+    if(dataCache[tabId]) {
+      // usar cache
+      const cached = dataCache[tabId];
+      renderFromProcessed(tabId, cached);
+      setStatus(tabId, '✅ Sincronizado (cached)', 'status-success');
+      return;
+    }
+
+    const raw = await parseCSV(config.url);
+    if(!raw || raw.length===0) throw new Error('CSV vacío o no accesible');
+
+    const cols = detectColumns(raw[0]);
+    // procesar filas útiles
+    const filas = [];
+    let total = 0, sumPor = 0, alto=0, medio=0, bajo=0;
+    raw.forEach(row=>{
+      const linea = row[cols.linea] || '';
+      // ignorar filas vacías
+      if(!linea || String(linea).trim()==='') return;
+      const porcentaje = cleanPercentage(row[cols.porcentaje]);
+      const nivel = row[cols.nivel] ? String(row[cols.nivel]).trim() : '';
+      const recomendacion = row[cols.recomendacion] || '';
+
+      filas.push({
+        original: row,
+        _linea: linea,
+        _porcentaje: porcentaje,
+        _nivel: nivel,
+        _recomendacion: recomendacion
+      });
+
+      total++; sumPor += porcentaje;
+      const nl = nivel.toLowerCase();
+      if(nl.includes('alto')) alto++;
+      else if(nl.includes('medio')) medio++;
+      else if(nl.includes('bajo')) bajo++;
+    });
+
+    const promedio = total>0 ? (sumPor/total) : 0;
+    const processed = { filas, stats:{ alto, medio, bajo, promedio }, cols };
+
+    // cachear
+    dataCache[tabId] = processed;
+
+    renderFromProcessed(tabId, processed);
+    setStatus(tabId, `✅ Sincronizado. ${filas.length} filas. Última: ${new Date().toLocaleString('es-CO')}`, 'status-success');
+
+    // si es general, actualizar validación con los KPIs generales
+    if(tabId === 'tab-general') renderValidationPanel(processed.stats);
+
+  } catch(err){
+    console.error('Error carga tab', tabId, err);
+    setStatus(tabId, '❌ Error: no se pudo cargar CSV. Revisa la URL o CORS.', 'status-error');
+    // escribir error en tabla
+    const tb = document.getElementById(`data-table-body-${tabId}`);
+    if(tb) tb.innerHTML = `<tr><td colspan="4" style="color:#b00">Error cargando datos: ${String(err.message||err)}</td></tr>`;
+  }
+}
+
+function renderFromProcessed(tabId, processed){
+  // tabla
+  renderTableHTML(tabId, processed.filas);
+  // KPIs
+  actualizarKPIs(tabId, processed.stats);
+  // gráficos
+  const labels = processed.filas.map(f=>f._linea);
+  const vals = processed.filas.map(f=>f._porcentaje);
+  drawDonut(`graficoNiveles-${idFor(tabId)}`, processed.stats);
+  drawBars(`graficoLineas-${idFor(tabId)}`, labels, vals);
+}
+
+/* --------------- VALIDACIÓN ---------------- */
+function renderValidationPanel(generalStats){
+  const valIndicadores = document.getElementById('val-indicadores');
+  const valGobernanza = document.getElementById('val-gobernanza');
+  const valAutoridad = document.getElementById('val-autoridad');
+  const valNormativa = document.getElementById('val-normativa');
+
+  if(!generalStats){
+    [valIndicadores,valGobernanza,valAutoridad,valNormativa].forEach(el=>{ if(el){ el.innerText='PENDIENTE'; }});
     return;
   }
 
-  let table = "<table><thead><tr>";
+  if(generalStats.bajo > 0 && generalStats.promedio < 70){
+    valIndicadores.innerText = 'ALERTA: Requiere transición a indicadores de impacto';
+    valIndicadores.style.color = PALETA.bajo;
+  } else {
+    valIndicadores.innerText = 'AVANCE: Indicadores en buen proceso';
+    valIndicadores.style.color = PALETA.alto;
+  }
 
-  // Cabeceras
-  Object.keys(data[0]).forEach(col => {
-    table += `<th>${col}</th>`;
-  });
+  if(generalStats.promedio >= 80){
+    valGobernanza.innerText = 'CONSOLIDADO';
+    valGobernanza.style.color = PALETA.alto;
+  } else {
+    valGobernanza.innerText = 'BRECHAS: Requiere unificación de metas';
+    valGobernanza.style.color = PALETA.medio;
+  }
 
-  table += "</tr></thead><tbody>";
+  valAutoridad.innerText = 'CRÍTICO: Fortalecer autoridad sanitaria';
+  valAutoridad.style.color = PALETA.bajo;
 
-  // Filas
-  data.forEach(row => {
-    table += "<tr>";
-    Object.values(row).forEach(val => {
-      table += `<td>${val}</td>`;
-    });
-    table += "</tr>";
-  });
-
-  table += "</tbody></table>";
-
-  document.getElementById(destino).innerHTML = table;
+  valNormativa.innerText = 'SOLIDEZ: Revisión normativa recomendada';
+  valNormativa.style.color = PALETA.alto;
 }
 
-// Cargar las 3 tablas
-loadCSV(urls.general, "tabla-general");
-loadCSV(urls.nacional, "tabla-nacional");
-loadCSV(urls.internacional, "tabla-internacional");
-</script>
+/* --------------- NAVEGACIÓN TABS ---------------- */
+function switchTab(targetId){
+  document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.tab-button[data-tab-target="${targetId}"]`)?.classList.add('active');
+  document.getElementById(targetId)?.classList.add('active');
 
+  // cargar datos si no se han cargado
+  if(!dataCache[targetId]){
+    // cargar la pestaña (general, nacional, internacional)
+    if(targetId.startsWith('tab-')){
+      loadAndRenderTab(targetId);
+    }
+  }
+}
+
+/* --------------- INIT ---------------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // listeners botones
+  document.querySelectorAll('.tab-button').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const t = btn.getAttribute('data-tab-target');
+      switchTab(t);
+    });
+  });
+
+  // Inicializar cargando la pestaña general (y en background las otras)
+  loadAndRenderTab('tab-general');
+  // Cargar las otras en background para que estén listas
+  loadAndRenderTab('tab-nacional');
+  loadAndRenderTab('tab-internacional');
+});
+</script>
 </body>
 </html>
