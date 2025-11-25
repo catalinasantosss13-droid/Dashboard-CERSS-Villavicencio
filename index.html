@@ -3,326 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz Comparativa - BI Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <title>Dashboard BI - CERS 2025 Villavicencio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background-color: #f4f4f9;
-            color: #333;
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button.active { 
+            background-color: #3b82f6; 
+            color: white; 
         }
-        h1, h2 { 
-            text-align: center; 
-            color: #1e3c72; 
-            margin-bottom: 20px;
-        }
-        .container { 
-            max-width: 1400px; 
-            margin: auto; 
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        /* Estilo para el área de gráficos */
-        #chart-section {
-            padding: 30px 0;
-            border-bottom: 2px solid #ccc;
-            margin-bottom: 30px;
-        }
-        #chart-container {
-            width: 80%; /* Ancho del contenedor del gráfico */
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
+        .kpi-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        /* Estilos de tabla (mantenidos del código anterior) */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 50px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); }
-        th, td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
-        th { background-color: #2a5298; color: white; cursor: pointer; position: sticky; top: 0; user-select: none; }
-        th[data-sort-direction="asc"]::after { content: " ▲"; }
-        th[data-sort-direction="desc"]::after { content: " ▼"; }
-        .loading, .error { text-align: center; font-size: 1.1em; padding: 15px; border-radius: 4px; }
-        .loading { color: #007bff; }
-        .error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; }
-        section { padding: 20px 0; border-bottom: 1px dashed #ccc; }
-        section:last-of-type { border-bottom: none; }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        th {
+            background-color: #1f2937;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>📊 Herramienta BI para Matriz Comparativa</h1>
-        <p class="loading" id="loading-message">Cargando datos y generando visualizaciones...</p>
-
-        <section id="chart-section">
-            <h2>📈 Gráfico de Resumen (Matriz General)</h2>
-            <div id="chart-container">
-                <canvas id="generalChart"></canvas>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="mb-8 bg-white rounded-lg shadow-md p-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="logos/unillanos.png" alt="Universidad de los Llanos" class="h-16 md:h-20">
+                    <img src="logos/alcaldia.png" alt="Alcaldía de Villavicencio" class="h-16 md:h-20">
+                </div>
+                <div class="text-center md:text-right">
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Dashboard Analítico BI</h1>
+                    <p class="text-gray-600 text-lg">Matriz Comparativa CERS 2025 - Villavicencio</p>
+                </div>
             </div>
-        </section>
+        </header>
 
-        <section id="general-section">
-            <h2>Matriz GENERAL (Referencia de Datos)</h2>
-            <div id="general-table"></div>
-        </section>
-        
-        <section id="nacional-section">
-            <h2>Matriz NACIONAL</h2>
-            <div id="nacional-table"></div>
-        </section>
+        <div class="mb-6 flex flex-wrap gap-2 border-b-2 border-gray-200">
+            <button onclick="switchTab('nacional')" class="tab-button active px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-nacional">
+                📊 Nacional
+            </button>
+            <button onclick="switchTab('internacional')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-internacional">
+                🌎 Internacional
+            </button>
+            <button onclick="switchTab('general')" class="tab-button px-6 py-3 font-semibold rounded-t-lg transition-all" id="tab-general">
+                📈 General
+            </button>
+        </div>
 
-        <section id="internacional-section">
-            <h2>Matriz INTERNACIONAL</h2>
-            <div id="internacional-table"></div>
-        </section>
-        
+        <div id="content-nacional" class="tab-content active">
+            <div class="loading" id="loading-nacional">
+                <div class="spinner"></div>
+            </div>
+            <div id="data-nacional" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-nacional"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-nacional-1"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-nacional-2"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
+                    <input type="text" id="search-nacional" class="search-input" placeholder="🔍 Buscar en los datos...">
+                    <div class="overflow-x-auto">
+                        <table id="table-nacional"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-internacional" class="tab-content">
+            <div class="loading" id="loading-internacional">
+                <div class="spinner"></div>
+            </div>
+            <div id="data-internacional" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-internacional"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-internacional-1"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-internacional-2"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
+                    <input type="text" id="search-internacional" class="search-input" placeholder="🔍 Buscar en los datos...">
+                    <div class="overflow-x-auto">
+                        <table id="table-internacional"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-general" class="tab-content">
+            <div class="loading" id="loading-general">
+                <div class="spinner"></div>
+            </div>
+            <div id="data-general" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="kpis-general"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribución por Categoría</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-general-1"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencias y Comparativas</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-general-2"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Datos Detallados</h3>
+                    <input type="text" id="search-general" class="search-input" placeholder="🔍 Buscar en los datos...">
+                    <div class="overflow-x-auto">
+                        <table id="table-general"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm md:text-base">
+                Elaborado por <span class="font-semibold">Catalina Santos</span> - Estudiante de enfermería IX Semestre
+            </p>
+        </div>
+    </footer>
+
     <script>
-        // --- CONFIGURACIÓN DE MATRICES ---
-        const MATRICES = [
-            // El orden se cambia para procesar GENERAL primero, si es la fuente principal del gráfico.
-            {
-                name: "GENERAL",
-                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv",
-                targetId: "general-table",
-                skipRows: 1,
-                isChartSource: true // Marcamos esta como la fuente de datos para el gráfico
-            },
-            {
-                name: "NACIONAL",
-                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv",
-                targetId: "nacional-table",
-                skipRows: 1
-            },
-            {
-                name: "INTERNACIONAL",
-                url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv",
-                targetId: "internacional-table",
-                skipRows: 1
+        const DATA_SOURCES = {
+            nacional: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=563980265&single=true&output=csv',
+            internacional: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=804794750&single=true&output=csv',
+            general: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3D2ho2jJV0hYbNOzVweclC4SYDifw5AGMEV8HO318cgxpl9tz4nkocubdFCrxxOX7Z8DZ21Ex-1IG/pub?gid=24842196&single=true&output=csv'
+        };
+
+        let dataCache = {};
+        let chartsCache = {};
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            if (!dataCache[tabName]) {
+                loadData(tabName);
             }
-        ];
+        }
 
-        // --- FUNCIONES CENTRALES (parseCSV y renderTable se mantienen igual) ---
-
-        function parseCSV(csvText, skipRows = 0) {
-            const rows = csvText.trim().split('\n').filter(row => row.trim() !== '');
-            const dataRows = rows.slice(skipRows);
-            return dataRows.map(row => {
-                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => {
-                    let content = cell.trim();
-                    if (content.startsWith('"') && content.endsWith('"')) {
-                        content = content.slice(1, -1);
-                    }
-                    return content.trim();
-                });
+        function loadData(source) {
+            Papa.parse(DATA_SOURCES[source], {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    dataCache[source] = results.data.filter(row => {
+                        return Object.values(row).some(val => val && val.toString().trim() !== '');
+                    });
+                    renderDashboard(source, dataCache[source]);
+                },
+                error: function(error) {
+                    console.error('Error loading data:', error);
+                    document.getElementById(`loading-${source}`).innerHTML = 
+                        '<div class="text-red-600 text-center"><p class="text-xl">❌ Error al cargar los datos</p><p class="mt-2">Por favor, verifica la conexión a internet</p></div>';
+                }
             });
         }
 
-        function renderTable(data, targetId) {
-            const container = document.getElementById(targetId);
-            if (!data || data.length < 2) {
-                container.innerHTML = '<p class="error">No se encontraron datos válidos o el archivo está vacío (después de saltar la fila fantasma).</p>';
+        function renderDashboard(source, data) {
+            document.getElementById(`loading-${source}`).style.display = 'none';
+            document.getElementById(`data-${source}`).style.display = 'block';
+
+            renderKPIs(source, data);
+            renderCharts(source, data);
+            renderTable(source, data);
+            setupSearch(source, data);
+        }
+
+        function renderKPIs(source, data) {
+            const kpisContainer = document.getElementById(`kpis-${source}`);
+            const columns = Object.keys(data[0] || {});
+            
+            const kpis = [
+                { label: 'Total de Registros', value: data.length, icon: '📊' },
+                { label: 'Columnas de Datos', value: columns.length, icon: '📋' },
+                { label: 'Campos Completos', value: calculateCompleteness(data), icon: '✅' },
+                { label: 'Última Actualización', value: new Date().toLocaleDateString('es-ES'), icon: '📅' }
+            ];
+
+            kpisContainer.innerHTML = kpis.map(kpi => `
+                <div class="kpi-card">
+                    <div class="text-3xl mb-2">${kpi.icon}</div>
+                    <div class="text-3xl font-bold mb-1">${kpi.value}</div>
+                    <div class="text-sm opacity-90">${kpi.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function calculateCompleteness(data) {
+            if (data.length === 0) return '0%';
+            const totalCells = data.length * Object.keys(data[0]).length;
+            const filledCells = data.reduce((sum, row) => {
+                return sum + Object.values(row).filter(val => val && val.toString().trim() !== '').length;
+            }, 0);
+            return Math.round((filledCells / totalCells) * 100) + '%';
+        }
+
+        function renderCharts(source, data) {
+            if (chartsCache[source]) {
+                chartsCache[source].forEach(chart => chart.destroy());
+            }
+            chartsCache[source] = [];
+
+            const columns = Object.keys(data[0] || {});
+            const numericColumns = columns.filter(col => {
+                return data.some(row => !isNaN(parseFloat(row[col])));
+            });
+
+            const categoricalColumns = columns.filter(col => !numericColumns.includes(col));
+
+            if (categoricalColumns.length > 0) {
+                const firstCatColumn = categoricalColumns[0];
+                const distribution = {};
+                data.forEach(row => {
+                    const value = row[firstCatColumn] || 'Sin categoría';
+                    distribution[value] = (distribution[value] || 0) + 1;
+                });
+
+                const labels = Object.keys(distribution).slice(0, 10);
+                const values = labels.map(label => distribution[label]);
+
+                const ctx1 = document.getElementById(`chart-${source}-1`).getContext('2d');
+                const chart1 = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: firstCatColumn,
+                            data: values,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+                chartsCache[source].push(chart1);
+            }
+
+            if (numericColumns.length > 0) {
+                const numCol = numericColumns[0];
+                const chartData = data.slice(0, 20).map((row, idx) => ({
+                    x: idx + 1,
+                    y: parseFloat(row[numCol]) || 0
+                }));
+
+                const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
+                const chart2 = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: numCol,
+                            data: chartData,
+                            borderColor: 'rgba(168, 85, 247, 1)',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' }
+                        },
+                        scales: {
+                            x: { type: 'linear', title: { display: true, text: 'Registro' } },
+                            y: { beginAtZero: true, title: { display: true, text: numCol } }
+                        }
+                    }
+                });
+                chartsCache[source].push(chart2);
+            } else {
+                if (categoricalColumns.length > 1) {
+                    const secondCatColumn = categoricalColumns[1];
+                    const distribution = {};
+                    data.forEach(row => {
+                        const value = row[secondCatColumn] || 'Sin categoría';
+                        distribution[value] = (distribution[value] || 0) + 1;
+                    });
+
+                    const labels = Object.keys(distribution).slice(0, 8);
+                    const values = labels.map(label => distribution[label]);
+
+                    const ctx2 = document.getElementById(`chart-${source}-2`).getContext('2d');
+                    const chart2 = new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: [
+                                    'rgba(239, 68, 68, 0.7)',
+                                    'rgba(59, 130, 246, 0.7)',
+                                    'rgba(34, 197, 94, 0.7)',
+                                    'rgba(168, 85, 247, 0.7)',
+                                    'rgba(251, 191, 36, 0.7)',
+                                    'rgba(236, 72, 153, 0.7)',
+                                    'rgba(20, 184, 166, 0.7)',
+                                    'rgba(249, 115, 22, 0.7)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'right' }
+                            }
+                        }
+                    });
+                    chartsCache[source].push(chart2);
+                }
+            }
+        }
+
+        function renderTable(source, data) {
+            const table = document.getElementById(`table-${source}`);
+            if (data.length === 0) {
+                table.innerHTML = '<p class="text-center text-gray-500 p-4">No hay datos disponibles</p>';
                 return;
             }
 
-            const headers = data[0];
-            const rows = data.slice(1);
-
-            let html = '<table><thead><tr>';
-            headers.forEach((header, index) => {
-                const headerText = header.replace(/\s+/g, ' ').trim() || `Columna ${index + 1}`;
-                html += `<th data-column-index="${index}">${headerText}</th>`;
+            const columns = Object.keys(data[0]);
+            
+            let html = '<thead><tr>';
+            columns.forEach(col => {
+                html += `<th class="cursor-pointer" onclick="sortTable('${source}', '${col}')">${col} ↕️</th>`;
             });
-            html += '</tr></thead><tbody>';
-
-            rows.forEach(row => {
+            html += '</tr></thead><tbody id="tbody-${source}">';
+            
+            data.forEach(row => {
                 html += '<tr>';
-                row.forEach(cell => {
-                    const cellContent = cell.trim() || '&nbsp;';
-                    html += `<td>${cellContent}</td>`;
+                columns.forEach(col => {
+                    html += `<td>${row[col] || ''}</td>`;
                 });
                 html += '</tr>';
             });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        // --- FUNCIÓN DE GRÁFICOS ---
-
-        /**
-         * Crea un gráfico de barras simple usando los datos de una matriz.
-         * ESTA FUNCIÓN DEBE SER PERSONALIZADA según la estructura EXACTA de tu CSV.
-         * * @param {Array<Array<string>>} data - Datos parseados de la matriz.
-         * @param {number} labelColIndex - Índice de la columna que será usada como etiqueta (eje X).
-         * @param {number} valueColIndex - Índice de la columna que será usada como valor (eje Y).
-         * @param {string} chartTitle - Título del gráfico.
-         */
-        function createBarChart(data, labelColIndex, valueColIndex, chartTitle) {
-            const chartData = data.slice(1); // Datos sin encabezados
-
-            // 1. Extraer Etiquetas y Valores
-            const labels = chartData.map(row => row[labelColIndex] || 'N/A');
-            const values = chartData.map(row => {
-                // Intenta convertir el valor a un número, eliminando separadores de miles (puntos)
-                // y usando coma o punto como separador decimal.
-                let val = row[valueColIndex].replace(/\./g, '').replace(',', '.');
-                return parseFloat(val) || 0; // Si no es un número válido, usa 0
-            });
-
-            // 2. Preparar el contexto del canvas
-            const ctx = document.getElementById('generalChart').getContext('2d');
             
-            // 3. Destruir gráfico anterior si existe (para prevenir errores al recargar)
-            if (window.generalChartInstance) {
-                window.generalChartInstance.destroy();
-            }
-
-            // 4. Crear el nuevo gráfico
-            window.generalChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: data[0][valueColIndex] || 'Valor', // Usa el encabezado de la columna como etiqueta
-                        data: values,
-                        backgroundColor: 'rgba(42, 82, 152, 0.8)', // Color de las barras
-                        borderColor: 'rgba(42, 82, 152, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: chartTitle
-                        },
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+            html += '</tbody>';
+            table.innerHTML = html;
         }
-        
-        // --- FUNCIÓN DE CARGA Y RENDERIZADO (MODIFICADA) ---
 
-        async function fetchAndRenderMatrix(matrixConfig) {
-            const container = document.getElementById(matrixConfig.targetId);
-            container.innerHTML = `<p class="loading">Cargando ${matrixConfig.name}...</p>`;
-
-            try {
-                const response = await fetch(matrixConfig.url);
-                if (!response.ok) {
-                    throw new Error(`Error HTTP! Estado: ${response.status}`);
-                }
-                const csvText = await response.text();
-                
-                const data = parseCSV(csvText, matrixConfig.skipRows);
-                
-                renderTable(data, matrixConfig.targetId);
-
-                // Si esta matriz está marcada como fuente del gráfico, generarlo.
-                if (matrixConfig.isChartSource) {
-                    // *** CONFIGURACIÓN CLAVE PARA EL GRÁFICO ***
-                    // ** DEBES AJUSTAR ESTOS ÍNDICES **
-                    // 1. Columna de Etiquetas (ej. Nombre del Competidor/Ítem)
-                    const labelColumn = 0; 
-                    // 2. Columna de Valores (ej. Puntaje Total/Resultado Clave)
-                    const valueColumn = 5; 
-                    // Título del Gráfico
-                    const chartTitle = `Comparativa Clave: ${data[0][labelColumn]} vs. ${data[0][valueColumn]}`;
-                    
-                    createBarChart(data, labelColumn, valueColumn, chartTitle);
-                }
-                
-            } catch (error) {
-                console.error(`Error al cargar la matriz ${matrixConfig.name}:`, error);
-                container.innerHTML = `<p class="error">⚠️ Error al cargar los datos de la matriz ${matrixConfig.name}. Detalle: ${error.message}</p>`;
-            }
-        }
-        
-        // --- FUNCIONES DE ORDENAMIENTO (Mantenidas) ---
-        function addTableSorting() {
-            document.querySelectorAll('table').forEach(table => {
-                const headers = table.querySelectorAll('th');
-                headers.forEach(header => {
-                    header.addEventListener('click', () => {
-                        const columnIndex = header.getAttribute('data-column-index');
-                        sortTableByColumn(table, parseInt(columnIndex));
-                    });
+        function setupSearch(source, data) {
+            const searchInput = document.getElementById(`search-${source}`);
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredData = data.filter(row => {
+                    return Object.values(row).some(val => 
+                        val && val.toString().toLowerCase().includes(searchTerm)
+                    );
                 });
+                renderTable(source, filteredData);
             });
         }
-        
-        function sortTableByColumn(table, column) {
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            
-            let direction = 'asc';
-            const currentColumn = table.getAttribute('data-sort-column');
-            const currentDirection = table.getAttribute('data-sort-direction');
 
-            if (currentColumn == column && currentDirection === 'asc') {
-                direction = 'desc';
-            }
+        function sortTable(source, column) {
+            const data = dataCache[source];
+            const isNumeric = !isNaN(parseFloat(data[0][column]));
             
-            table.setAttribute('data-sort-column', column);
-            table.setAttribute('data-sort-direction', direction);
-            table.querySelectorAll('th').forEach(th => th.removeAttribute('data-sort-direction'));
-            table.querySelector(`th[data-column-index="${column}"]`).setAttribute('data-sort-direction', direction);
-            
-            const sortedRows = rows.sort((rowA, rowB) => {
-                const cellA = rowA.querySelectorAll('td')[column].textContent.trim();
-                const cellB = rowB.querySelectorAll('td')[column].textContent.trim();
+            data.sort((a, b) => {
+                const aVal = a[column];
+                const bVal = b[column];
                 
-                const valA = parseFloat(cellA.replace(/\./g, '').replace(',', '.'));
-                const valB = parseFloat(cellB.replace(/\./g, '').replace(',', '.'));
-                
-                let comparison;
-                if (!isNaN(valA) && !isNaN(valB)) {
-                    comparison = valA - valB;
+                if (isNumeric) {
+                    return parseFloat(aVal || 0) - parseFloat(bVal || 0);
                 } else {
-                    comparison = cellA.localeCompare(cellB, 'es', { numeric: true, sensitivity: 'base' });
+                    return (aVal || '').toString().localeCompare((bVal || '').toString());
                 }
-                
-                return direction === 'asc' ? comparison : comparison * -1;
             });
-
-            while (tbody.firstChild) {
-                tbody.removeChild(tbody.firstChild);
-            }
-            tbody.append(...sortedRows);
-        }
-
-        async function loadAllMatrices() {
-            const generalLoading = document.getElementById('loading-message');
-            generalLoading.textContent = 'Procesando...';
             
-            try {
-                const promises = MATRICES.map(fetchAndRenderMatrix);
-                await Promise.all(promises);
-                
-                generalLoading.style.display = 'none';
-                addTableSorting();
-            } catch(e) {
-                 generalLoading.textContent = 'Fallo en la carga. Revisa los errores en la consola.';
-            }
+            renderTable(source, data);
         }
 
-        document.addEventListener('DOMContentLoaded', loadAllMatrices);
+        loadData('nacional');
     </script>
 </body>
 </html>
