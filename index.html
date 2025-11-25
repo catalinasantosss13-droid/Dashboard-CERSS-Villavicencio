@@ -3,628 +3,202 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard CERS – Matriz y Validación</title>
+<title>Dashboard CERS – Villavicencio (auto-CSV)</title>
 
-<!-- Fuentes y librerías -->
+<!-- Fuentes y libs -->
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
 <style>
-  :root{
-    --primario:#1a4369;
-    --sec:#00bcd4;
-    --alto:#28a745;
-    --medio:#ffc107;
-    --bajo:#dc3545;
-    --fondo:#eef1f5;
-    --card:#ffffff;
-    --muted:#6c757d;
-  }
-  *{box-sizing:border-box}
-  body{font-family:'Montserrat',sans-serif;margin:0;background:var(--fondo);color:#222}
-  header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--card);border-bottom:5px solid var(--primario)}
-  header .center{flex:1;text-align:center}
-  header img{height:54px}
-  h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
-  .subtitle{margin:3px 0 0;color:var(--muted);font-size:.9rem}
+:root{
+  --primario:#1a4369;
+  --sec:#00bcd4;
+  --alto:#28a745;
+  --medio:#ffc107;
+  --bajo:#dc3545;
+  --fondo:#eef1f5;
+  --card:#ffffff;
+  --muted:#6c757d;
+}
+*{box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;margin:0;background:var(--fondo);color:#222}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--card);border-bottom:5px solid var(--primario)}
+header img{height:54px}
+.header-center{text-align:center;flex:1}
+h1{margin:0;color:var(--primario);font-size:1.4rem;font-weight:700}
+.subtitle{color:var(--muted);font-size:.9rem;margin-top:4px}
 
-  /* Tabs */
-  .tabs{display:flex;gap:10px;justify-content:center;padding:14px;background:var(--primario);flex-wrap:wrap}
-  .tabs button{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
-  .tabs button.active{background:var(--sec);color:#003242}
-  .container{max-width:1300px;margin:26px auto;padding:0 16px}
+/* Tabs */
+.tabs{display:flex;gap:10px;justify-content:center;padding:12px;background:var(--primario);flex-wrap:wrap}
+.tab-btn{background:#163653;color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700}
+.tab-btn.active{background:var(--sec);color:#003242}
+.container{max-width:1300px;margin:20px auto;padding:0 16px}
 
-  .tab-panel{display:none;background:var(--card);padding:22px;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
-  .tab-panel.active{display:block}
-  .title{color:var(--primario);font-size:1.25rem;font-weight:700;margin-bottom:6px}
-  .muted{color:var(--muted);margin-bottom:16px}
+/* Panels */
+.panel{display:none;background:var(--card);padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06);margin-bottom:20px}
+.panel.active{display:block}
+.title{color:var(--primario);font-weight:700;font-size:1.15rem;margin-bottom:6px}
+.muted{color:var(--muted);margin-bottom:12px}
 
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .card{background:#fff;padding:14px;border-radius:10px;border:1px solid #e7eef6}
-  .card h3{margin:0 0 8px;color:#163653;font-size:1rem}
-  .placeholder{min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--muted);border:2px dashed #d8e6ef;border-radius:8px;background:#fbfeff}
+/* grid & cards */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:12px}
+.card{background:#fff;padding:12px;border-radius:8px;border:1px solid #e9f0f6}
+.kpi{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:#fafcff;border-left:6px solid var(--primario)}
+.kpi .label{font-size:.9rem;color:var(--muted)}
+.kpi .value{font-size:1.6rem;font-weight:800}
 
-  table{width:100%;border-collapse:collapse;background:#fff}
-  th,td{padding:10px;border-bottom:1px solid #eef4fa;text-align:left;font-size:.95rem}
-  thead th{background:var(--primario);color:white;font-weight:700}
-  tbody tr:nth-child(even){background:#fbfdff}
+/* table */
+.table-wrap{overflow:auto;border-radius:8px;border:1px solid #e6eef6;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:10px;border-bottom:1px solid #eef6fb;text-align:left}
+thead th{background:var(--primario);color:#fff}
+tbody tr:nth-child(even){background:#fbfdff}
 
-  .kpi-row{display:flex;gap:14px;flex-wrap:wrap}
-  .kpi{flex:1;min-width:150px;background:#fff;padding:14px;border-radius:10px;border-left:6px solid var(--primario);box-shadow:0 3px 10px rgba(8,16,28,0.04)}
-  .kpi .value{font-size:1.6rem;font-weight:800}
-  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* validation */
+.validation-list{max-height:420px;overflow:auto;border-radius:8px;padding:8px;background:#fff;border:1px solid #e6eef6}
+.validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f3f8fb}
+.validation-item:last-child{border-bottom:0}
+.btn{padding:8px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
+.ok{background:var(--alto);color:#fff}
+.pend{background:var(--medio);color:#003242}
+.rej{background:var(--bajo);color:#fff}
+.small{font-size:.85rem;color:var(--muted)}
 
-  /* Validation list */
-  .validation-list{max-height:360px;overflow:auto;border-radius:8px;border:1px solid #e6eef6;padding:8px;background:#fff}
-  .validation-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid #f1f6fb}
-  .validation-item:last-child{border-bottom:0}
-  .validation-item button{padding:6px 10px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
-  .ok{background:var(--alto);color:white}
-  .pend{background:var(--medio);color:#003242}
-  .rej{background:var(--bajo);color:white}
-
-  .small{font-size:.85rem;color:var(--muted)}
-  .export-btn{background:var(--primario);color:white;padding:10px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
-
-  @media (max-width:900px){
-    .grid-2{grid-template-columns:1fr}
-    .grid-3{grid-template-columns:1fr}
-    header{flex-direction:column;gap:8px}
-    .tabs{padding:8px}
-  }
+/* responsive */
+@media (max-width:900px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  header{flex-direction:column;gap:10px}
+  .tabs{padding:8px}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <img src="logos/alcaldia.png" alt="Alcaldía">
-  <div class="center">
-    <h1>Dashboard Integral de Alineación CERS / OPS</h1>
-    <div class="subtitle">Secretaría de Salud de Villavicencio — Análisis de matriz y validación técnica</div>
+  <img src="logos/alcaldia.png" alt="alcaldia">
+  <div class="header-center">
+    <h1>Dashboard de Alineación CERS / OPS — Villavicencio</h1>
+    <div class="subtitle">Carga automática desde las hojas publicadas (CSV)</div>
   </div>
-  <img src="logos/unillanos.png" alt="Unillanos">
+  <img src="logos/unillanos.png" alt="unillanos">
 </header>
 
-<!-- TABS -->
-<div class="tabs" role="tablist" aria-label="Secciones del dashboard">
-  <button class="tab-btn active" data-tab="tab-nal">Referentes Nacionales</button>
-  <button class="tab-btn" data-tab="tab-int">Referentes Internacionales</button>
-  <button class="tab-btn" data-tab="tab-matriz">Matriz General</button>
-  <button class="tab-btn" data-tab="tab-val">Validación Técnica</button>
+<div class="tabs" role="tablist" aria-label="Secciones">
+  <button class="tab-btn active" data-target="panel-nal">Referentes Nacionales</button>
+  <button class="tab-btn" data-target="panel-int">Referentes Internacionales</button>
+  <button class="tab-btn" data-target="panel-mat">Matriz General</button>
+  <button class="tab-btn" data-target="panel-val">Validación Técnica</button>
 </div>
 
 <div class="container">
 
-  <!-- TAB: Nacionales -->
-  <section id="tab-nal" class="tab-panel active">
+  <!-- NACIONALES -->
+  <section id="panel-nal" class="panel active" role="region" aria-label="Referentes Nacionales">
     <div class="title">Referentes Nacionales</div>
-    <div class="muted">Análisis y visualizaciones extraídas de la hoja <strong>MATRIZ REFERENTES NACIONALES</strong></div>
+    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES NACIONALES</strong></div>
 
-    <div class="grid-3" style="margin-bottom:16px">
-      <div class="card">
-        <h3>KPIs nacionales</h3>
-        <div id="kpis-nal" class="kpi-row">
-          <div class="kpi"><div class="small">Total Ítems</div><div id="nal-total" class="value">—</div></div>
-          <div class="kpi"><div class="small">Alineamiento ≥ 80%</div><div id="nal-alto" class="value">—</div></div>
-          <div class="kpi"><div class="small">Alineamiento < 40%</div><div id="nal-bajo" class="value">—</div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Distribución por nivel</h3>
-        <canvas id="chartNalLevels" height="160"></canvas>
-      </div>
-
-      <div class="card">
-        <h3>Alineamiento % — Líneas</h3>
-        <canvas id="chartNalLines" height="160"></canvas>
-      </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <div class="small">Fuente:</div>
+      <a id="link-nal" href="#" target="_blank" class="small">CSV Nacional</a>
+      <button id="refresh-nal" class="btn" style="background:#163653;color:#fff">Recargar</button>
     </div>
 
-    <div class="card">
-      <h3>Tabla: Referentes Nacionales</h3>
-      <div style="margin:10px 0" class="controls">
+    <div class="grid-3" style="margin-bottom:12px">
+      <div class="card kpi"><div class="label">Total ítems</div><div id="nal-total" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Alto (≥80%)</div><div id="nal-alto" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Bajo (<40%)</div><div id="nal-bajo" class="value">—</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card"><h4 style="margin:0 0 8px">Distribución por nivel</h4><canvas id="chartNalLevels" height="200"></canvas></div>
+      <div class="card"><h4 style="margin:0 0 8px">Alineamiento % por línea</h4><canvas id="chartNalLines" height="200"></canvas></div>
+    </div>
+
+    <div style="margin-top:14px" class="card">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
         <label class="small">Filtrar nivel:</label>
-        <select id="filter-nal-level"><option value="all">Todos</option><option value="Alto">Alto</option><option value="Medio">Medio</option><option value="Bajo">Bajo</option></select>
-        <button id="refresh-nal" class="export-btn">Actualizar</button>
+        <select id="filter-nal"><option value="all">Todos</option><option>Alto</option><option>Medio</option><option>Bajo</option></select>
+        <button id="export-nal" class="btn" style="background:var(--primario);color:#fff">Exportar CSV</button>
       </div>
-      <div class="table-container">
-        <table id="table-nal"><thead><tr><th>Línea / Ítem</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
-      </div>
+      <div class="table-wrap" id="tablewrap-nal"><table id="table-nal"><thead><tr><th>Línea / Ítem</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
     </div>
   </section>
 
-  <!-- TAB: Internacionales -->
-  <section id="tab-int" class="tab-panel">
+  <!-- INTERNACIONALES -->
+  <section id="panel-int" class="panel" role="region" aria-label="Referentes Internacionales">
     <div class="title">Referentes Internacionales</div>
-    <div class="muted">Análisis extraído de la hoja <strong>MATRIZ REFERENTES INTERNACIONAL</strong></div>
+    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ REFERENTES INTERNACIONAL</strong></div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <div class="small">Fuente:</div>
+      <a id="link-int" href="#" target="_blank" class="small">CSV Internacional</a>
+      <button id="refresh-int" class="btn" style="background:#163653;color:#fff">Recargar</button>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="card kpi"><div class="label">Total ítems</div><div id="int-total" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Alto (≥80%)</div><div id="int-alto" class="value">—</div></div>
+    </div>
+
+    <div class="card" style="margin-top:8px">
+      <h4 style="margin:0 0 8px">Comparativo por nivel</h4>
+      <canvas id="chartIntCompare" height="220"></canvas>
+    </div>
+
+    <div style="margin-top:12px" class="card">
+      <div class="table-wrap" id="tablewrap-int"><table id="table-int"><thead><tr><th>Ítem</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- MATRIZ GENERAL -->
+  <section id="panel-mat" class="panel" role="region" aria-label="Matriz General">
+    <div class="title">Matriz General Consolidada</div>
+    <div class="muted">Datos cargados desde la hoja pública: <strong>MATRIZ GENERAL</strong></div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <div class="small">Fuente:</div>
+      <a id="link-mat" href="#" target="_blank" class="small">CSV Matriz general</a>
+      <button id="refresh-mat" class="btn" style="background:#163653;color:#fff">Recargar</button>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="card kpi"><div class="label">Promedio de alineamiento</div><div id="mat-prom" class="value">—</div></div>
+      <div class="card kpi"><div class="label">Ítems totales</div><div id="mat-total" class="value">—</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <h4 style="margin:0 0 8px">Mapa de calor / Barras</h4>
+      <canvas id="chartMatBars" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <label class="small">Buscar:</label>
+        <input id="search-mat" type="search" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #e6eef6;flex:1">
+        <button id="export-mat" class="btn" style="background:var(--primario);color:#fff">Exportar CSV</button>
+      </div>
+      <div class="table-wrap" id="tablewrap-mat"><table id="table-mat"><thead><tr><th>Línea estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- VALIDACION -->
+  <section id="panel-val" class="panel" role="region" aria-label="Validación técnica">
+    <div class="title">Validación Técnica — Comité</div>
+    <div class="muted">Marca cada ítem como <strong>Aprobado</strong>, <strong>Pendiente</strong> o <strong>No aprobado</strong>. Guarda en local y descarga CSV.</div>
+
+    <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <button id="save-valid" class="btn" style="background:var(--primario);color:#fff">Guardar local</button>
+      <button id="download-valid" class="btn" style="background:var(--sec);color:#003242">Descargar CSV</button>
+      <button id="clear-valid" class="btn" style="background:#444;color:#fff">Limpiar</button>
+    </div>
 
     <div class="grid-2">
       <div class="card">
-        <h3>KPIs internacionales</h3>
-        <div id="kpis-int" class="kpi-row">
-          <div class="kpi"><div class="small">Total Ítems</div><div id="int-total" class="value">—</div></div>
-          <div class="kpi"><div class="small">Alineamiento ≥ 80%</div><div id="int-alto" class="value">—</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Comparativo por eje</h3>
-        <canvas id="chartIntCompare" height="180"></canvas>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:18px">
-      <h3>Tabla: Referentes Internacionales</h3>
-      <div class="table-container">
-        <table id="table-int"><thead><tr><th>Ítem</th><th>%</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB: Matriz General -->
-  <section id="tab-matriz" class="tab-panel">
-    <div class="title">Matriz General Consolidada</div>
-    <div class="muted">Datos extraídos de la hoja <strong>MATRIZ GENERAL</strong>. (Últimas 2 pestañas del archivo están <em>ignoradas</em>.)</div>
-
-    <div class="card" style="margin-bottom:18px">
-      <h3>Resumen y KPIs</h3>
-      <div class="grid-2">
-        <div>
-          <div class="small">Promedio de alineamiento (%)</div>
-          <div id="mat-prom" class="value">—</div>
-          <div style="height:10px"></div>
-          <div class="small">Conteo por nivel</div>
-          <ul id="mat-counts" class="small"></ul>
-        </div>
-        <div>
-          <canvas id="chartMatBars" height="160"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Tabla: Matriz General</h3>
-      <div style="margin:10px 0" class="controls">
-        <label class="small">Buscar:</label>
-        <input type="search" id="search-matriz" placeholder="Escribe palabra clave..." style="padding:8px;border-radius:6px;border:1px solid #daeaf3">
-        <button id="export-matriz" class="export-btn">Exportar CSV</button>
-      </div>
-      <div class="table-container" style="margin-top:10px">
-        <table id="table-matriz"><thead><tr><th>Línea Estratégica / Eje</th><th>Alineamiento (%)</th><th>Nivel</th><th>Recomendación</th></tr></thead><tbody><tr><td colspan="4" class="small">Cargando...</td></tr></tbody></table>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB: Validación técnica -->
-  <section id="tab-val" class="tab-panel">
-    <div class="title">Validación Técnica — Comité</div>
-    <div class="muted">Marca cada ítem como <strong>Aprobado</strong>, <strong>Pendiente</strong> o <strong>No aprobado</strong>. Descarga el resultado para consolidar en acta.</div>
-
-    <div class="grid-2" style="margin-bottom:18px">
-      <div class="card">
-        <h3>Lista de ítems (matriz general)</h3>
-        <div id="validation-list" class="validation-list">
-          <div class="small">Cargando ítems para validación...</div>
-        </div>
+        <h4 style="margin:0 0 8px">Lista de ítems</h4>
+        <div id="validation-list" class="validation-list"><div class="small">Cargando ítems de la matriz...</div></div>
       </div>
 
       <div class="card">
-        <h3>Acciones</h3>
-        <p class="small">Guarda en el navegador (localStorage) para continuar revisando en la sesión; descarga CSV para compartir con el comité.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button id="save-valid" class="export-btn">Guardar (local)</button>
-          <button id="download-valid" class="export-btn">Descargar CSV</button>
-          <button id="clear-valid" class="export-btn" style="background:#444">Limpiar</button>
-        </div>
-        <hr style="margin:12px 0">
-        <div class="small">Resumen rápido</div>
-        <ul id="val-summary" class="small"></ul>
-      </div>
-    </div>
-
-  </section>
-
-</div> <!-- /container -->
-
-<script>
-/*
-  Ruta del archivo Excel (local en entorno de ejecución).
-  Según tu instrucción, usamos la ruta del archivo que subiste:
-*/
-const FILE_PATH = '/mnt/data/MATRIZ COMPARATIVA CERS 2025 VILLAVICENCIO (5).xlsx';
-
-/* ---------- UTIL: leer workbook como ArrayBuffer y parsear con SheetJS ---------- */
-async function loadWorkbook(path){
-  try {
-    // fetch con ruta local: el entorno donde ejecutes esto debe servir el archivo.
-    const res = await fetch(path);
-    if(!res.ok) throw new Error('No se pudo acceder al archivo. Revisa la ruta: ' + path);
-    const ab = await res.arrayBuffer();
-    const wb = XLSX.read(ab, {type: 'array'});
-    return wb;
-  } catch (e) {
-    console.error('Error lectura workbook:', e);
-    throw e;
-  }
-}
-
-/* ---------- Leer una hoja como JSON ---------- */
-function sheetToJson(wb, sheetName){
-  const ws = wb.Sheets[sheetName];
-  if(!ws) return [];
-  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
-  return json;
-}
-
-/* ---------- Helpers para crear tablas y gráficos ---------- */
-function renderTableFromJson(tableId, data, cols){
-  const tbody = document.querySelector(tableId + ' tbody');
-  if(!data || data.length===0){
-    tbody.innerHTML = '<tr><td colspan="'+cols.length+'" class="small">No hay datos</td></tr>';
-    return;
-  }
-  const html = data.map(row => {
-    return `<tr>${cols.map(c=>`<td>${(row[c]!==undefined?row[c]:'')}</td>`).join('')}</tr>`;
-  }).join('');
-  tbody.innerHTML = html;
-}
-
-function toNumber(v){
-  if(v===null||v==='') return 0;
-  const n = parseFloat(String(v).replace('%','').replace(',','.')) || 0;
-  return n;
-}
-
-/* ---------- Variables globales UI ---------- */
-let workbook = null;
-let sheetNames = [];
-let sheetsToUse = []; // todas menos las últimas 2
-
-/* ---------- CARGA PRINCIPAL ---------- */
-async function initDashboard(){
-  try {
-    workbook = await loadWorkbook(FILE_PATH);
-    sheetNames = workbook.SheetNames.slice(); // copia
-    // ignorar las últimas 2 pestañas
-    sheetsToUse = sheetNames.slice(0, Math.max(0, sheetNames.length - 2));
-    console.info('SheetNames:', sheetNames);
-    console.info('Sheets usadas (se ignoran últimas 2):', sheetsToUse);
-
-    // intentamos cargar las hojas clave por nombre (seguras) si están disponibles
-    const hojaMatriz = sheetNames.find(s => s.toUpperCase().includes('MATRIZ GENERAL'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('MATRIZ GENERAL'));
-    const hojaNal = sheetNames.find(s => s.toUpperCase().includes('MATRIZ REFERENTES NACIONALES'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('NACIONALES'));
-    const hojaInt = sheetNames.find(s => s.toUpperCase().includes('MATRIZ REFERENTES INTERNACIONAL'.toUpperCase())) || sheetNames.find(s => s.toUpperCase().includes('INTERNACIONAL'));
-
-    // fallback: si no existen, busca entre sheetsToUse por palabras clave
-    const matName = hojaMatriz || sheetsToUse.find(s=>s.toUpperCase().includes('MATRIZ GENERAL')) || sheetsToUse[0];
-    const nalName = hojaNal || sheetsToUse.find(s=>s.toUpperCase().includes('NACIONALES')) || sheetsToUse[1] || sheetsToUse[0];
-    const intName = hojaInt || sheetsToUse.find(s=>s.toUpperCase().includes('INTERNACIONAL')) || sheetsToUse[2] || sheetsToUse[0];
-
-    // extraer JSON
-    const dataMatriz = sheetToJson(workbook, matName);
-    const dataNal = sheetToJson(workbook, nalName);
-    const dataInt = sheetToJson(workbook, intName);
-
-    // render en UI
-    setupNacionales(dataNal);
-    setupInternacionales(dataInt);
-    setupMatriz(dataMatriz);
-    setupValidacion(dataMatriz);
-
-  } catch (err) {
-    alert('Error cargando workbook: '+err.message + ' — revisa consola.');
-    console.error(err);
-  }
-}
-
-/* ---------------- NACIONALES ---------------- */
-let chartNalLevels = null;
-let chartNalLines = null;
-function setupNacionales(data){
-  // suponemos que en la hoja hay columnas con: 'Línea' (o similar), 'Porcentaje' o 'Avance', 'Nivel', 'Recomendación'
-  const colLinea = guessColumn(data, ['Línea','Linea','Item','Ítem','Eje','Linea Estratégica','Linea estrategica']);
-  const colPorc = guessColumn(data, ['Porcentaje','%','Porc','Avance','Alineamiento (%)','Alineamiento']);
-  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Categoria']);
-  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Observación','Observacion']);
-  // limpieza
-  const cleaned = data.filter(r=> (r[colLinea] || r[colPorc] || r[colNivel]));
-  // KPIs
-  const total = cleaned.length;
-  const altos = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('alto')) || toNumber(r[colPorc])>=80).length;
-  const bajos = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('bajo')) || toNumber(r[colPorc])<40).length;
-  document.getElementById('nal-total').innerText = total;
-  document.getElementById('nal-alto').innerText = altos;
-  document.getElementById('nal-bajo').innerText = bajos;
-
-  // tabla
-  renderTableFromJson('#table-nal', cleaned.map(r=>({
-    [colLinea]: r[colLinea], [colPorc]: formatPct(r[colPorc]), [colNivel]: r[colNivel], [colRec]: r[colRec]
-  })), [colLinea, colPorc, colNivel, colRec]);
-
-  // gráfico niveles (doughnut)
-  const counts = [
-    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('bajo') || toNumber(r[colPorc])<40).length,
-    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('medio') || (toNumber(r[colPorc])>=40 && toNumber(r[colPorc])<80)).length,
-    cleaned.filter(r=> String((r[colNivel]||'')).toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length
-  ];
-  const ctx = document.getElementById('chartNalLevels').getContext('2d');
-  if(chartNalLevels) chartNalLevels.destroy();
-  chartNalLevels = new Chart(ctx, {
-    type:'doughnut',
-    data:{ labels:['Bajo','Medio','Alto'], datasets:[{data:counts, backgroundColor:[getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545', getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107', getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745']}]},
-    options:{plugins:{legend:{position:'top'}}}
-  });
-
-  // gráfico líneas (barras horizontales)
-  const labels = cleaned.map(r=>String(r[colLinea]).slice(0,60));
-  const datos = cleaned.map(r=> toNumber(r[colPorc]) );
-  const ctx2 = document.getElementById('chartNalLines').getContext('2d');
-  if(chartNalLines) chartNalLines.destroy();
-  chartNalLines = new Chart(ctx2, {
-    type:'bar',
-    data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor:datos.map(v=> v>=80? getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745': v>=40? getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107' : getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545' )}]},
-    options:{indexAxis:'y', scales:{x:{beginAtZero:true, max:100, ticks:{callback: v=> v+'%'}}}, plugins:{legend:{display:false}}}
-  });
-
-  // filtro
-  document.getElementById('refresh-nal').onclick = ()=>{
-    const sel = document.getElementById('filter-nal-level').value;
-    let fil = cleaned;
-    if(sel!=='all') fil = cleaned.filter(r => String(r[colNivel]||'').toLowerCase() === sel.toLowerCase());
-    renderTableFromJson('#table-nal', fil.map(r=>({ [colLinea]: r[colLinea], [colPorc]: formatPct(r[colPorc]), [colNivel]: r[colNivel], [colRec]: r[colRec]})), [colLinea, colPorc, colNivel, colRec]);
-  };
-}
-
-/* ---------------- INTERNACIONALES ---------------- */
-let chartIntCompare = null;
-function setupInternacionales(data){
-  const colLinea = guessColumn(data, ['Línea','Linea','Item','Ítem','Eje']);
-  const colPorc = guessColumn(data, ['Porcentaje','%','Porc','Avance','Alineamiento']);
-  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Categoria']);
-  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Observación','Observacion']);
-  const cleaned = data.filter(r=> (r[colLinea] || r[colPorc] || r[colNivel]));
-  document.getElementById('int-total').innerText = cleaned.length;
-  document.getElementById('int-alto').innerText = cleaned.filter(r=> (String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80)).length;
-
-  renderTableFromJson('#table-int', cleaned.map(r=>({[colLinea]:r[colLinea],[colPorc]:formatPct(r[colPorc]),[colNivel]:r[colNivel],[colRec]:r[colRec]})), [colLinea,colPorc,colNivel,colRec]);
-
-  // gráfico comparativo simple: bucket por nivel
-  const dataBuckets = {
-    Alto: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('alto') || toNumber(r[colPorc])>=80).length,
-    Medio: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('medio') || (toNumber(r[colPorc])>=40 && toNumber(r[colPorc])<80)).length,
-    Bajo: cleaned.filter(r=> String(r[colNivel]||'').toLowerCase().includes('bajo') || toNumber(r[colPorc])<40).length
-  };
-  const ctx = document.getElementById('chartIntCompare').getContext('2d');
-  if(chartIntCompare) chartIntCompare.destroy();
-  chartIntCompare = new Chart(ctx, {
-    type:'pie',
-    data:{ labels:Object.keys(dataBuckets), datasets:[{data:Object.values(dataBuckets), backgroundColor:[getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745', getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107', getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545']}]},
-    options:{plugins:{legend:{position:'top'}}}
-  });
-}
-
-/* ---------------- MATRIZ GENERAL ---------------- */
-let chartMatBars = null;
-let matrizCached = [];
-function setupMatriz(data){
-  // columnas esperadas: 'Línea Estratégica / Eje', 'Alineamiento (%)', 'Nivel de alineamiento', 'Recomendaciones'
-  // vamos a intentar detectar nombres
-  const colLinea = guessColumn(data, ['Línea','Linea','Línea Estratégica / Eje','Eje','Linea estrategica']);
-  const colPorc = guessColumn(data, ['Porcentaje','%','Alineamiento','Alineamiento (%)','Avance']);
-  const colNivel = guessColumn(data, ['Nivel','Nivel de alineamiento','Nivel de alineamiento']);
-  const colRec = guessColumn(data, ['Recomendación','Recomendacion','Recomendaciones','Recomendación de mejora']);
-
-  const cleaned = data.filter(r=> r[colLinea] !== undefined && String(r[colLinea]).trim()!=='');
-  matrizCached = cleaned.map(r=>({
-    linea: r[colLinea] || '',
-    porcentaje: formatPct(r[colPorc]),
-    porcentajeNum: toNumber(r[colPorc]),
-    nivel: r[colNivel] || '',
-    recomendacion: r[colRec] || ''
-  }));
-
-  // KPIs y resumen
-  const prom = matrizCached.reduce((s,it)=> s + (it.porcentajeNum || 0), 0) / Math.max(1, matrizCached.length);
-  document.getElementById('mat-prom').innerText = (isNaN(prom)?'0': prom.toFixed(1)) + '%';
-  const counts = {
-    Alto: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('alto') || i.porcentajeNum>=80 ).length,
-    Medio: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('medio') || (i.porcentajeNum>=40 && i.porcentajeNum<80)).length,
-    Bajo: matrizCached.filter(i=> i.nivel && String(i.nivel).toLowerCase().includes('bajo') || i.porcentajeNum<40).length
-  };
-  const countsNode = document.getElementById('mat-counts');
-  countsNode.innerHTML = `<li>Alto: ${counts.Alto}</li><li>Medio: ${counts.Medio}</li><li>Bajo: ${counts.Bajo}</li>`;
-
-  // gráfico barras
-  const labels = matrizCached.slice(0,20).map(i=> i.linea.slice(0,50));
-  const datos = matrizCached.slice(0,20).map(i=> i.porcentajeNum);
-  const ctx = document.getElementById('chartMatBars').getContext('2d');
-  if(chartMatBars) chartMatBars.destroy();
-  chartMatBars = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[{label:'Alineamiento %', data:datos, backgroundColor:datos.map(v=> v>=80? getComputedStyle(document.documentElement).getPropertyValue('--alto')||'#28a745': v>=40? getComputedStyle(document.documentElement).getPropertyValue('--medio')||'#ffc107' : getComputedStyle(document.documentElement).getPropertyValue('--bajo')||'#dc3545')}]},
-    options:{scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}}}
-  });
-
-  // render tabla completa
-  renderTableFromJson('#table-matriz', matrizCached.map(r=>({ 'Línea Estratégica / Eje': r.linea, 'Alineamiento (%)': r.porcentaje, 'Nivel': r.nivel, 'Recomendación': r.recomendacion })), ['Línea Estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
-
-  // search
-  document.getElementById('search-matriz').addEventListener('input', e=>{
-    const q = e.target.value.trim().toLowerCase();
-    const fil = matrizCached.filter(it => (it.linea + ' ' + it.recomendacion + ' ' + it.nivel).toLowerCase().includes(q));
-    renderTableFromJson('#table-matriz', fil.map(r=>({ 'Línea Estratégica / Eje': r.linea, 'Alineamiento (%)': r.porcentaje, 'Nivel': r.nivel, 'Recomendación': r.recomendacion })), ['Línea Estratégica / Eje','Alineamiento (%)','Nivel','Recomendación']);
-  });
-
-  // export matriz CSV
-  document.getElementById('export-matriz').onclick = ()=>{
-    const csv = toCSV(matrizCached.map(r=> ({linea:r.linea, porcentaje:r.porcentaje, nivel:r.nivel, recomendacion:r.recomendacion})));
-    downloadFile(csv, 'matriz_general_export.csv');
-  };
-}
-
-/* ---------------- VALIDACION ---------------- */
-const VALID_KEY = 'cers_validations_v1';
-function setupValidacion(data){
-  // reusar matrizCached si ya existe (asignado en setupMatriz). Si no, usamos data argumento.
-  const items = (matrizCached && matrizCached.length>0) ? matrizCached : (data.map((r,idx)=>({linea:r[Object.keys(r)[0]]||('Item '+(idx+1)), porcentaje:toNumber(r[Object.keys(r)[1]]||0), nivel: r[Object.keys(r)[2]]||'', recomendacion: r[Object.keys(r)[3]]||''})));
-  // map to validation objects
-  const validations = items.map((it, idx) => ({
-    id: idx+1,
-    linea: it.linea,
-    porcentaje: (it.porcentaje || it.porcentajeNum) || 0,
-    nivel: it.nivel || '',
-    recomendacion: it.recomendacion || '',
-    estado: 'Pendiente',
-    observacion: ''
-  }));
-  // load saved state if exists
-  const saved = JSON.parse(localStorage.getItem(VALID_KEY) || 'null');
-  const state = saved && Array.isArray(saved) && saved.length === validations.length ? saved : validations;
-  renderValidationList(state);
-  updateValSummary(state);
-
-  // buttons
-  document.getElementById('save-valid').onclick = ()=> {
-    localStorage.setItem(VALID_KEY, JSON.stringify(state));
-    alert('Guardado localmente. Puedes continuar más tarde en este navegador.');
-    updateValSummary(state);
-  };
-  document.getElementById('download-valid').onclick = ()=> {
-    const csv = toCSV(state.map(s=> ({id:s.id,linea:s.linea,porcentaje:s.porcentaje,nivel:s.nivel,estado:s.estado,observacion:s.observacion})));
-    downloadFile(csv, 'validacion_comite.csv');
-  };
-  document.getElementById('clear-valid').onclick = ()=> {
-    if(confirm('Limpiar validaciones guardadas y reiniciar?')){
-      localStorage.removeItem(VALID_KEY);
-      state.forEach(s=>{ s.estado='Pendiente'; s.observacion=''; });
-      renderValidationList(state);
-      updateValSummary(state);
-    }
-  };
-
-  // internal helpers to update state and UI
-  function renderValidationList(list){
-    const root = document.getElementById('validation-list');
-    root.innerHTML = '';
-    list.forEach(item=>{
-      const el = document.createElement('div');
-      el.className = 'validation-item';
-      el.innerHTML = `
-        <div style="flex:1">
-          <div style="font-weight:700">${item.id}. ${safeText(item.linea)}</div>
-          <div class="small" style="margin-top:6px">Nivel: ${safeText(item.nivel)} — %: ${item.porcentaje}</div>
-          <div class="small" style="margin-top:6px;color:#2b2b2b">${safeText(item.recomendacion)}</div>
-          <div style="margin-top:8px">
-            <input type="text" placeholder="Observación (opcional)" value="${escapeHTML(item.observacion||'')}" style="width:100%;padding:8px;border-radius:6px;border:1px solid #e3eef8" data-id="${item.id}" class="obs-input" />
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-          <button class="ok" data-id="${item.id}" title="Aprobado">A</button>
-          <button class="pend" data-id="${item.id}" title="Pendiente">P</button>
-          <button class="rej" data-id="${item.id}" title="No aprobado">N</button>
-        </div>
-      `;
-      root.appendChild(el);
-    });
-
-    // attach listeners
-    root.querySelectorAll('.ok').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'Aprobado'); });
-    root.querySelectorAll('.pend').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'Pendiente'); });
-    root.querySelectorAll('.rej').forEach(b=> b.onclick = ()=> { const id=+b.dataset.id; setState(id,'No aprobado'); });
-    root.querySelectorAll('.obs-input').forEach(inp=> inp.onchange = ()=> {
-      const id = +inp.dataset.id; const val = inp.value;
-      const obj = state.find(s=> s.id===id); if(obj) obj.observacion = val;
-      updateValSummary(state);
-    });
-  }
-
-  function setState(id, newState){
-    const obj = state.find(s=> s.id===id);
-    if(!obj) return;
-    obj.estado = newState;
-    // visual feedback: small flash by re-rendering
-    renderValidationList(state);
-    updateValSummary(state);
-  }
-
-  function updateValSummary(list){
-    const ul = document.getElementById('val-summary');
-    const tot = list.length;
-    const apro = list.filter(l=> l.estado==='Aprobado').length;
-    const pen = list.filter(l=> l.estado==='Pendiente').length;
-    const noap = list.filter(l=> l.estado==='No aprobado').length;
-    ul.innerHTML = `<li>Total ítems: ${tot}</li><li>Aprobados: ${apro}</li><li>Pendientes: ${pen}</li><li>No aprobados: ${noap}</li>`;
-  }
-}
-
-/* ---------- UTIL: guess column name ---------- */
-function guessColumn(data, candidates){
-  if(!data || data.length===0) return candidates[0];
-  const row = data.find(r=> Object.keys(r).length>0);
-  if(!row) return candidates[0];
-  const keys = Object.keys(row);
-  for(const cand of candidates){
-    const found = keys.find(k => k.toLowerCase().trim() === cand.toLowerCase().trim());
-    if(found) return found;
-  }
-  // fuzzy: contains
-  for(const cand of candidates){
-    const found = keys.find(k => k.toLowerCase().includes(cand.toLowerCase().trim().split(' ')[0]));
-    if(found) return found;
-  }
-  // fallback first 4 cols
-  return keys[0] || candidates[0];
-}
-
-function formatPct(v){
-  if(v===undefined || v===null || v==='') return '';
-  const n = toNumber(v);
-  return (isNaN(n)? String(v): (n.toFixed(1)+'%'));
-}
-
-/* ---------- small utils ---------- */
-function safeText(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escapeHTML(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function toCSV(arr){
-  if(!arr || arr.length===0) return '';
-  const keys = Object.keys(arr[0]);
-  const lines = [keys.join(',')];
-  for(const r of arr){
-    const row = keys.map(k=>{
-      let v = r[k]===null||r[k]===undefined?'':String(r[k]);
-      v = v.replace(/"/g,'""');
-      if(v.includes(',')||v.includes('"')||v.includes('\n')) v = `"${v}"`;
-      return v;
-    }).join(',');
-    lines.push(row);
-  }
-  return lines.join('\n');
-}
-function downloadFile(content, filename){
-  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=> URL.revokeObjectURL(url), 1000);
-}
-
-/* ---------- startup ---------- */
-/* Tab behavior */
-document.querySelectorAll('.tab-btn').forEach(b=>{
-  b.addEventListener('click', ()=> {
-    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    const id = b.dataset.tab;
-    document.getElementById(id).classList.add('active');
-  });
-});
-
-/* Inicializamos: carga el excel y talla las hojas (ignorando últimas 2) */
-initDashboard();
-</script>
-
-</body>
-</html>
+        <h4 style="mar
