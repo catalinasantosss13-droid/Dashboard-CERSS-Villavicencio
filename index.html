@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero de análisis Plan de Acción Política Pública MCYEVS</title>
+    <title>Tablero de Análisis y Verificación CERS</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,11 +50,11 @@
         .tab-btn:hover { background: #eef7ff; color: var(--primary); }
         .tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* ESTILO PESTAÑA 4 */
+        /* Estilo especial para la pestaña 4 */
         .tab-btn.tab-valid { border-color: var(--final); color: var(--final); }
         .tab-btn.tab-valid.active { background: var(--final); color: white; }
 
-        /* PANEL DE PROYECCIÓN */
+        /* PANEL DE INFORMACIÓN */
         .simulation-panel {
             display: flex; align-items: center; gap: 20px; width: 100%;
             background: #f0fdf4; padding: 15px 25px; border-radius: 12px; border: 1px solid #bbf7d0;
@@ -67,6 +67,11 @@
 
         /* CONTAINER */
         .container { max-width: 1300px; margin: 30px auto; padding: 0 30px; }
+
+        /* VISTAS */
+        .view-section { display: none; animation: fadeIn 0.5s; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
         /* KPI GRID */
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
@@ -114,12 +119,7 @@
         }
         .tooltip-container:hover .tooltip-content { visibility: visible; opacity: 1; }
 
-        /* VISTAS */
-        .view-section { display: none; animation: fadeIn 0.5s; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-        /* VISTA DE VALIDACIÓN (NUEVA PESTAÑA 4) */
+        /* VISTA VALIDACIÓN */
         .validation-area {
             display: flex; flex-direction: column; height: 600px; background: white; border-radius: 12px; padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
@@ -157,7 +157,8 @@
 
     <header class="header-top">
         <div class="header-info">
-            <h1>ANÁLISIS DE ALINEACIÓN </h1>
+            <h1>ANÁLISIS DE ALINEACIÓN CERS</h1>
+            <p class="subtitle">Evaluación de Conformidad y Verificación Técnica</p>
             <div style="font-size:0.75rem; opacity:0.8; margin-top:5px; font-weight:600;">Investigadora: Catalina Santos Gonzalez</div>
         </div>
         
@@ -181,13 +182,13 @@
             <div style="display:flex; align-items:center; gap:15px;">
                 <i class="fas fa-chart-line sim-icon"></i>
                 <div>
-                    <strong style="color:var(--primary); font-size:1rem;">Panel de control</strong>
-                    <div style="font-size:0.8rem; color:#666;">Visualización de alineación actual vs metas propuestas.</div>
+                    <strong style="color:var(--primary); font-size:1rem;">Panel de Control y Ajuste</strong>
+                    <div style="font-size:0.8rem; color:#666;">Comparación de la línea base documental vs. el dato verificado.</div>
                 </div>
             </div>
             <div class="legend-box">
                 <div class="legend-item"><div class="dot" style="background:var(--initial);"></div> <span>Línea Base</span></div>
-                <div class="legend-item"><div class="dot" style="background:var(--final);"></div> <span>Meta</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--final);"></div> <span>Dato Verificado</span></div>
             </div>
         </div>
     </div>
@@ -206,18 +207,18 @@
                     <span class="kpi-value" id="kpi-inicial" style="color:var(--initial);">0%</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--final);">
-                    <span class="kpi-title">Meta Proyectada</span>
+                    <span class="kpi-title">DATO FINAL (VERIFICADO)</span>
                     <span class="kpi-value" id="kpi-final" style="color:var(--final);">0%</span>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--accent);">
-                    <span class="kpi-title">Potencial de Mejora</span>
+                    <span class="kpi-title">AJUSTE DE COHERENCIA</span>
                     <span class="kpi-value" id="kpi-delta" style="color:var(--accent);">+0%</span>
-                    <span class="kpi-trend">Impacto Estimado</span>
+                    <span class="kpi-trend">Diferencia vs Base</span>
                 </div>
             </div>
 
             <div class="chart-card">
-                <div class="section-header">Gráfico Comparativo: Actual vs Deseado</div>
+                <div class="section-header">Gráfico Comparativo: Actual vs Dato Final</div>
                 <div style="height: 380px; position: relative;">
                     <canvas id="chartComparativo"></canvas>
                 </div>
@@ -231,8 +232,8 @@
                             <tr>
                                 <th style="width: 35%;">Línea Estratégica</th>
                                 <th style="width: 12%; text-align:center;">Base</th>
-                                <th style="width: 12%; text-align:center;">Meta</th>
-                                <th style="width: 12%; text-align:center;">Delta</th>
+                                <th style="width: 12%; text-align:center;">Dato Final</th>
+                                <th style="width: 12%; text-align:center;">Ajuste</th>
                                 <th style="width: 29%; text-align:center;">Sustento Técnico</th>
                             </tr>
                         </thead>
@@ -274,7 +275,7 @@
     </div>
 
     <script>
-        // DATOS INTEGRADOS (Solución al error "Cargando...")
+        // DATOS INTEGRADOS (Para estabilidad y rapidez)
         const DB = {
             'NACIONAL': [
                 { linea: "Gobernanza Intersectorial", inicial: 45, rec: "Existe Acuerdo 462, pero falta articulación presupuestal conjunta." },
@@ -303,16 +304,18 @@
         let isValidationMode = false;
         let activeIndex = -1;
 
-        // INICIO AUTOMÁTICO
-        window.onload = function() { loadTab('NACIONAL'); };
+        window.onload = function() { 
+            // Inicialmente no mostramos el loading si cargamos data local
+            document.getElementById('detail-view').classList.add('active'); 
+            loadTab('NACIONAL'); 
+        };
 
         function loadTab(tabName) {
-            // Manejo de botones activos
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.onclick.toString().includes(`'${tabName}'`));
             if(activeBtn) activeBtn.classList.add('active');
 
-            // Switch entre Vistas
+            // Switch Vistas
             if(tabName === 'VALIDACION') {
                 isValidationMode = true;
                 processData(DB['GENERAL']); // Carga la General para validar
@@ -329,24 +332,17 @@
         }
 
         function processData(rawData) {
-            // Procesamiento de datos y cálculo de metas
             const clean = rawData.map((row, i) => {
                 let val = row.inicial;
                 
-                // Lógica de Proyección Técnica
-                let mejora = 0;
-                if (val < 40) mejora = 20;      
-                else if (val < 70) mejora = 15; 
-                else if (val < 90) mejora = 5;  
-                
-                let simulado = val + mejora;
-                if (simulado > 100) simulado = 100;
+                // FINAL IGUAL A INICIAL (CERO PROYECCIÓN AUTOMÁTICA)
+                let final = val; 
 
                 return {
                     id: i,
                     linea: row.linea,
                     inicial: val,
-                    final: simulado, 
+                    final: final, 
                     recomendacion: row.rec
                 };
             });
@@ -376,7 +372,7 @@
                         onchange="updateValue(${index}, this.value)" min="0" max="100">
                     </td>
                     <td style="text-align:center;">
-                        <span class="improvement-tag"><i class="fas fa-arrow-up"></i> +${Math.round(diff)}%</span>
+                        <span class="improvement-tag"><i class="fas fa-arrow-up"></i> ${diff >= 0 ? '+' : ''}${Math.round(diff)}%</span>
                     </td>
                     <td style="text-align:center;">
                         <div class="tooltip-container">
@@ -413,7 +409,7 @@
 
             document.getElementById('kpi-inicial').innerText = Math.round(avgInit) + '%';
             document.getElementById('kpi-final').innerText = Math.round(avgFinal) + '%';
-            document.getElementById('kpi-delta').innerText = '+' + Math.round(delta) + '%';
+            document.getElementById('kpi-delta').innerText = (delta >= 0 ? '+' : '') + Math.round(delta) + '%';
         }
 
         function updateChart() {
@@ -426,7 +422,7 @@
                     labels: currentData.map(d => d.linea),
                     datasets: [
                         { label: 'Línea Base', data: currentData.map(d => d.inicial), backgroundColor: '#bdc3c7', borderRadius: 4 },
-                        { label: 'Meta', data: currentData.map(d => d.final), backgroundColor: '#003366', borderRadius: 4 }
+                        { label: 'Dato Verificado', data: currentData.map(d => d.final), backgroundColor: '#003366', borderRadius: 4 }
                     ]
                 },
                 options: { 
@@ -443,9 +439,9 @@
 
             // Colores Semáforo según valor
             const colors = currentData.map(d => {
-                if(d.final < 40) return '#e74c3c'; // Rojo
-                if(d.final < 80) return '#f1c40f'; // Amarillo
-                return '#27ae60'; // Verde
+                if(d.final < 40) return '#e74c3c'; // Rojo (Bajo)
+                if(d.final < 80) return '#f1c40f'; // Amarillo (Medio)
+                return '#27ae60'; // Verde (Alto)
             });
 
             chartValidation = new Chart(ctx, {
